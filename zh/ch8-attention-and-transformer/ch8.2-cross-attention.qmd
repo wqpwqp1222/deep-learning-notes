@@ -1,7 +1,7 @@
 ---
 author: jshn9515
 date: 2026-04-09
-date-modified: 2026-04-25
+date-modified: 2026-05-04
 open-graph:
   title: ch8.2-cross-attention
   description: "8.2 Cross-Attention: One Sequence Querying Another Sequence"
@@ -23,6 +23,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 import torch
+import torch.nn as nn
+from torch import Tensor
 
 plt.rc('savefig', dpi=300, bbox='tight')
 print('PyTorch version:', torch.__version__)
@@ -161,45 +163,92 @@ $$
 
 在 cross-attention 中，最关键的一点是 Q 来自一个序列，而 K 和 V 来自另一个序列。这也是它被称为 cross-attention 的原因。它广泛适用于机器翻译、图文匹配、问答等需要跨序列交互的任务。
 
-下面这段代码，我们用随机张量实现一个最小版的 cross-attention。这里 `X` 和 `Y` 是两个不同序列，`Q` 来自 `X`，`K` 和 `V` 来自 `Y`。
+下面这段代码，我们用随机张量实现一个最小版的 cross-attention。这里 `x` 和 `y` 是两个不同序列，`Q` 来自 `x`，`K` 和 `V` 来自 `y`。
+
+::: {.callout-note}
+我们这里的实现和 PyTorch 标准的 `nn.MultiheadAttention` 有一点不同。`nn.MultiheadAttention` 把 `attn_dim` 同时作为 query 的输入维度、query/key/value 投影后的维度，以及 attention 的最终输出维度。它只额外提供 `kdim` 和 `vdim`，用来允许 key/value 的原始输入维度不同。
+:::
 
 ```{python}
-X = torch.randn(4, 4)  # query sequence, length = 4
-Y = torch.randn(6, 4)  # key/value sequence, length = 6
+class CrossAttention(nn.Module):
+    def __init__(
+        self,
+        attn_dim: int,
+        q_dim: int | None = None,
+        k_dim: int | None = None,
+        v_dim: int | None = None,
+        out_dim: int | None = None,
+    ):
+        super().__init__()
+        self.attn_dim = attn_dim
+        self.q_dim = q_dim or attn_dim
+        self.k_dim = k_dim or attn_dim
+        self.v_dim = v_dim or attn_dim
+        self.out_dim = out_dim or attn_dim
 
-# Note that W_Q and W_K must have the same output dimension (3),
-# because Q and K are compared by dot product.
-# W_V can have a different output dimension (2),
-# because it determines the dimension of the final output.
-W_Q = torch.randn(4, 3)  # query projection
-W_K = torch.randn(4, 3)  # key projection
-W_V = torch.randn(4, 2)  # value projection
+        self.q_proj = nn.Linear(self.q_dim, attn_dim)
+        self.k_proj = nn.Linear(self.k_dim, attn_dim)
+        self.v_proj = nn.Linear(self.v_dim, attn_dim)
+        self.out_proj = nn.Linear(attn_dim, self.out_dim)
 
-Q = X @ W_Q
-K = Y @ W_K
-V = Y @ W_V
+    def forward(
+        self,
+        q: Tensor,
+        k: Tensor,
+        v: Tensor,
+        need_weights: bool = False,
+    ) -> tuple[Tensor, Tensor | None]:
+        # Make sure the sequence lengths of key and value match
+        if k.size(-2) != v.size(-2):
+            raise AssertionError(
+                '`key` and `value` must have the same sequence length.'
+            )
 
-scores = Q @ K.T / math.sqrt(K.size(-1))
-attn_weights = scores.softmax(dim=-1)
-O = attn_weights @ V
+        q = self.q_proj(q)
+        k = self.k_proj(k)
+        v = self.v_proj(v)
+
+        scores = q @ k.transpose(-2, -1)
+        scores = scores / math.sqrt(self.attn_dim)
+
+        attn_weights = scores.softmax(dim=-1)
+        attn_output = attn_weights @ v
+        output = self.out_proj(attn_output)
+
+        if need_weights:
+            return output, attn_weights
+
+        return output, None
+
+
+x = torch.randn(3, 5, 4)  # query sequence, length = 5
+y = torch.randn(3, 8, 6)  # key/value sequence, length = 8
+cross_attn = CrossAttention(attn_dim=4, q_dim=4, k_dim=6, v_dim=6)
+
+with torch.inference_mode():
+    Q = cross_attn.q_proj(x)
+    K = cross_attn.k_proj(y)
+    V = cross_attn.v_proj(y)
+    output, attn_weights = cross_attn(x, y, y, need_weights=True)
 
 print('Q shape:', Q.shape)
 print('K shape:', K.shape)
 print('V shape:', V.shape)
 print('Attention weights shape:', attn_weights.shape)
-print('Output shape:', O.shape)
+print('Output shape:', output.shape)
 ```
 
-可以看到，attention weights 的形状是 `(query length, key/value length)`。也就是说，查询序列中的每个位置，都会对被查询序列中的所有位置分配一组权重。
+可以看到，attention weights 的形状是 `(batch size, query length, key/value length)`。也就是说，查询序列中的每个位置，都会对被查询序列中的所有位置分配一组权重。
 
 我们把这个权重矩阵可视化一下。
 
 ```{python}
-fig = plt.figure(1, figsize=(4, 3))
+fig = plt.figure(1, figsize=(5, 3))
 ax = fig.add_subplot(1, 1, 1)
-im = ax.pcolormesh(attn_weights, cmap='Blues', vmin=0, vmax=1)
-x_ticks = np.arange(Y.size(0))
-y_ticks = np.arange(X.size(0))
+im = ax.pcolormesh(attn_weights[0], cmap='Blues', vmin=0, vmax=0.4)
+x_ticks = np.arange(y.size(-2))
+y_ticks = np.arange(x.size(-2))
+cbar_ticks = np.arange(0, 0.5, 0.1)
 ax.set_xticks(x_ticks + 0.5, x_ticks)
 ax.set_yticks(y_ticks + 0.5, y_ticks)
 ax.invert_yaxis()
@@ -207,7 +256,7 @@ ax.set_xlabel('key/value position')
 ax.set_ylabel('query position')
 ax.set_title('Cross-Attention Weights')
 ax.set_aspect('equal')
-fig.colorbar(im, shrink=0.8)
+fig.colorbar(im, shrink=0.85, ticks=cbar_ticks)
 fig.savefig('figures/ch8.2-cross-attn-weights.svg')
 plt.close(fig)
 ```
