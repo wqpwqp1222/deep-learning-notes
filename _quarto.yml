@@ -26,6 +26,7 @@ format:
     css: styles.css
     toc: true
     syntax-highlighting: github
+    code-annotations: hover
     license: CC BY-NC
 
 website:
