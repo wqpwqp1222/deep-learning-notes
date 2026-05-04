@@ -1,0 +1,31 @@
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: "18px"
+    primaryColor: "#e9f2fc"
+    primaryBorderColor: "#296bb7"
+    secondaryBorderColor: "#296bb7"
+  flowchart:
+    wrappingWidth: 250
+---
+
+flowchart TD
+  X[X]
+
+  X --> MHA[Multi-Head Self-Attention]
+  X --> Skip1[Identity]
+
+  MHA --> Add1((+))
+  Skip1 --> Add1
+
+  Add1 --> LN1[LayerNorm]
+
+  LN1 --> FFN[Feed-Forward Network]
+  LN1 --> Skip2[Identity]
+
+  FFN --> Add2((+))
+  Skip2 --> Add2
+
+  Add2 --> LN2[LayerNorm]
+  LN2 --> Y[Y]
