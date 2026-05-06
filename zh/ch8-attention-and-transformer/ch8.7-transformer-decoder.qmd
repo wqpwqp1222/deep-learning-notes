@@ -4,7 +4,7 @@ date: 2026-05-05
 date-modified: 2026-05-05
 open-graph:
   title: ch8.5-positional-encoding
-  description: "8.7` Transformer Decoder：Masked Self-Attention and Cross-Attention"
+  description: "8.7 Transformer Decoder：Masked Self-Attention and Cross-Attention"
 title: "8.7 Transformer Decoder：Masked Self-Attention 与 Cross-Attention"
 ---
 
@@ -93,21 +93,29 @@ $$
 
 如果不加 mask，每一行都可以看到所有列：
 
-|       |  pos 1  |  pos 2  |  pos 3  |  pos 4  |
-| :---: | :-----: | :-----: | :-----: | :-----: |
-| pos 1 |    ✓    |    ✓    |    ✓    |    ✓    |
-| pos 2 |    ✓    |    ✓    |    ✓    |    ✓    |
-| pos 3 |    ✓    |    ✓    |    ✓    |    ✓    |
-| pos 4 |    ✓    |    ✓    |    ✓    |    ✓    |
+$$
+\begin{array}{c|cccc}
+ & \text{pos 1} & \text{pos 2} & \text{pos 3} & \text{pos 4} \\
+\hline
+\text{pos 1} & \checkmark & \checkmark & \checkmark & \checkmark \\
+\text{pos 2} & \checkmark & \checkmark & \checkmark & \checkmark \\
+\text{pos 3} & \checkmark & \checkmark & \checkmark & \checkmark \\
+\text{pos 4} & \checkmark & \checkmark & \checkmark & \checkmark \\
+\end{array}
+$$
 
 但在 Decoder 中，我们希望它变成：
 
-|       |  pos 1  |  pos 2  |  pos 3  |  pos 4  |
-| :---: | :-----: | :-----: | :-----: | :-----: |
-| pos 1 |    ✓    |    ✗    |    ✗    |    ✗    |
-| pos 2 |    ✓    |    ✓    |    ✗    |    ✗    |
-| pos 3 |    ✓    |    ✓    |    ✓    |    ✗    |
-| pos 4 |    ✓    |    ✓    |    ✓    |    ✓    |
+$$
+\begin{array}{c|cccc}
+ & \text{pos 1} & \text{pos 2} & \text{pos 3} & \text{pos 4} \\
+\hline
+\text{pos 1} & \checkmark & \times & \times & \times \\
+\text{pos 2} & \checkmark & \checkmark & \times & \times \\
+\text{pos 3} & \checkmark & \checkmark & \checkmark & \times \\
+\text{pos 4} & \checkmark & \checkmark & \checkmark & \checkmark \\
+\end{array}
+$$
 
 也就是说，第 1 个位置只能看第 1 个位置；第 2 个位置可以看第 1、2 个位置；第 3 个位置可以看第 1、2、3 个位置，以此类推。
 
@@ -363,6 +371,7 @@ encoder output -> value
 和 Encoder 一样，我们通常会把多个 Decoder Block 堆叠起来，形成一个完整的 Transformer Decoder。
 
 ```{python}
+nn.Transformer
 class TransformerDecoder(nn.Module):
     def __init__(
         self,
@@ -428,9 +437,8 @@ from torch.types import Device
 
 
 def generate_causal_mask(seq_len: int, device: Device = None) -> Tensor:
-    mask = torch.ones(seq_len, seq_len, device=device)
+    mask = torch.full((seq_len, seq_len), -torch.inf, device=device)
     mask = mask.triu(diagonal=1)
-    mask = mask.masked_fill(mask == 1, -torch.inf)
     return mask
 
 
