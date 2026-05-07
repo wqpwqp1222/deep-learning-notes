@@ -72,7 +72,7 @@ print('PyTorch version:', torch.__version__)
 因此，在 cross-attention 里，一个很自然的对应关系是：
 
 - Query 来自正在生成或正在更新的序列；
-- Key 和 Value 来自被查询的序列。
+- Key 和 value 来自被查询的序列。
 
 也就是说，谁在提问，谁就产生 query；谁被查询，谁就产生 key 和 value。
 
@@ -163,7 +163,7 @@ $$
 
 在 cross-attention 中，最关键的一点是 Q 来自一个序列，而 K 和 V 来自另一个序列。这也是它被称为 cross-attention 的原因。它广泛适用于机器翻译、图文匹配、问答等需要跨序列交互的任务。
 
-下面这段代码，我们用随机张量实现一个最小版的 cross-attention。这里 `x` 和 `y` 是两个不同序列，`Q` 来自 `x`，`K` 和 `V` 来自 `y`。
+下面这段代码，我们用随机张量实现一个最小版的 cross-attention。这里 `x` 和 `y` 是两个不同序列，Q 来自 `x`，K 和 V 来自 `y`。
 
 ::: {.callout-note}
 我们这里的实现和 PyTorch 标准的 `nn.MultiheadAttention` 有一点不同。`nn.MultiheadAttention` 把 `attn_dim` 同时作为 query 的输入维度、query/key/value 投影后的维度，以及 attention 的最终输出维度。它只额外提供 `kdim` 和 `vdim`，用来允许 key/value 的原始输入维度不同。
@@ -289,7 +289,9 @@ $$
 我们可以用下面的代码直观看一下这个现象。我们随机生成 query 和 key，在不同维度下比较缩放前后的注意力分布熵。熵越低，说明分布越尖锐。
 
 ```{python}
-def average_entropy(d_k: int, num_queries: int = 2048, num_keys: int = 10):
+def average_entropy(
+    d_k: int, num_queries: int = 2048, num_keys: int = 10
+) -> tuple[float, float]:
     q = torch.randn(num_queries, d_k)
     k = torch.randn(num_keys, d_k)
 
@@ -302,6 +304,7 @@ def average_entropy(d_k: int, num_queries: int = 2048, num_keys: int = 10):
     raw_entropy = stats.entropy(raw_prob, axis=-1).mean()
     scaled_entropy = stats.entropy(scaled_prob, axis=-1).mean()
     return raw_entropy, scaled_entropy
+
 
 dims = [8, 32, 128, 512]
 raw_entropies = []
