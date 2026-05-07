@@ -1,5 +1,4 @@
 import math
-from numbers import Real
 
 import torch
 from torch import Tensor
@@ -10,72 +9,19 @@ __all__ = [
 ]
 
 
-def _validate_block_size(name: str, value: int) -> None:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise AssertionError(f'`{name}` must be an integer.')
-    if value <= 0:
-        raise AssertionError(f'`{name}` must be greater than 0.')
-
-
-def _validate_dropout(dropout: float) -> None:
-    if not isinstance(dropout, Real):
-        raise AssertionError('`dropout` must be a real number.')
-    if not 0.0 <= dropout < 1.0:
-        raise AssertionError('`dropout` must satisfy 0 <= dropout < 1.')
-
-
-def _validate_scale(scale: float | None) -> None:
-    if scale is None:
-        return
-    if not isinstance(scale, Real):
-        raise AssertionError('`scale` must be a real number or None.')
-    if not math.isfinite(scale) or scale <= 0.0:
-        raise AssertionError('`scale` must be a finite positive number.')
-
-
 def _validate_query_key_value(query: Tensor, key: Tensor, value: Tensor) -> None:
-    if not isinstance(query, Tensor):
-        raise AssertionError('`query` must be a torch.Tensor.')
-    if not isinstance(key, Tensor):
-        raise AssertionError('`key` must be a torch.Tensor.')
-    if not isinstance(value, Tensor):
-        raise AssertionError('`value` must be a torch.Tensor.')
-
     if query.ndim != key.ndim or query.ndim != value.ndim:
         raise AssertionError(
             '`query`, `key`, and `value` must have the same number of dimensions.'
         )
     if query.ndim not in (2, 3):
         raise AssertionError('`query`, `key`, and `value` must be 2D or 3D tensors.')
-    if (
-        not query.is_floating_point()
-        or not key.is_floating_point()
-        or not value.is_floating_point()
-    ):
-        raise AssertionError(
-            '`query`, `key`, and `value` must be floating-point tensors.'
-        )
-    if key.dtype != query.dtype or value.dtype != query.dtype:
-        raise AssertionError('`query`, `key`, and `value` must have the same dtype.')
-    if key.device != query.device or value.device != query.device:
-        raise AssertionError('`query`, `key`, and `value` must be on the same device.')
-    if key.shape != query.shape or value.shape != query.shape:
-        raise AssertionError('`query`, `key`, and `value` must have the same shape.')
-    if query.size(-2) == 0:
-        raise AssertionError('sequence length must be greater than 0.')
-    if query.size(-1) == 0:
-        raise AssertionError('embedding dimension must be greater than 0.')
-
-
-def _validate_gradient(query: Tensor, gradient: Tensor) -> None:
-    if not isinstance(gradient, Tensor):
-        raise AssertionError('`gradient` must be a torch.Tensor.')
-    if gradient.shape != query.shape:
-        raise AssertionError('`gradient` must have the same shape as `query`.')
-    if gradient.dtype != query.dtype:
-        raise AssertionError('`gradient` must have the same dtype as `query`.')
-    if gradient.device != query.device:
-        raise AssertionError('`gradient` must be on the same device as `query`.')
+    if query.shape[:-2] != key.shape[:-2] or query.shape[:-2] != value.shape[:-2]:
+        raise AssertionError('batch dimensions must match.')
+    if query.size(-1) != key.size(-1):
+        raise AssertionError('`query` and `key` must have the same embedding dim.')
+    if key.size(-2) != value.size(-2):
+        raise AssertionError('`key` and `value` must have the same sequence length.')
 
 
 def flash_attention_v1_forward(
@@ -120,11 +66,6 @@ def flash_attention_v1_forward(
         AssertionError: If query, key, value have mismatched dimensions or incorrect shapes.
     """
     _validate_query_key_value(query, key, value)
-    _validate_block_size('Br', Br)
-    _validate_block_size('Bc', Bc)
-    _validate_dropout(dropout)
-    _validate_scale(scale)
-
     original_dtype = query.dtype
 
     squeeze_batch = query.ndim == 2
@@ -133,7 +74,9 @@ def flash_attention_v1_forward(
         key = key.unsqueeze(0)
         value = value.unsqueeze(0)
 
-    B, N, d = query.size()
+    B, Nq, kdim = query.size()
+    Nk = key.size(1)
+    vdim = value.size(-1)
 
     dtype = (
         torch.float32
@@ -145,21 +88,21 @@ def flash_attention_v1_forward(
     V = value.to(dtype=dtype)
 
     if scale is None:
-        scale = 1.0 / math.sqrt(d)
+        scale = 1.0 / math.sqrt(kdim)
 
     # line 3: initialize O, l, m in HBM
-    O = torch.zeros(B, N, d, dtype=dtype, device=Q.device)
-    l = torch.zeros(B, N, dtype=dtype, device=Q.device)
-    m = torch.full((B, N), -math.inf, dtype=dtype, device=Q.device)
+    O = torch.zeros(B, Nq, vdim, dtype=dtype, device=Q.device)
+    l = torch.zeros(B, Nq, dtype=dtype, device=Q.device)
+    m = torch.full((B, Nq), -math.inf, dtype=dtype, device=Q.device)
 
     # Split counts
-    Tr = math.ceil(N / Br)
-    Tc = math.ceil(N / Bc)
+    Tr = math.ceil(Nq / Br)
+    Tc = math.ceil(Nk / Bc)
 
     # line 6: for j in [1..Tc]
     for j in range(Tc):
         k_start = j * Bc
-        k_end = min((j + 1) * Bc, N)
+        k_end = min((j + 1) * Bc, Nk)
 
         # line 7: read K_j, V_j from HBM
         Kj = K[:, k_start:k_end]
@@ -168,7 +111,7 @@ def flash_attention_v1_forward(
         # line 8: for i in [1..Tr]
         for i in range(Tr):
             q_start = i * Br
-            q_end = min((i + 1) * Br, N)
+            q_end = min((i + 1) * Br, Nq)
 
             # line 9: read Q_i, O_i, l_i, m_i from HBM
             Qi = Q[:, q_start:q_end]
@@ -288,12 +231,6 @@ def flash_attention_v1_backward(
            - Accumulate dQ, dK gradients scaled by attention scores
     """
     _validate_query_key_value(query, key, value)
-    _validate_gradient(query, gradient)
-    _validate_block_size('Br', Br)
-    _validate_block_size('Bc', Bc)
-    _validate_dropout(dropout)
-    _validate_scale(scale)
-
     original_dtype = query.dtype
 
     squeeze_batch = query.ndim == 2
@@ -303,12 +240,17 @@ def flash_attention_v1_backward(
         value = value.unsqueeze(0)
         gradient = gradient.unsqueeze(0)
 
-    B, N, d = query.size()
+    B, Nq, kdim = query.size()
+    Nk = key.size(1)
+    vdim = value.size(-1)
 
     if dropout > 0.0:
         raise NotImplementedError(
             'Exact backward with dropout needs the same forward dropout mask to be saved.'
         )
+
+    if gradient.shape != (*query.shape[:-1], vdim):
+        raise AssertionError('`gradient` must match the output shape.')
 
     dtype = (
         torch.float32
@@ -321,25 +263,25 @@ def flash_attention_v1_backward(
     dO = gradient.to(dtype=dtype)
 
     if scale is None:
-        scale = 1.0 / math.sqrt(d)
+        scale = 1.0 / math.sqrt(kdim)
 
-    Tr = math.ceil(N / Br)
-    Tc = math.ceil(N / Bc)
+    Tr = math.ceil(Nq / Br)
+    Tc = math.ceil(Nk / Bc)
 
-    O = torch.zeros(B, N, d, dtype=dtype, device=Q.device)
-    l = torch.zeros(B, N, dtype=dtype, device=Q.device)
-    m = torch.full((B, N), -math.inf, dtype=dtype, device=Q.device)
+    O = torch.zeros(B, Nq, vdim, dtype=dtype, device=Q.device)
+    l = torch.zeros(B, Nq, dtype=dtype, device=Q.device)
+    m = torch.full((B, Nq), -math.inf, dtype=dtype, device=Q.device)
 
     for j in range(Tc):
         k_start = j * Bc
-        k_end = min((j + 1) * Bc, N)
+        k_end = min((j + 1) * Bc, Nk)
 
         Kj = K[:, k_start:k_end]
         Vj = V[:, k_start:k_end]
 
         for i in range(Tr):
             q_start = i * Br
-            q_end = min((i + 1) * Br, N)
+            q_end = min((i + 1) * Br, Nq)
 
             Qi = Q[:, q_start:q_end]
             Oi = O[:, q_start:q_end]
@@ -361,7 +303,7 @@ def flash_attention_v1_backward(
             )
             lij_tilde = Pij_tilde.sum(dim=-1)
 
-            mi_new = torch.maximum(mi, mij_tilde)
+            mi_new = mi.maximum(mij_tilde)
             alpha = torch.exp(mi - mi_new)
             beta = torch.exp(mij_tilde - mi_new)
             li_new = alpha * li + beta * lij_tilde
@@ -389,7 +331,7 @@ def flash_attention_v1_backward(
     # Same loop order as forward: outer j, inner i
     for j in range(Tc):
         k_start = j * Bc
-        k_end = min((j + 1) * Bc, N)
+        k_end = min((j + 1) * Bc, Nk)
 
         Kj = K[:, k_start:k_end]
         Vj = V[:, k_start:k_end]
@@ -399,7 +341,7 @@ def flash_attention_v1_backward(
 
         for i in range(Tr):
             q_start = i * Br
-            q_end = min((i + 1) * Br, N)
+            q_end = min((i + 1) * Br, Nq)
 
             Qi = Q[:, q_start:q_end]
             dOi = dO[:, q_start:q_end]
