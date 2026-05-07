@@ -54,7 +54,7 @@ $$
 
 如果我们不做任何优化，那么每一步推理时，都会重新计算整个前缀序列的 $Q$、$K$、$V$。例如，生成第 3 个 token 时，要重新计算 $x_1, x_2$；生成第 4 个 token 时，要重新计算 $x_1, x_2, x_3$；生成第 5 个 token 时，又要重新计算 $x_1, x_2, x_3, x_4$。
 
-问题在于，$x_1$、$x_2$、$x_3$、$x_4$ 这些过去 token 的表示，在前面的步骤里已经算过了。推理时，过去的 token 不会再改变，所以它们对应的 key 和 value 其实也没有必要重复计算。这就是 KV Cache 的基本动机。
+问题在于，$x_1, x_2, x_3, x_4$ 这些过去 token 的表示，在前面的步骤里已经算过了。推理时，过去的 token 不会再改变，所以它们对应的 key 和 value 其实也没有必要重复计算。这就是 KV Cache 的基本动机。
 
 ## 8.9.2 为什么缓存的是 K 和 V，而不是 Q
 
@@ -98,7 +98,7 @@ $$
 
 至于 query，通常不需要缓存。因为在自回归推理中，每一步真正要输出的是最新位置的结果。过去位置的 query 已经用来计算过过去位置的输出了，后续不会再用它们重新生成过去 token。
 
-所以，推理时缓存的是 $K_{\text{cache}},\quad V_{\text{cache}}$，而不是 $Q_{\text{cache}}$。
+所以，推理时缓存的是 $K_{\text{cache}}, V_{\text{cache}}$，而不是 $Q_{\text{cache}}$。
 
 ## 8.9.3 没有 KV Cache 时发生了什么
 
@@ -114,79 +114,201 @@ $$
 Q_{\le t},\quad K_{\le t},\quad V_{\le t}
 $$
 
-这意味着第 1 个 token 的 key 和 value 会被重复计算很多次。从计算量上看，生成长度为 $T$ 的序列时：
-
-```text
-第 1 步处理 1 个 token；
-第 2 步处理 2 个 token；
-第 3 步处理 3 个 token；
-...
-第 T 步处理 T 个 token。
-```
-
-总共处理的 token 数大约是：
+其中：
 
 $$
-1 + 2 + 3 + \cdots + T = \frac{T(T+1)}{2}
+Q_{\le t} = X_{\le t}W_Q,\quad
+K_{\le t} = X_{\le t}W_K,\quad
+V_{\le t} = X_{\le t}W_V
 $$
 
-也就是说，整体会随生成长度近似二次增长。当然，这里只是一个直观估计。真实 Transformer 里还有多层、多头、矩阵乘法和具体实现细节。但核心问题不变：如果每一步都重新处理完整前缀，就会产生大量重复计算。
+也就是说，前面已经算过的 token，并不会被直接复用，而是会在下一步生成时再次参与整层 Transformer 的前向计算。
+
+从计算量上看，主要有两类成本。
+
+第一类是线性层和 FFN 的计算。第 $t$ 步输入长度是 $t$，因此一次线性投影大致是：
+
+$$
+X_{\le t}W,\quad
+X_{\le t} \in \mathbb{R}^{t \times d},\quad
+W \in \mathbb{R}^{d \times d}
+$$
+
+它的计算量约为：
+
+$$
+O(td^2)
+$$
+
+生成长度为 $T$ 的序列时，这部分会在每一步重复发生，因此累计为：
+
+$$
+\sum_{t=1}^{T} O(td^2) = O(T^2d^2)
+$$
+
+第二类是 attention 里的匹配和加权计算。没有 KV Cache 时，第 $t$ 步会重新计算完整的 attention score：
+
+$$
+Q_{\le t}K_{\le t}^{\top}
+$$
+
+其中：
+
+$$
+Q_{\le t} \in \mathbb{R}^{t \times d},\quad
+K_{\le t}^{\top} \in \mathbb{R}^{d \times t}
+$$
+
+所以：
+
+$$
+Q_{\le t}K_{\le t}^{\top} \in \mathbb{R}^{t \times t}
+$$
+
+这一步的计算量约为：
+
+$$
+O(t^2d)
+$$
+
+如果把生成过程从第 1 步累加到第 $T$ 步，attention score 的累计计算量大约是：
+
+$$
+\sum_{t=1}^{T} O(t^2d) = O(T^3d)
+$$
+
+因此，没有 KV Cache 时，问题不只是前面的 token 被重复处理，而是每一步都要把整个前缀重新计算一遍。线性层和 FFN 会产生 $O(T^2d^2)$ 级别的累计成本，attention score 的重复计算甚至会带来 $O(T^3d)$ 级别的累计成本。
+
+当然，这里的分析忽略了层数、head 数、batch size、常数因子以及具体 kernel 实现。它的目的不是给出精确运行时间，而是说明一个核心事实：如果每一步生成都重新处理完整前缀，历史 token 的计算会被反复浪费，而且序列越长，这种浪费越明显。
 
 ## 8.9.4 有 KV Cache 时发生了什么
 
-有了 KV Cache 以后，推理过程会变成下面这样。
-
-第一步，输入第一个 token，计算它的 key 和 value：
+有了 KV Cache 以后，推理时不再需要每一步都重新处理完整前缀。模型会把历史 token 在每一层 self-attention 中算出来的 key 和 value 保存下来：
 
 $$
-k_1,\ v_1
+K_{\text{cache}},\quad V_{\text{cache}}
 $$
 
-然后把它们存进缓存：
+当生成到第 $t$ 个 token 时，模型只需要对当前新 token 计算：
 
 $$
-K_{\text{cache}} = [k_1],\quad V_{\text{cache}} = [v_1]
+q_t,\quad k_t,\quad v_t
 $$
 
-第二步，输入第二个 token，只计算新 token 的 $q_2, k_2, v_2$，然后把新的 key 和 value 追加到缓存里：
+然后把新的 key 和 value 追加到缓存里：
 
 $$
-K_{\text{cache}} = [k_1, k_2],\quad V_{\text{cache}} = [v_1, v_2]
+K_{\text{cache}} = [k_1, k_2, \dots, k_t]
 $$
 
-接着，用当前 query $q_2$ 去看缓存中的所有 key/value：
-
 $$
-\operatorname{softmax} \left(\frac{q_2 K_{\text{cache}}^\top}{\sqrt{d_k}} \right) V_{\text{cache}}
+V_{\text{cache}} = [v_1, v_2, \dots, v_t]
 $$
 
-第三步也是一样。只计算最新 token 的 $q_3, k_3, v_3$，然后追加：
+接着，当前 token 的 query 会和缓存中的所有 key 做匹配，并从缓存中的 value 里取回信息：
 
 $$
-K_{\text{cache}} = [k_1, k_2, k_3],\quad V_{\text{cache}} = [v_1, v_2, v_3]
+\operatorname{softmax}\left(
+\frac{q_t K_{\text{cache}}^\top}{\sqrt{d_k}}
+\right)V_{\text{cache}}
 $$
 
-再用 $q_3$ 去看所有历史 key/value。这样一来，每一步都不需要重新计算过去 token 的 key 和 value。过去的信息已经存好了，直接拿来用就可以。
+从计算量上看，KV Cache 主要改变了两件事。
 
-## 8.9.5 KV Cache 改变的是推理，不是训练
+第一，线性层和 FFN 不再需要重复作用在完整前缀上。第 $t$ 步只处理当前这一个新 token，因此一次线性投影大致是：
 
-这里要特别注意：
+$$
+x_t W,\quad
+x_t \in \mathbb{R}^{1 \times d},\quad
+W \in \mathbb{R}^{d \times d}
+$$
+
+它的计算量约为：
+
+$$
+O(d^2)
+$$
+
+生成长度为 $T$ 的序列时，累计为：
+
+$$
+\sum_{t=1}^{T} O(d^2) = O(Td^2)
+$$
+
+相比没有 KV Cache 时的 $O(T^2d^2)$，这部分少了大量重复计算。
+
+第二，attention 不再重新计算完整的 $t \times t$ score 矩阵。第 $t$ 步只需要计算当前 token 对所有历史 token 的这一行 attention score：
+
+$$
+q_t K_{\text{cache}}^\top
+$$
+
+其中：
+
+$$
+q_t \in \mathbb{R}^{1 \times d},\quad
+K_{\text{cache}}^\top \in \mathbb{R}^{d \times t}
+$$
+
+所以：
+
+$$
+q_t K_{\text{cache}}^\top \in \mathbb{R}^{1 \times t}
+$$
+
+这一步的计算量约为：
+
+$$
+O(td)
+$$
+
+生成长度为 $T$ 的序列时，累计为：
+
+$$
+\sum_{t=1}^{T} O(td) = O(T^2d)
+$$
+
+相比没有 KV Cache 时每一步重新计算完整的 $Q_{\le t}K_{\le t}^{\top}$，这部分从累计 $O(T^3d)$ 降到了 $O(T^2d)$。
+
+因此，有 KV Cache 时，模型并不是不再做 attention，而是只计算当前新 token 对历史 token 的 attention。历史 token 的 key/value 已经保存在缓存里，不需要重新计算；历史 token 自己对应的 attention 行也不需要重新计算。
+
+可以把两种情况对比为：
+
+::: {.list-table}
+表 1：有无 KV Cache 时的计算对比
+
+- - 计算部分
+  - 没有 KV Cache
+  - 有 KV Cache
+
+- - 线性层 / FFN / QKV 投影
+  - $O(T^2d^2)$
+  - $O(Td^2)$
+
+- - Attention score 计算
+  - $O(T^3d)$
+  - $O(T^2d)$
+:::
+
+从表格里可以看到，KV Cache 明显减少了重复计算，但它并没有把 attention 的成本完全消除。第 $t$ 步生成时，当前 query 仍然要和缓存中的所有历史 key 做匹配：
+
+$$
+q_t K_{\le t}^\top
+$$
+
+因此，这部分计算仍然会随着上下文长度增长。KV Cache 真正避免的是另一类更大的浪费：不要让历史 token 在每一步都重新经过整层 Transformer。换句话说，它把每一步都重新处理完整前缀变成每一步只处理新增 token，并读取历史缓存。
+
+还有一个点要特别注意：
 
 > **KV Cache 主要用于自回归推理，而不是普通训练。**
 
-训练时，我们通常已经知道完整目标序列。比如机器翻译任务中，目标句子是：
-
-```text
-I love deep learning.
-```
-
-训练时我们仍然可以一次性把整个目标序列输入 Decoder，并用 causal mask 保证每个位置只能看到自己之前的位置。也就是说，训练时虽然不能偷看未来，但计算上仍然可以并行处理整个序列。这时候没有必要像推理那样一步一步生成，也就不需要 KV Cache 来避免前缀重复计算。
+训练时，我们通常已经知道完整目标序列。因此，我们仍然可以一次性把整个目标序列输入 Decoder，并用 causal mask 保证每个位置只能看到自己之前的位置。也就是说，训练时虽然不能偷看未来，但计算上仍然可以并行处理整个序列。这时候没有必要像推理那样一步一步生成，也就不需要 KV Cache 来避免前缀重复计算。
 
 推理时则不同。推理时模型一开始并不知道完整输出，它必须先生成第一个 token，再把这个 token 接回输入，继续生成第二个 token，因此推理是串行的。KV Cache 不能消除这种串行依赖，它不能让第 10 个 token 在第 1 个 token 之前生成。它解决的是另一个问题：在必须一步步生成的前提下，不要重复计算已经算过的历史 key/value。
 
 所以，KV Cache 加速的是自回归推理阶段。
 
-## 8.9.6 KV Cache 的代价：更快，但更占显存
+## 8.9.5 KV Cache 的代价：更快，但更占显存
 
 KV Cache 可以显著减少重复计算，但它不是免费的。因为我们把每一层、每一个 head、每一个历史 token 的 key 和 value 都存了下来，所以生成越长，cache 占用的显存就越多。
 
@@ -246,7 +368,7 @@ $$
 
 所以，KV Cache 本质上是一种典型的工程权衡：用更多显存，换更少重复计算。这也是为什么大模型推理服务里，经常会非常关注 KV Cache 的管理、压缩和分页调度。
 
-## 8.9.7 一个简化的 KV Cache 示例
+## 8.9.6 一个简化的 KV Cache 示例
 
 下面我们用一个非常简化的 self-attention 例子，看看 KV Cache 在代码里大概是什么样子。为了突出核心思想，这里先不考虑多头，只看单头 attention。
 
@@ -356,21 +478,7 @@ v = torch.concat([past_v, v], dim=1)
 
 把过去算过的 key/value 留下来，下一步继续用。
 
-## 8.9.8 从复杂度角度理解 KV Cache
-
-最后，我们再用一个更直观的方式总结 KV Cache 的作用。
-
-假设已经生成了 $t$ 个 token。没有 KV Cache 时，第 $t$ 步需要重新处理长度为 $t$ 的前缀。模型不仅要计算新 token 的表示，还要重新计算所有历史 token 的 key/value 和中间状态。有 KV Cache 时，第 $t$ 步只需要处理最新的 1 个 token，同时让当前 token 去查询长度为 $t$ 的 KV 缓存。
-
-也就是说，KV Cache 并不会让 attention 完全变成常数时间。因为当前 query 仍然要和所有历史 key 做匹配：
-
-$$
-q_t K_{\le t}^\top
-$$
-
-这个计算仍然会随着上下文长度增长。但它避免了更大的浪费：重复计算所有历史 token 在每一层里的 key/value。所以更准确地说，KV Cache 的作用不是让生成成本和长度无关，而是把每一步重新跑完整前缀变成每一步只处理新增 token，并读取历史缓存。这对大模型推理非常重要。
-
-## 8.9.9 本章小结
+## 8.9.7 本章小结
 
 这一节里，我们讨论了 Transformer Decoder 推理中的一个关键优化：KV Cache。自回归生成必须一步一步进行，因为下一个 token 依赖前面已经生成的 token。如果每一步都重新计算完整前缀，就会对过去 token 产生大量重复计算。
 
