@@ -1,7 +1,7 @@
 from typing import Literal
 
 import torch
-import torch.nn.functional as torch_F
+import torch.nn.functional as F
 from torch import Tensor
 
 __all__ = ['vae_loss']
@@ -16,9 +16,9 @@ def vae_loss(
     beta: float = 1.0,
 ) -> tuple[Tensor, Tensor, Tensor]:
     if loss_fn == 'mse':
-        recon_loss = torch_F.mse_loss(x_hat, x, reduction='sum')
+        recon_loss = F.mse_loss(x_hat, x, reduction='sum')
     elif loss_fn == 'bce':
-        recon_loss = torch_F.binary_cross_entropy(x_hat, x, reduction='sum')
+        recon_loss = F.binary_cross_entropy(x_hat, x, reduction='sum')
     else:
         raise NotImplementedError(f'Unsupported loss function: {loss_fn},.')
 
