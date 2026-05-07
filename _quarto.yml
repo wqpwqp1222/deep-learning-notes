@@ -33,6 +33,7 @@ website:
   title: deep-learning-notes
   search: true
   back-to-top-navigation: false
+  page-navigation: true
   repo-url: https://github.com/jshn9515/deep-learning-notes
   repo-actions: [source, issue, edit]
   open-graph:
