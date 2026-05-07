@@ -1,6 +1,6 @@
 [project]
 name = "dnnl"
-version = "2026.04.12"
+version = "2026.05.16"
 keywords = ["deep learning", "jupyter notebook", "tutorial"]
 description = "Deep Learning Notes Library"
 authors = [{ name = "jshn9515", email = "jshn9510@gmail.com" }]
