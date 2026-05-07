@@ -6,6 +6,7 @@ from torch import Tensor
 
 __all__ = [
     'attention',
+    'generate_casual_mask',
     'scaled_dot_product_attention',
     'multi_head_attention',
 ]
@@ -17,7 +18,7 @@ def attention(
     query: Tensor,
     key: Tensor,
     value: Tensor,
-    need_weights: bool = False,
+    need_weights: bool = True,
 ) -> AttentionOutput:
     scores = query @ key.transpose(-2, -1)
     attn_weights = scores.softmax(dim=-1)
@@ -37,14 +38,14 @@ def scaled_dot_product_attention(
     is_causal: bool = False,
     dropout: float = 0.0,
     training: bool = True,
-    need_weights: bool = False,
+    need_weights: bool = True,
     scale: float | None = None,
 ) -> AttentionOutput:
     """Compute scaled dot-product attention.
 
-    Boolean masks follow ``torch.nn.functional.scaled_dot_product_attention``:
-    ``True`` means the element participates in attention and ``False`` masks it.
-    Float masks are additive attention biases.
+    Boolean masks use the same convention as ``torch.nn.Transformer``:
+    ``True`` always means the element is masked out and ``False`` means the
+    element participates in attention. Float masks are additive attention biases.
     """
     if query.size(-1) != key.size(-1):
         raise AssertionError(
@@ -65,17 +66,13 @@ def scaled_dot_product_attention(
     scores = scores * scale_factor
 
     if is_causal:
-        causal_mask = torch.ones(
-            target_len,
-            source_len,
-            dtype=torch.bool,
-            device=query.device,
-        ).tril()
-        scores = scores.masked_fill(~causal_mask, -math.inf)
+        causal_mask = generate_casual_mask(max(target_len, source_len))
+        causal_mask = causal_mask[:target_len, :source_len].to(query.device)
+        scores = scores.masked_fill(causal_mask, -math.inf)
 
     if attn_mask is not None:
         if attn_mask.dtype == torch.bool:
-            scores = scores.masked_fill(~attn_mask, -math.inf)
+            scores = scores.masked_fill(attn_mask, -math.inf)
         else:
             scores = scores + attn_mask.to(device=query.device, dtype=query.dtype)
 
@@ -155,3 +152,13 @@ def multi_head_attention(
         return output, attn_weights
 
     return output, None
+
+
+def generate_casual_mask(
+    sz: int,
+    dtype: torch.dtype = torch.bool,
+    device: torch.device | None = None,
+) -> Tensor:
+    mask = torch.full((sz, sz), -torch.inf, dtype=dtype, device=device)
+    mask = mask.triu(diagonal=1)
+    return mask
