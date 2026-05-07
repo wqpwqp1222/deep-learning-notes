@@ -3,8 +3,8 @@ author: jshn9515
 date: 2026-03-19
 date-modified: 2026-04-04
 open-graph:
-  title: ch1.3-computation-graphs
-  description: "Forward Propagation, Backpropagation, and Computation Graphs"
+  title: ch1.3-computation-graph
+  description: "Forward Propagation, Backpropagation, and Computation Graph"
 title: "1.3 前向传播、反向传播与计算图"
 ---
 
