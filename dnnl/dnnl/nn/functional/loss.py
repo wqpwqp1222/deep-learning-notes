@@ -15,6 +15,19 @@ def vae_loss(
     loss_fn: Literal['mse', 'bce'] = 'bce',
     beta: float = 1.0,
 ) -> tuple[Tensor, Tensor, Tensor]:
+    """Compute beta-VAE total, reconstruction, and KL losses per batch item.
+
+    Args:
+        x_hat (Tensor): Reconstructed samples.
+        x (Tensor): Target samples.
+        mu (Tensor): Latent Gaussian means.
+        logvar (Tensor): Latent Gaussian log-variances.
+        loss_fn (Literal['mse', 'bce'], default: 'bce'): Reconstruction loss type.
+        beta (float, default: 1.0): Weight applied to the KL divergence term.
+
+    Returns:
+        Tuple of ``(loss, recon_loss, kl_loss)`` normalized by batch size.
+    """
     if loss_fn == 'mse':
         recon_loss = F.mse_loss(x_hat, x, reduction='sum')
     elif loss_fn == 'bce':
