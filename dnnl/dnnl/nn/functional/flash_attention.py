@@ -10,6 +10,7 @@ __all__ = [
 
 
 def _validate_query_key_value(query: Tensor, key: Tensor, value: Tensor) -> None:
+    """Check the shape relationships needed by flash attention."""
     if query.ndim != key.ndim or query.ndim != value.ndim:
         raise AssertionError(
             '`query`, `key`, and `value` must have the same number of dimensions.'
@@ -218,17 +219,6 @@ def flash_attention_v1_backward(
     Raises:
         NotImplementedError: If dropout > 0.0 (exact backward with dropout mask needed).
         AssertionError: If tensor shapes are incompatible.
-
-    Algorithm:
-        1. Forward pass: Recompute attention scores, softmax, and outputs in blocks.
-        2. Compute delta term D_i = sum(dO_i * O_i) for each query position.
-        3. Backward pass: For each (Q_i, K_j) block pair:
-           - Recover normalized attention probabilities P_ij from row-wise stats
-             (m_i, l_i)
-           - Compute dV += P_ij^T @ dO_i
-           - Compute dP_ij = dO_i @ V_j^T
-           - Compute dS_ij = P_ij * (dP_ij - D_i) (softmax gradient)
-           - Accumulate dQ, dK gradients scaled by attention scores
     """
     _validate_query_key_value(query, key, value)
     original_dtype = query.dtype
