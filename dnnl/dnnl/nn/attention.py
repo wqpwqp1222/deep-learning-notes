@@ -10,6 +10,8 @@ type AttentionOutput = tuple[Tensor, Tensor | None]
 
 
 class MultiheadAttention(nn.Module):
+    """Batch-first multi-head attention with separate Q, K, V projections."""
+
     def __init__(
         self,
         embed_dim: int,
@@ -19,6 +21,16 @@ class MultiheadAttention(nn.Module):
         dropout: float = 0.0,
         bias: bool = True,
     ):
+        """Initialize the attention projections.
+
+        Args:
+            embed_dim (int): Output embedding dimension.
+            num_heads (int): Number of attention heads.
+            kdim (int | None, default: None): Input dimension for keys.
+            vdim (int | None, default: None): Input dimension for values.
+            dropout (float, default: 0.0): Dropout probability applied to attention weights.
+            bias (bool, default: True): Whether projection layers include bias terms.
+        """
         super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
@@ -46,7 +58,24 @@ class MultiheadAttention(nn.Module):
         need_weights: bool = False,
         is_causal: bool = False,
         average_attn_weights: bool = True,
-    ) -> Tensor | AttentionOutput:
+    ) -> AttentionOutput:
+        """Compute attention over batch-first query, key, and value tensors.
+
+        Args:
+            query (Tensor): Query tensor of shape ``(batch, target_len, embed_dim)``.
+            key (Tensor): Key tensor of shape ``(batch, source_len, kdim)``.
+            value (Tensor): Value tensor of shape ``(batch, source_len, vdim)``.
+            attn_mask (Tensor | None, default: None): Optional attention mask where bool ``True`` masks out a
+                position and float masks are additive biases.
+            key_padding_mask (Tensor | None, default: None): Optional mask of padded key positions.
+            need_weights (bool, default: False): Whether to return attention weights with the output.
+            is_causal (bool, default: False): Whether to apply a causal mask.
+            average_attn_weights (bool, default: True): Whether to average returned weights over heads.
+
+        Returns:
+            The attention output, or ``(output, weights)`` when
+            ``need_weights=True``.
+        """
         if key_padding_mask is not None:
             padding_mask = key_padding_mask[:, None, None, :]
             attn_mask = (
@@ -82,4 +111,4 @@ class MultiheadAttention(nn.Module):
                 attn_weights = attn_weights.mean(dim=1)
             return attn_output, attn_weights
 
-        return attn_output
+        return attn_output, None
