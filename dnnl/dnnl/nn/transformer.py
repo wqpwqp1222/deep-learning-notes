@@ -19,6 +19,7 @@ __all__ = [
 def _get_activation_fn(
     activation: str | Callable[[Tensor], Tensor],
 ) -> Callable[[Tensor], Tensor]:
+    """Resolve a transformer activation name or callable."""
     if activation == 'relu':
         return F.relu
     if activation == 'gelu':
@@ -29,10 +30,13 @@ def _get_activation_fn(
 
 
 def _clone_module(module: nn.Module, num_layers: int) -> nn.ModuleList:
+    """Deep-copy a module into a ``ModuleList``."""
     return nn.ModuleList(copy.deepcopy(module) for _ in range(num_layers))
 
 
 class TransformerEncoderLayer(nn.Module):
+    """A batch-first Transformer encoder layer."""
+
     def __init__(
         self,
         d_model: int,
@@ -44,6 +48,18 @@ class TransformerEncoderLayer(nn.Module):
         norm_first: bool = False,
         bias: bool = True,
     ):
+        """Initialize self-attention, feed-forward, and normalization blocks.
+
+        Args:
+            d_model (int): Token embedding dimension.
+            num_heads (int): Number of attention heads.
+            dim_feedforward (int, default: 2048): Hidden dimension of the feed-forward block.
+            dropout (float, default: 0.1): Dropout probability.
+            activation (str | Callable[[Tensor], Tensor], default: F.relu): Feed-forward activation.
+            layer_norm_eps (float, default: 1e-5): Epsilon for layer normalization.
+            norm_first (bool, default: False): If ``True``, use pre-normalization.
+            bias (bool, default: True): Whether linear and layer norm modules include bias.
+        """
         super().__init__()
         self.norm_first = norm_first
 
@@ -72,6 +88,7 @@ class TransformerEncoderLayer(nn.Module):
         src_key_padding_mask: Tensor | None = None,
         is_causal: bool = False,
     ) -> Tensor:
+        """Pass source tokens through the encoder layer."""
         if self.norm_first:  # Pre-LN
             x = src + self._sa_block(
                 self.norm1(src),
@@ -100,7 +117,8 @@ class TransformerEncoderLayer(nn.Module):
         key_padding_mask: Tensor | None,
         is_causal: bool,
     ) -> Tensor:
-        x = self.self_attn(
+        """Apply self-attention and dropout."""
+        x, _ = self.self_attn(
             x, x, x,
             attn_mask=attn_mask,
             key_padding_mask=key_padding_mask,
@@ -111,6 +129,7 @@ class TransformerEncoderLayer(nn.Module):
         return x
 
     def _ff_block(self, x: Tensor) -> Tensor:
+        """Apply the feed-forward block and dropout."""
         x = self.linear1(x)
         x = self.activation(x)
         x = self.dropout(x)
@@ -120,12 +139,21 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
+    """Stack of Transformer encoder layers."""
+
     def __init__(
         self,
         encoder_layer: TransformerEncoderLayer,
         num_layers: int,
         norm: nn.Module | None = None,
     ):
+        """Initialize an encoder stack.
+
+        Args:
+            encoder_layer (TransformerEncoderLayer): Prototype encoder layer to clone.
+            num_layers (int): Number of encoder layers.
+            norm (nn.Module | None, default: None): Optional final normalization module.
+        """
         super().__init__()
         self.layers = _clone_module(encoder_layer, num_layers)
         self.num_layers = num_layers
@@ -138,6 +166,7 @@ class TransformerEncoder(nn.Module):
         src_key_padding_mask: Tensor | None = None,
         is_causal: bool = False,
     ) -> Tensor:
+        """Pass source tokens through all encoder layers."""
         output = src
         for layer in self.layers:
             output = layer(
@@ -154,6 +183,8 @@ class TransformerEncoder(nn.Module):
 
 
 class TransformerDecoderLayer(nn.Module):
+    """A batch-first Transformer decoder layer."""
+
     def __init__(
         self,
         d_model: int,
@@ -165,6 +196,18 @@ class TransformerDecoderLayer(nn.Module):
         layer_norm_eps: float = 1e-5,
         norm_first: bool = False,
     ):
+        """Initialize self-attention, cross-attention, and feed-forward blocks.
+
+        Args:
+            d_model (int): Token embedding dimension.
+            num_heads (int): Number of attention heads.
+            dim_feedforward (int, default: 2048): Hidden dimension of the feed-forward block.
+            bias (bool, default: True): Whether linear and layer norm modules include bias.
+            dropout (float, default: 0.1): Dropout probability.
+            activation (str | Callable[[Tensor], Tensor], default: F.relu): Feed-forward activation.
+            layer_norm_eps (float, default: 1e-5): Epsilon for layer normalization.
+            norm_first (bool, default: False): If ``True``, use pre-normalization.
+        """
         super().__init__()
         self.norm_first = norm_first
 
@@ -206,6 +249,7 @@ class TransformerDecoderLayer(nn.Module):
         tgt_is_causal: bool = False,
         memory_is_causal: bool = False,
     ) -> Tensor:
+        """Pass target tokens through the decoder layer."""
         if self.norm_first:
             x = tgt + self._sa_block(
                 self.norm1(tgt),
@@ -248,7 +292,8 @@ class TransformerDecoderLayer(nn.Module):
         key_padding_mask: Tensor | None,
         is_causal: bool,
     ) -> Tensor:
-        x = self.self_attn(
+        """Apply masked self-attention and dropout."""
+        x, _ = self.self_attn(
             x, x, x,
             attn_mask=attn_mask,
             key_padding_mask=key_padding_mask,
@@ -265,7 +310,8 @@ class TransformerDecoderLayer(nn.Module):
         key_padding_mask: Tensor | None,
         is_causal: bool,
     ) -> Tensor:
-        x = self.mha_attn(
+        """Apply encoder-decoder cross-attention and dropout."""
+        x, _ = self.mha_attn(
             x,
             memory,
             memory,
@@ -277,6 +323,7 @@ class TransformerDecoderLayer(nn.Module):
         return self.dropout2(x)
 
     def _ff_block(self, x: Tensor) -> Tensor:
+        """Apply the feed-forward block and dropout."""
         x = self.linear1(x)
         x = self.activation(x)
         x = self.dropout(x)
@@ -285,12 +332,21 @@ class TransformerDecoderLayer(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
+    """Stack of Transformer decoder layers."""
+
     def __init__(
         self,
         decoder_layer: TransformerDecoderLayer,
         num_layers: int,
         norm: nn.Module | None = None,
     ):
+        """Initialize a decoder stack.
+
+        Args:
+            decoder_layer (TransformerDecoderLayer): Prototype decoder layer to clone.
+            num_layers (int): Number of decoder layers.
+            norm (nn.Module | None, default: None): Optional final normalization module.
+        """
         super().__init__()
         self.layers = _clone_module(decoder_layer, num_layers)
         self.num_layers = num_layers
@@ -307,6 +363,7 @@ class TransformerDecoder(nn.Module):
         tgt_is_causal: bool = False,
         memory_is_causal: bool = False,
     ) -> Tensor:
+        """Pass target tokens and encoder memory through all decoder layers."""
         output = tgt
         for layer in self.layers:
             output = layer(
@@ -327,6 +384,8 @@ class TransformerDecoder(nn.Module):
 
 
 class Transformer(nn.Module):
+    """A batch-first encoder-decoder Transformer."""
+
     def __init__(
         self,
         d_model: int = 512,
@@ -340,6 +399,20 @@ class Transformer(nn.Module):
         norm_first: bool = False,
         bias: bool = True,
     ):
+        """Initialize a full encoder-decoder Transformer.
+
+        Args:
+            d_model (int, default: 512): Token embedding dimension.
+            num_heads (int, default: 8): Number of attention heads.
+            num_encoder_layers (int, default: 6): Number of encoder layers.
+            num_decoder_layers (int, default: 6): Number of decoder layers.
+            dim_feedforward (int, default: 2048): Hidden dimension of feed-forward blocks.
+            dropout (float, default: 0.1): Dropout probability.
+            activation (str | Callable[[Tensor], Tensor], default: F.relu): Feed-forward activation.
+            layer_norm_eps (float, default: 1e-5): Epsilon for layer normalization.
+            norm_first (bool, default: False): If ``True``, use pre-normalization inside layers.
+            bias (bool, default: True): Whether linear and layer norm modules include bias.
+        """
         super().__init__()
         self.d_model = d_model
         self.num_heads = num_heads
@@ -392,6 +465,7 @@ class Transformer(nn.Module):
         tgt_is_causal: bool = False,
         memory_is_causal: bool = False,
     ) -> Tensor:
+        """Encode ``src`` and decode ``tgt`` against the encoder memory."""
         if src.size(-1) != self.d_model or tgt.size(-1) != self.d_model:
             raise AssertionError(
                 'the feature number of src and tgt must be equal to d_model'
