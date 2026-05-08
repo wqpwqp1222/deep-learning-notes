@@ -20,6 +20,17 @@ def attention(
     value: Tensor,
     need_weights: bool = True,
 ) -> AttentionOutput:
+    """Compute unscaled dot-product attention.
+
+    Args:
+        query (Tensor): Query tensor.
+        key (Tensor): Key tensor with the same final dimension as ``query``.
+        value (Tensor): Value tensor with the same sequence length as ``key``.
+        need_weights (bool, default: True): Whether to return attention weights.
+
+    Returns:
+        Tuple of output tensor and optional attention weights.
+    """
     scores = query @ key.transpose(-2, -1)
     attn_weights = scores.softmax(dim=-1)
     output = attn_weights @ value
@@ -46,6 +57,21 @@ def scaled_dot_product_attention(
     Boolean masks use the same convention as ``torch.nn.Transformer``:
     ``True`` always means the element is masked out and ``False`` means the
     element participates in attention. Float masks are additive attention biases.
+
+    Args:
+        query (Tensor): Query tensor of shape ``(batch, target_len, embed_dim)``.
+        key (Tensor): Key tensor of shape ``(batch, source_len, key_dim)``.
+        value (Tensor): Value tensor of shape ``(batch, source_len, value_dim)``.
+        attn_mask (Tensor | None, default: None): Optional attention mask.
+        is_causal (bool, default: False): Whether to apply a causal mask.
+        dropout (float, default: 0.0): Dropout probability for attention weights.
+        training (bool, default: True): Whether dropout is active.
+        need_weights (bool, default: True): Whether to return attention weights.
+        scale (float | None, default: None): Optional scaling factor for attention scores.
+            If ``None``, defaults to ``1 / sqrt(embed_dim)``.
+
+    Returns:
+        Tuple of output tensor and optional attention weights.
     """
     if query.size(-1) != key.size(-1):
         raise AssertionError(
@@ -66,8 +92,7 @@ def scaled_dot_product_attention(
     scores = scores * scale_factor
 
     if is_causal:
-        causal_mask = generate_casual_mask(max(target_len, source_len))
-        causal_mask = causal_mask[:target_len, :source_len].to(query.device)
+        causal_mask = generate_casual_mask(target_len, source_len, device=query.device)
         scores = scores.masked_fill(causal_mask, -math.inf)
 
     if attn_mask is not None:
@@ -105,6 +130,34 @@ def multi_head_attention(
     training: bool = True,
     need_weights: bool = False,
 ) -> AttentionOutput:
+    """Compute batch-first multi-head attention from explicit projection weights.
+
+    Projection weights are right-multiplied, so their shapes are
+    ``(input_dim, embed_dim)``. Boolean masks use ``True`` to mask out
+    positions.
+
+    Args:
+        query (Tensor): Query tensor of shape ``(batch, target_len, embed_dim)``.
+        key (Tensor): Key tensor of shape ``(batch, source_len, key_dim)``.
+        value (Tensor): Value tensor of shape ``(batch, source_len, value_dim)``.
+        num_heads (int): Number of attention heads.
+        q_proj_weight (Tensor): Query projection weight.
+        k_proj_weight (Tensor): Key projection weight.
+        v_proj_weight (Tensor): Value projection weight.
+        out_proj_weight (Tensor): Output projection weight.
+        q_proj_bias (Tensor | None, default: None): Optional query projection bias.
+        k_proj_bias (Tensor | None, default: None): Optional key projection bias.
+        v_proj_bias (Tensor | None, default: None): Optional value projection bias.
+        out_proj_bias (Tensor | None, default: None): Optional output projection bias.
+        attn_mask (Tensor | None, default: None): Optional attention mask.
+        is_causal (bool, default: False): Whether to apply a causal mask.
+        dropout (float, default: 0.0): Dropout probability for attention weights.
+        training (bool, default: True): Whether dropout is active.
+        need_weights (bool, default: False): Whether to return per-head attention weights.
+
+    Returns:
+        Tuple of output tensor and optional per-head attention weights.
+    """
     batch_size, target_len, embed_dim = query.size()
     source_len = key.size(1)
 
@@ -155,10 +208,25 @@ def multi_head_attention(
 
 
 def generate_casual_mask(
-    sz: int,
+    tgt_len: int,
+    src_len: int | None = None,
     dtype: torch.dtype = torch.bool,
     device: torch.device | None = None,
 ) -> Tensor:
-    mask = torch.full((sz, sz), -torch.inf, dtype=dtype, device=device)
+    """Generate an upper-triangular causal attention mask.
+
+    Args:
+        sz (int): Height and width of the square mask.
+        dtype (torch.dtype, default: torch.bool): Output dtype.
+            Use ``torch.bool`` for boolean masks or a floating dtype for additive masks.
+        device (torch.device | None, default: None): Optional output device.
+
+    Returns:
+        A square mask where positions above the diagonal are masked.
+    """
+    if src_len is None:
+        src_len = tgt_len
+
+    mask = torch.full((tgt_len, src_len), -torch.inf, dtype=dtype, device=device)
     mask = mask.triu(diagonal=1)
     return mask
