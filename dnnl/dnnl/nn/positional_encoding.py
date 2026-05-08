@@ -12,7 +12,15 @@ __all__ = [
 
 
 class SinusoidalPositionalEncoding(nn.Module):
+    """Add fixed sinusoidal position encodings to batch-first sequences."""
+
     def __init__(self, embed_dim: int, max_len: int = 5000):
+        """Precompute sinusoidal encodings.
+
+        Args:
+            embed_dim (int): Embedding dimension of each token.
+            max_len (int, default: 5000): Maximum supported sequence length.
+        """
         super().__init__()
         self.embed_dim = embed_dim
         self.max_len = max_len
@@ -29,17 +37,27 @@ class SinusoidalPositionalEncoding(nn.Module):
         self.register_buffer('pe', pe.unsqueeze(0))
 
     def forward(self, x: Tensor) -> Tensor:
+        """Add positional encodings to ``x``."""
         seq_len = x.size(1)
         return x + self.pe[:, :seq_len]  # type: ignore
 
 
 class SinusoidalTimestepEmbedding(nn.Module):
+    """Create sinusoidal embeddings for diffusion timesteps."""
+
     def __init__(self, embedding_dim: int, max_period: int = 10000):
+        """Initialize timestep embedding parameters.
+
+        Args:
+            embedding_dim (int): Size of each timestep embedding.
+            max_period (int, default: 10000): Controls the minimum sinusoidal frequency.
+        """
         super().__init__()
         self.embedding_dim = embedding_dim
         self.max_period = max_period
 
     def forward(self, timesteps: Tensor) -> Tensor:
+        """Embed a 1D tensor of timesteps."""
         half_dim = self.embedding_dim // 2
         if half_dim == 0:
             return torch.zeros(
