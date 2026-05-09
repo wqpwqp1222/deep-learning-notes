@@ -19,31 +19,31 @@ d_model = 8
 num_heads = 2
 
 
+@torch.inference_mode()
 def _copy_mha_to_torch(actual: MultiheadAttention, expected: nn.MultiheadAttention):
-    with torch.inference_mode():
-        expected.in_proj_weight.copy_(
+    expected.in_proj_weight.copy_(
+        torch.concat(
+            [
+                actual.q_proj.weight,
+                actual.k_proj.weight,
+                actual.v_proj.weight,
+            ],
+            dim=0,
+        )
+    )
+    if expected.in_proj_bias is not None:
+        expected.in_proj_bias.copy_(
             torch.concat(
                 [
-                    actual.q_proj.weight,
-                    actual.k_proj.weight,
-                    actual.v_proj.weight,
-                ],
-                dim=0,
+                    actual.q_proj.bias,
+                    actual.k_proj.bias,
+                    actual.v_proj.bias,
+                ]
             )
         )
-        if expected.in_proj_bias is not None:
-            expected.in_proj_bias.copy_(
-                torch.concat(
-                    [
-                        actual.q_proj.bias,
-                        actual.k_proj.bias,
-                        actual.v_proj.bias,
-                    ]
-                )
-            )
-        expected.out_proj.weight.copy_(actual.out_proj.weight)
-        if expected.out_proj.bias is not None:
-            expected.out_proj.bias.copy_(actual.out_proj.bias)
+    expected.out_proj.weight.copy_(actual.out_proj.weight)
+    if expected.out_proj.bias is not None:
+        expected.out_proj.bias.copy_(actual.out_proj.bias)
 
 
 def _copy_encoder_layer_to_torch(
