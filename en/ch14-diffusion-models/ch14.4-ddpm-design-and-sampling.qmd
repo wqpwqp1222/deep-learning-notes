@@ -6,6 +6,7 @@ open-graph:
   title: ch14.4-ddpm-design-and-sampling
   description: "DDPM Network Architecture and Sampling Process"
 title: "14.4 DDPM Network Structure and Sampling Process"
+order: 4
 ---
 
 In the previous sections, we have already built up the most core ideas of DDPM:
@@ -22,7 +23,8 @@ In this section, we explain the overall running process of DDPM from the perspec
 import math
 import random
 
-import dnnl.ch14 as ch14
+import dnnl.nn as dnn
+import dnnl.nn.functional as dF
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -48,7 +50,9 @@ print('Using device:', device)
 
 Let's first recall the training task. We start from a real image $x_0$, randomly sample a timestep $t$, and then construct the noisy image $x_t$ according to the forward process. Next, we input $(x_t, t)$ into the neural network and let it predict the noise in the current step:
 
-$$ \epsilon_\theta(x_t, t) $$
+$$
+\epsilon_\theta(x_t, t)
+$$
 
 So, we need to input a noisy image $x_t$ and the current timestep $t$, and let the network output the noise estimate $\epsilon_\theta(x_t, t)$ contained in this image. If this noise estimate is accurate enough, we can follow the reverse formula and push the image one step in a cleaner direction.
 
@@ -58,7 +62,9 @@ The answer is that the network will be very confused. Because the noise intensit
 
 So in DDPM, the model is generally written as:
 
-$$ \epsilon_\theta(x_t, t) $$
+$$
+\epsilon_\theta(x_t, t)
+$$
 
 That is to say, the timestep $t$ is part of the model input. This is a kind of conditional information. It tells the network how strong the noise is now, and lets the network know how large a correction it should make at the current moment, so that the same network can handle denoising tasks under different noise levels.
 
@@ -74,7 +80,9 @@ So many diffusion models use a method very similar to positional encoding in Tra
 
 One common method is to use sinusoidal and cosine-form encoding:
 
-$$ \text{emb}(t) = [\sin(\omega_1 t), \cos(\omega_1 t), \sin(\omega_2 t), \cos(\omega_2 t), \dots] $$
+$$
+\text{emb}(t) = [\sin(\omega_1 t), \cos(\omega_1 t), \sin(\omega_2 t), \cos(\omega_2 t), \dots]
+$$
 
 Then it passes through several MLP layers and becomes a feature vector suitable for the current network width.
 
@@ -85,33 +93,38 @@ About why positional encoding and timestep embedding both like to use sinusoidal
 :::
 
 ```{python}
-class SinusoidalPositionEmbeddings(nn.Module):
+class SinusoidalTimestepEmbedding(nn.Module):
     def __init__(self, embedding_dim: int, max_period: int = 10000):
-        """Embed time steps into a high-dimensional space using sinusoidal functions.
-
-        Args:
-            embedding_dim (int): The dimension of the output embedding vector.
-            max_period (int): The maximum period for the sinusoidal functions,
-                which controls the frequency of the embeddings.
-        """
         super().__init__()
         self.embedding_dim = embedding_dim
         self.max_period = max_period
 
-    def forward(self, timesteps: Tensor):
+    def forward(self, timesteps: Tensor) -> Tensor:
         half_dim = self.embedding_dim // 2
-        scale = -math.log(self.max_period) / (half_dim - 1)
+        if half_dim == 0:
+            return torch.zeros(
+                timesteps.size(0),
+                self.embedding_dim,
+                device=timesteps.device,
+                dtype=torch.float32,
+            )
+
+        scale = -math.log(self.max_period) / max(half_dim - 1, 1)
         emb = torch.arange(half_dim, device=timesteps.device) * scale
         emb = timesteps.unsqueeze(1) * emb.exp().unsqueeze(0)
         emb = torch.concat([emb.sin(), emb.cos()], dim=-1)
+
+        if self.embedding_dim % 2 == 1:
+            emb = F.pad(emb, (0, 1))
+
         return emb
 ```
 
 ```{python}
-pos_emb = SinusoidalPositionEmbeddings(embedding_dim=32)
+timestep_emb = SinusoidalTimestepEmbedding(embedding_dim=32)
 
 timesteps = torch.tensor([0, 10, 50, 100, 200, 500, 1000])
-emb = pos_emb(timesteps)
+emb = timestep_emb(timesteps)
 
 fig = plt.figure(1, figsize=(8, 4))
 ax = fig.add_subplot(1, 1, 1)
@@ -121,14 +134,14 @@ yticks = np.arange(len(timesteps))
 ax.set_xticks(xticks + 0.5, xticks + 1)
 ax.set_yticks(yticks + 0.5, timesteps.tolist())
 ax.set_xlabel('Embedding Dimension')
-ax.set_title('Illustration of sinusoidal time embeddings')
+ax.set_title('Illustration of sinusoidal time embedding')
 fig.colorbar(im)
-fig.savefig('figures/ch14.4-time-embeddings.svg')
+fig.savefig('figures/ch14.4-time-embedding.svg')
 plt.close(fig)
 ```
 
 <figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.4-time-embeddings.svg">
+  <img src="figures/ch14.4-time-embedding.svg">
 </figure>
 
 Each row in this figure represents the encoding result of one timestep, and each column represents the value change of one encoding dimension across different timesteps. Some columns change color quickly, which means these dimensions correspond to higher frequencies and are more sensitive to small changes in the timestep; some columns change more slowly, which means these dimensions correspond to lower frequencies and can provide smoother, coarser-grained time information.
@@ -175,7 +188,7 @@ A common method is:
 Of course, in more modern diffusion models, besides time embedding, category conditions and text conditions are also often added, or external information is integrated into the network through cross-attention. But in the most basic DDPM scenario, time embedding + U-Net is already a very classic combination.
 
 ```{python}
-unet = ch14.UNet2DModel().to(device)
+unet = dnn.UNet2DModel().to(device)
 x = torch.randn(1, 3, 64, 64, device=device)
 timesteps = torch.tensor([10], dtype=torch.float32, device=device)
 
@@ -201,7 +214,7 @@ So generation is not completed in one step, but is a step-by-step denoising proc
 This is the pseudocode for the generation stage, and it is also very simple:
 
 <figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.4-ddpm-sampling.png" alt="Algorithm 2: DDPM generation process pseudocode" style="width: 60%;">
+  <img src="figures/ch14.4-ddpm-sampling.png" style="width: 60%;">
   <figcaption>Algorithm 2: DDPM generation process pseudocode [@ho2020DDPM, alg. 2]</figcaption>
 </figure>
 
@@ -209,11 +222,15 @@ If you look carefully at this pseudocode, you will find that we seem to also add
 
 We know that the reverse process is generally written as a Gaussian distribution:
 
-$$ p_\theta(x_{t-1}\mid x_t) = \mathcal{N}(\mu_\theta(x_t,t), \Sigma_\theta(x_t,t)) $$
+$$
+p_\theta(x_{t-1}\mid x_t) = \mathcal{N}(\mu_\theta(x_t,t), \Sigma_\theta(x_t,t))
+$$
 
 This is a probability distribution. This means that the process from $x_t$ to $x_{t-1}$ not only has a mean, but also has a certain amount of randomness. So, in order to reflect this randomness, during sampling we often move along the mean direction given by the model while adding a little random perturbation. In other words, the sampling process at each step is:
 
-$$ x_{t-1} = \mu_\theta(x_t, t) + \sigma_\theta(x_t, t) \cdot z $$
+$$
+x_{t-1} = \mu_\theta(x_t, t) + \sigma_\theta(x_t, t) \cdot z
+$$
 
 If there is no randomness at all, the sampling path may become too rigid. Properly keeping some random perturbation is more consistent with the definition of the original probabilistic model. That is to say, the sampling process of DDPM is essentially also a stochastic process, not a completely deterministic process.
 
@@ -253,7 +270,7 @@ def denoise_v2(x0: Tensor, xt: Tensor, timestep: int, betas: Tensor) -> Tensor:
 
 T = 1000
 betas = torch.linspace(0.0001, 0.02, steps=T)
-xt = ch14.add_noise_v2(x0, betas, T - 1)
+xt = dF.add_noise(x0, betas, T - 1)
 trajectory = [xt.clone()]
 
 for t in range(T - 1, -1, -1):
@@ -300,8 +317,8 @@ The `add_noise()` function here is the `add_noise_v2()` function we defined in t
 data = torch.randn(32, 3, 32, 32)
 train_ds = utils.TensorDataset(data)
 train_dl = utils.DataLoader(train_ds, batch_size=16, shuffle=True)
-model = ch14.UNet2DModel().to(device)
-scheduler = ch14.DDPMScheduler()
+model = dnn.UNet2DModel().to(device)
+scheduler = dnn.DDPMScheduler()
 
 model.train()
 # 1. Iterate over the training data.
@@ -328,6 +345,8 @@ for x0, *_ in train_dl:
     # 6. Compute the loss between the predicted noise and the actual noise.
     loss = F.mse_loss(pred_noise, noise)
     loss.backward()
+
+print('Training step completed, loss:', loss.item())
 ```
 
 ### 14.4.5.2 Sampling process

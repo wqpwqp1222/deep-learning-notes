@@ -6,6 +6,7 @@ open-graph:
   title: ch14.1-ddpm-basics
   description: "DDPM: From Denoising to Generation"
 title: "14.1 DDPM: From Denoising to Generation"
+order: 1
 ---
 
 Previously, we have already seen several types of generative models. GAN is like an adversarial game, letting the generator produce realistic samples in one step; AutoEncoder learns compression and reconstruction; VAE starts to explicitly model probability distributions and can sample from latent variables; and when it comes to Diffusion Model, its idea is quite different again:
@@ -40,7 +41,7 @@ Let's first think about a very simple process. Suppose we have a real image $x_0
 
 This tells us one thing: between the real data distribution and the Gaussian noise distribution, maybe they can be connected through many very small changes. Then, since we can slowly push a real image toward the noise side, a natural idea is:
 
-> **Can we do it in reverse?**  
+> **Can we do it in reverse?**
 
 That is, can we start from pure noise, make only a small correction at each step, and finally slowly walk back to the real image distribution?
 
@@ -105,7 +106,9 @@ DDPM actually does two things.
 
 We manually specify a simple and fixed process, adding noise to the real image step by step until it finally becomes standard Gaussian noise:
 
-$$ x_0 \rightarrow x_1 \rightarrow x_2 \rightarrow \cdots \rightarrow x_T $$
+$$
+x_0 \rightarrow x_1 \rightarrow x_2 \rightarrow \cdots \rightarrow x_T
+$$
 
 Here, $x_0$ is the real image; $x_t$ is the result after adding noise at step $t$; $x_T$ is basically pure noise.
 
@@ -115,14 +118,16 @@ This process does not need learning. It is defined by ourselves. Its role is to 
 
 Since the forward process turns the image into noise, we train a neural network to learn the process in the reverse direction:
 
-$$ x_T \rightarrow x_{T-1} \rightarrow x_{T-2} \rightarrow \cdots \rightarrow x_0 $$
+$$
+x_T \rightarrow x_{T-1} \rightarrow x_{T-2} \rightarrow \cdots \rightarrow x_0
+$$
 
 That is, input the current noisy image, predict how much noise should be removed in this step, and get an image that is slightly cleaner; repeat this many times, and finally get a clear image.
 
 Then, when we want to generate an image, it is very simple: start from random Gaussian noise, repeatedly call the denoising network, and finally generate a sample. So, DDPM's generation is not direct generation like GAN, but starts from noise and denoises gradually.
 
 <figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.1-ddpm-chain.png" alt="Figure 1: Schematic diagram of the DDPM generation process" style="width: 80%;">
+  <img src="figures/ch14.1-ddpm-chain.png" style="width: 80%;">
   <figcaption>Figure 1: Schematic diagram of the DDPM generation process [@ho2020DDPM, fig. 2]</figcaption>
 </figure>
 
@@ -132,11 +137,16 @@ We know that no matter what kind of generative model it is, what it ultimately w
 
 That is, it does not directly force itself to learn:
 
-$$ \text{noise} \rightarrow \text{image} $$
+$$
+\text{noise} \rightarrow \text{image}
+$$
 
 but learns:
 
-$$ \text{noise} \rightarrow \text{slightly less noisy image} \rightarrow \cdots \rightarrow \text{clean image} $$
+$$
+\text{noise} \rightarrow \text{slightly less noisy image}
+\rightarrow\cdots \rightarrow \text{clean image}
+$$
 
 Each step only makes a small modification, so the learning difficulty is lower and it is more stable.
 
@@ -146,7 +156,10 @@ So, DDPM successfully turns an image generation problem into a denoising problem
 
 In the most common DDPM notation, we write the noisy sample at step $t$ as:
 
-$$ x_t = \sqrt{\bar{\alpha}_t}\,x_0 + \sqrt{1 - \bar{\alpha}_t}\,\epsilon, \qquad \epsilon \sim \mathcal{N}(0, I) $$
+$$
+x_t = \sqrt{\bar{\alpha}_t}\,x_0 + \sqrt{1 - \bar{\alpha}_t}\,\epsilon,
+\qquad \epsilon \sim \mathcal{N}(0, I)
+$$
 
 There is no need to fully understand this formula right now. We only need to first grasp what it expresses:
 
@@ -159,11 +172,15 @@ Here, $\bar{\alpha}_t$ is a coefficient that changes over time, controlling the 
 
 During training, the model's task is usually:
 
-$$ \epsilon_\theta(x_t, t) \approx \epsilon $$
+$$
+\epsilon_\theta(x_t, t) \approx \epsilon
+$$
 
 That is, give it a noisy image at some time, and let it guess the noise mixed into it. This is why in many DDPM papers and code implementations, the final loss function looks like a very simple mean squared error:
 
-$$ \mathcal{L} = \mathbb{E}\left[\left\|\epsilon - \epsilon_\theta(x_t, t)\right\|^2\right] $$
+$$
+\mathcal{L} = \mathbb{E}\left[\left\|\epsilon - \epsilon_\theta(x_t, t)\right\|^2\right]
+$$
 
 On the surface, it is only guessing noise, but in essence, it is learning how to slowly pull the sample from the noise direction back to the data distribution.
 

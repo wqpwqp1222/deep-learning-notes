@@ -4,21 +4,24 @@ date: 2026-03-31
 date-modified: 2026-04-16
 open-graph:
   title: ch14.3-ddpm-reverse
-  description: "DDPM's Reverse Denoising Process and Training Objective"
+  description: "14.3 DDPM's Reverse Denoising Process and Training Objective"
 title: "14.3 DDPM's Reverse Denoising Process and Training Objective"
+order: 3
 ---
 
 In the previous section, we clarified the forward process of DDPM.
 
 We know that it first defines a fixed noise-adding chain:
 
-$$ x_0 \rightarrow x_1 \rightarrow x_2 \rightarrow \cdots \rightarrow x_T $$
+$$
+x_0 \rightarrow x_1 \rightarrow x_2 \rightarrow \cdots \rightarrow x_T
+$$
 
 And as the number of steps increases, the structure in the image will gradually be drowned out by noise, and finally $x_T$ will approach a standard Gaussian distribution.
 
 Then, since we can add noise to an image step by step until it becomes Gaussian noise, can we walk back step by step from Gaussian noise?
 
-This is the core question of the **reverse diffusion process**.
+This is the core question of the **Reverse Diffusion Process**.
 
 In this section, we will clarify three things:
 
@@ -30,7 +33,7 @@ In this section, we will clarify three things:
 ```{python}
 import random
 
-import dnnl.ch14 as ch14
+import dnnl.nn.functional as dF
 import matplotlib.pyplot as plt
 import torch
 import torchvision.datasets as datasets
@@ -45,13 +48,17 @@ print('PyTorch version:', torch.__version__)
 
 The forward process is designed by ourselves:
 
-$$ q(x_t \mid x_{t-1}) = \mathcal{N}(x_t; \sqrt{1-\beta_t}x_{t-1}, \beta_t I) $$
+$$
+q(x_t \mid x_{t-1}) = \mathcal{N}(x_t; \sqrt{1-\beta_t}x_{t-1}, \beta_t I)
+$$
 
 That is, we know how to construct $x_t$ from $x_{t-1}$.
 
 But during generation, what we care about is the opposite direction:
 
-$$ x_T \rightarrow x_{T-1} \rightarrow x_{T-2} \rightarrow \cdots \rightarrow x_0 $$
+$$
+x_T \rightarrow x_{T-1} \rightarrow x_{T-2} \rightarrow \cdots \rightarrow x_0
+$$
 
 When many people first see this, they naturally have a question: since forward noise addition is so simple, can't we just reverse it directly? Unfortunately, things are not that simple. Because adding noise itself is a process that loses information.
 
@@ -65,11 +72,16 @@ We denote this conditional distribution as $q(x_{t-1} \mid x_t)$. That is, given
 
 Let's look at Bayes' formula:
 
-$$ q(x_{t-1} \mid x_t) = \frac{q(x_t \mid x_{t-1}) q(x_{t-1})}{q(x_t)} $$
+$$
+q(x_{t-1} \mid x_t) = \frac{q(x_t \mid x_{t-1}) q(x_{t-1})}{q(x_t)}
+$$
 
 The forward distribution $q(x_t \mid x_{t-1})$ is designed by ourselves, so this part is easy. But what about $q(x_{t-1})$ and $q(x_t)$? They correspond to the marginal distributions of samples at step $t-1$ and step $t$, respectively. That is:
 
-$$ q(x_{t-1}) = \int q(x_{t-1} \mid x_0) q(x_0) dx_0, \qquad q(x_t) = \int q(x_t \mid x_0) q(x_0) dx_0 $$
+$$
+q(x_{t-1}) = \int q(x_{t-1} \mid x_0) q(x_0) dx_0, \qquad q(x_t) =
+\int q(x_t \mid x_0) q(x_0) dx_0
+$$
 
 You see, both of them involve the real data distribution $q(x_0)$, and the real data distribution is something we cannot directly model. If we already knew it, why would we need DDPM? So this reverse conditional distribution $q(x_{t-1} \mid x_t)$ is a very complex distribution, and we cannot directly compute it at all.
 
@@ -77,27 +89,44 @@ Then what should we do? Don't forget that we have real images! Can we use them?
 
 Of course. Although $q(x_{t-1} \mid x_t)$ is complex, if we write the distribution in this form:
 
-$$ q(x_{t-1} \mid x_t, x_0) = \frac{q(x_t \mid x_{t-1}, x_0) q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} $$
+$$
+q(x_{t-1} \mid x_t, x_0) =
+\frac{q(x_t \mid x_{t-1}, x_0) q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)}
+$$
 
 Since the forward process is a Markov chain, according to the Markov property, we have:
 
-$$ q(x_t \mid x_{t-1}, x_0) = q(x_t \mid x_{t-1}) $$
+$$
+q(x_t \mid x_{t-1}, x_0) = q(x_t \mid x_{t-1})
+$$
 
 The equation above simplifies to:
 
-$$ q(x_{t-1} \mid x_t, x_0) = \frac{q(x_t \mid x_{t-1}) q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} $$
+$$
+q(x_{t-1} \mid x_t, x_0) =
+\frac{q(x_t \mid x_{t-1}) q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)}
+$$
 
 You will find that the three terms on the right are all known! The first two terms are the forward process designed by ourselves, and the last term $q(x_t \mid x_0)$ can also be obtained through the recurrence relation of the forward process. In other words, although $q(x_{t-1} \mid x_t)$ is complex, $q(x_{t-1} \mid x_t, x_0)$ is a simple distribution. We can directly derive its analytic expression, and then step by step obtain the conditional distribution of the reverse process.
 
 In fact, it can be proved that under the definition of the forward process, the reverse conditional distribution $q(x_{t-1} \mid x_t, x_0)$ is a Gaussian distribution:
 
-$$ q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I) $$
+$$
+q(x_{t-1} \mid x_t, x_0) =
+\mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I)
+$$
 
 where:
 
-$$ \tilde{\mu}_t(x_t,x_0) = \frac{\sqrt{\bar{\alpha}_{t-1}}\,\beta_t}{1-\bar{\alpha}_t}\,x_0 + \frac{\sqrt{\alpha_t}\,(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}\,x_t $$
+$$
+\tilde{\mu}_t(x_t,x_0) =
+\frac{\sqrt{\bar{\alpha}_{t-1}}\,\beta_t}{1-\bar{\alpha}_t}\,x_0 +
+\frac{\sqrt{\alpha_t}\,(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}\,x_t
+$$
 
-$$ \tilde{\beta}_t = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t}\,\beta_t $$
+$$
+\tilde{\beta}_t = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t}\,\beta_t
+$$
 
 For the full proof, see [@luo2022UnderstandingDiffusionModels, eq. 71-84]. Note that the result here is a little different from the result in the paper. The paper ignores some constant terms, so it writes “proportional to”; here we have written the constant terms as well.
 
@@ -135,7 +164,7 @@ def denoise_v1(x0: Tensor, xt: Tensor, timestep: int, betas: Tensor) -> Tensor:
 
 T = 1000
 betas = torch.linspace(0.0001, 0.02, steps=T)
-xt = ch14.add_noise_v2(x0, betas, T - 1)
+xt = dF.add_noise(x0, betas, T - 1)
 trajectory = [xt.clone()]
 
 for t in range(T - 1, -1, -1):
@@ -169,23 +198,33 @@ This is where neural networks come in. We define a parameterized conditional dis
 
 In essence, what the reverse process needs to learn is the reverse conditional distribution at each step:
 
-$$ p_\theta(x_{t-1} \mid x_t) $$
+$$
+p_\theta(x_{t-1} \mid x_t)
+$$
 
 That is, given the noisy image $x_t$ at the current step $t$, the model needs to give the probability distribution of the cleaner sample $x_{t-1}$ from the previous step.
 
 Then the whole generation chain can be written as:
 
-$$ p(x_{0:T}) = p(x_T) \prod_{t=1}^{T} p_\theta(x_{t-1} \mid x_t) $$
+$$
+p(x_{0:T}) = p(x_T) \prod_{t=1}^{T} p_\theta(x_{t-1} \mid x_t)
+$$
 
 The starting point $p(x_T)$ is very simple. Usually, we directly take the standard Gaussian distribution $\mathcal{N}(0, I)$. The difficulty is all concentrated on the reverse conditional distribution $p_\theta(x_{t-1} \mid x_t)$ at each step. So, what does this distribution look like? And how should we learn it?
 
 In the previous section, we knew that the reverse conditional distribution $q(x_{t-1} \mid x_t, x_0)$ is essentially a Gaussian distribution:
 
-$$ q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I) $$
+$$
+q(x_{t-1} \mid x_t, x_0) =
+\mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I)
+$$
 
 So we can boldly assume that the distribution $p_\theta(x_{t-1} \mid x_t)$ that we want to learn is also a Gaussian distribution:
 
-$$ p_\theta(x_{t-1} \mid x_t) = \mathcal{N}(x_{t-1}; \mu_\theta(x_t, t), \Sigma_\theta(x_t, t)) $$
+$$
+p_\theta(x_{t-1} \mid x_t) =
+\mathcal{N}(x_{t-1}; \mu_\theta(x_t, t), \Sigma_\theta(x_t, t))
+$$
 
 What the model actually needs to learn is the mean $\mu_\theta(x_t, t)$ and covariance $\Sigma_\theta(x_t, t)$ at each step.
 
@@ -193,7 +232,9 @@ If you know a little about DDPM, you may ask: isn't it said that we only need to
 
 Actually, yes. If we observe the expression of the covariance, we will find that it is actually just a constant term related to the timestep $t$:
 
-$$ \tilde{\beta}_t = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t}\,\beta_t $$
+$$
+\tilde{\beta}_t = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t}\,\beta_t
+$$
 
 That is, if we directly fix the covariance as $\tilde{\beta}_t I$, it is already enough. So in actual training, we usually only let the model predict the mean $\mu_\theta(x_t, t)$, and fix the covariance $\Sigma_\theta(x_t, t)$ as $\tilde{\beta}_t I$.
 
@@ -207,27 +248,40 @@ In theory, of course we can. But in practice, DDPM usually adopts a more clever 
 
 That is, we let the model learn:
 
-$$ \epsilon_\theta(x_t, t) $$
+$$
+\epsilon_\theta(x_t, t)
+$$
 
 The reason is also simple. We know that the expression of the true mean $\tilde{\mu}_t(x_t, x_0)$ actually contains the original image $x_0$:
 
-$$ \tilde{\mu}_t(x_t, x_0) = \frac{\sqrt{\bar{\alpha}_{t-1}}\,\beta_t}{1-\bar{\alpha}_t}\,x_0 + \frac{\sqrt{\alpha_t}\,(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}\,x_t $$
+$$
+\tilde{\mu}_t(x_t, x_0) =
+\frac{\sqrt{\bar{\alpha}_{t-1}}\,\beta_t}{1-\bar{\alpha}_t}\,x_0 +
+\frac{\sqrt{\alpha_t}\,(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}\,x_t
+$$
 
 So, if we want to predict this mean accurately, since the mean itself depends on $x_0$, the model is actually indirectly recovering information about the original image. Instead of directly predicting such a complex mean whose form changes with the timestep, we would rather rewrite the learning target into a simpler and more stable form.
 
 We know that the forward process has a closed-form sampling formula:
 
-$$ x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon $$
+$$
+x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon
+$$
 
 That is, the current noisy image $x_t$ is formed by mixing the original image $x_0$ and noise $\epsilon$. We can transform this equation a little:
 
-$$ \hat{x}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}} (x_t - \sqrt{1-\bar{\alpha}_t}\epsilon) $$
+$$
+\hat{x}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}} (x_t - \sqrt{1-\bar{\alpha}_t}\epsilon)
+$$
 
 The noise $\epsilon$ here is sampled by ourselves during training, so it is known. In this way, we can use the noise as the model's training target, let the model predict it, indirectly obtain an estimate of the original image $x_0$, and finally obtain the mean $\mu_\theta(x_t, t)$. At the same time, we also avoid the trouble of directly predicting a complex mean that changes with the timestep. Besides, predicting noise and predicting the mean are essentially equivalent.
 
 So the final training objective of DDPM is usually written as:
 
-$$ L(\theta) = \mathbb{E}_{t, x_0, \epsilon} \left[ \| \epsilon - \epsilon_\theta(x_t, t) \|^2 \right] $$
+$$
+L(\theta) = \mathbb{E}_{t, x_0, \epsilon}
+\left[ \| \epsilon - \epsilon_\theta(x_t, t) \|^2 \right]
+$$
 
 :::{.callout-note}
 The derivation here is not rigorous. We only explain intuitively why noise prediction is reasonable, and we have not strictly explained its theoretical basis. From the perspective of rigorous probabilistic modeling, the training objective of DDPM actually comes from the variational lower bound (ELBO), and the common noise prediction loss is an equivalent or approximately equivalent rewriting based on that objective. We will not expand the full derivation here for now, and will explain it in detail later. Interested readers can first look at [@luo2022UnderstandingDiffusionModels, eq. 46-58, 115-130].
@@ -237,14 +291,17 @@ The derivation here is not rigorous. We only explain intuitively why noise predi
 
 In the previous section, we wrote the training objective of DDPM as a mean squared error for noise prediction:
 
-$$ L(\theta) = \mathbb{E}_{t, x_0, \epsilon} \left[ \| \epsilon - \epsilon_\theta(x_t, t) \|^2 \right] $$
+$$
+L(\theta) = \mathbb{E}_{t, x_0, \epsilon}
+\left[ \| \epsilon - \epsilon_\theta(x_t, t) \|^2 \right]
+$$
 
 Here, $x_0$ is sampled from the real data $p_{\text{data}}$, $t$ is a randomly selected timestep from 1 to $T$, and $\epsilon$ is Gaussian noise sampled by ourselves. This loss function looks a bit too simple: the whole diffusion model often ends up just doing a mean squared error for noise regression.
 
 However, although it looks like just MSE on the surface, behind it is actually probabilistic modeling of the reverse diffusion process. In other words, this simple MSE loss function actually starts from a rigorous probabilistic model, goes through a series of equivalent or approximately equivalent transformations, and finally becomes a training objective that is very easy to optimize. Unlike many deep learning networks, it has theoretical support behind it. We use a piece of pseudocode to describe this process:
 
 <figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.3-ddpm-training.png" alt="Algorithm 1: DDPM training process pseudocode" style="width: 60%;">
+  <img src="figures/ch14.3-ddpm-training.png" style="width: 60%;">
   <figcaption>Algorithm 1: DDPM training process pseudocode [@ho2020DDPM, alg. 1]</figcaption>
 </figure>
 
@@ -258,7 +315,9 @@ At this point, we can connect Sections 14.1, 14.2, and 14.3 together.
 
 We manually design a fixed process that turns real data into noise step by step:
 
-$$ x_0 \rightarrow x_1 \rightarrow \cdots \rightarrow x_T $$
+$$
+x_0 \rightarrow x_1 \rightarrow \cdots \rightarrow x_T
+$$
 
 And finally $x_T$ approaches a standard Gaussian distribution.
 
@@ -266,19 +325,25 @@ And finally $x_T$ approaches a standard Gaussian distribution.
 
 Since the forward process can push data toward noise, generation starts from noise and walks back in reverse:
 
-$$ x_T \rightarrow x_{T-1} \rightarrow \cdots \rightarrow x_0 $$
+$$
+x_T \rightarrow x_{T-1} \rightarrow \cdots \rightarrow x_0
+$$
 
 **Step 3: Model the reverse process as conditional Gaussian distributions**
 
 Each step is not a direct inverse, but learns:
 
-$$ p_\theta(x_{t-1} \mid x_t) $$
+$$
+p_\theta(x_{t-1} \mid x_t)
+$$
 
 **Step 4: Turn the training objective into noise prediction**
 
 Using the closed-form formula of the forward process, we can directly construct the supervision signal and let the model learn:
 
-$$ \epsilon_\theta(x_t, t) $$
+$$
+\epsilon_\theta(x_t, t)
+$$
 
 This turns a complex generative modeling problem into a noise regression problem that can be optimized stably.
 
