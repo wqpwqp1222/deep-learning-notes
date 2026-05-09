@@ -223,7 +223,6 @@ class TransformerDecoderLayer(nn.Module):
             dropout=dropout,
             bias=bias,
         )
-        self.multihead_attn = self.mha_attn
 
         self.linear1 = nn.Linear(d_model, dim_feedforward, bias=bias)
         self.dropout = nn.Dropout(dropout)
@@ -468,10 +467,10 @@ class Transformer(nn.Module):
         """Encode ``src`` and decode ``tgt`` against the encoder memory."""
         if src.size(-1) != self.d_model or tgt.size(-1) != self.d_model:
             raise AssertionError(
-                'the feature number of src and tgt must be equal to d_model'
+                'The feature number of `src` and `tgt` must be equal to `d_model`.'
             )
         if src.size(0) != tgt.size(0):
-            raise AssertionError('the batch size of src and tgt must be equal')
+            raise AssertionError('The batch size of `src` and `tgt` must be equal.')
 
         memory = self.encoder(
             src,
