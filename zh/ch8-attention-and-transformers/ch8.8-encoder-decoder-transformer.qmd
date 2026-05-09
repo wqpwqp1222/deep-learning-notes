@@ -6,6 +6,7 @@ open-graph:
   title: ch8.8-encoder-decoder-transformer
   description: "8.8 Encoder-Decoder Transformer: Connecting Encoder and Decoder"
 title: "8.8 Encoder-Decoder Transformer：把 Encoder 和 Decoder 连接起来"
+order: 8
 ---
 
 前面几节里，我们已经分别看过 Transformer encoder 和 Transformer decoder。Encoder 的核心任务是把输入序列编码成一组上下文表示；decoder 的核心任务是在 causal mask 的限制下，根据已有目标前缀继续预测后面的 token。
@@ -14,7 +15,7 @@ title: "8.8 Encoder-Decoder Transformer：把 Encoder 和 Decoder 连接起来"
 
 这一节重点回答三个问题：
 
-1. Encoder 和 Decoder 在完整模型里如何连接；
+1. Encoder 和 decoder 在完整模型里如何连接；
 2. 训练时为什么可以使用真实前缀并行预测；
 3. 推理时为什么必须自回归生成。
 
@@ -25,6 +26,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+import dnnl.nn as dnn
+import dnnl.nn.functional as dF
 
 print('PyTorch version:', torch.__version__)
 ```
@@ -115,8 +118,8 @@ $$
 
 在模型结构中可以对应成两条信息流：
 
-- $X$ 先经过 Encoder 变成 $H_{\mathrm{enc}}$，再通过 Decoder 的 cross-attention 进入模型；
-- $y_{<t}$ 通过 Decoder 的 masked self-attention 进入模型。
+- $X$ 先经过 encoder 变成 $H_{\mathrm{enc}}$，再通过 decoder 的 cross-attention 进入模型；
+- $y_{<t}$ 通过 decoder 的 masked self-attention 进入模型。
 
 所以我们可以把完整信息流简单概括为：
 
@@ -161,7 +164,7 @@ $$
 p(y_3 \mid y_1, y_2, X)
 $$
 
-但训练时，我们已经知道完整目标序列，所以可以一次性构造右移后的 decoder input 和对应的 target label，然后让 Decoder 同时输出所有位置的预测。
+但训练时，我们已经知道完整目标序列，所以可以一次性构造右移后的 decoder input 和对应的 target label，然后让 decoder 同时输出所有位置的预测。
 
 但是，如果我们一次性输入完整目标前缀，模型会不会偷看未来呢？答案是不会。因为 decoder 的 self-attention 里有 **causal mask**。
 
@@ -273,17 +276,108 @@ Step 4 输入: <BOS>, y1, y2, y3
 > Padding mask：不要看 padding。\
 > Causal mask：不要看未来。
 
-## 8.8.7 PyTorch 中的 `nn.Transformer`
+## 8.8.7 Transformer 的 PyTorch 实现
 
-PyTorch 提供了完整的 encoder-decoder Transformer 模块：
+接下来，我们来完整实现一下 encoder-decoder Transformer。我们直接使用 8.6 和 8.7 中实现的 encoder block 和 decoder block，来构建一个完整的 Transformer 模型。
 
 ```{python}
-transformer = nn.Transformer(
+class Transformer(nn.Module):
+    def __init__(
+        self,
+        d_model: int = 512,
+        num_heads: int = 8,
+        num_encoder_layers: int = 6,
+        num_decoder_layers: int = 6,
+        dim_feedforward: int = 2048,
+        dropout: float = 0.1,
+        activation: str | Callable[[Tensor], Tensor] = F.relu,
+        layer_norm_eps: float = 1e-5,
+        norm_first: bool = False,
+        bias: bool = True,
+    ):
+        super().__init__()
+        self.d_model = d_model
+        self.num_heads = num_heads
+
+        encoder_layer = dnn.TransformerEncoderLayer(
+            d_model,
+            num_heads,
+            dim_feedforward,
+            bias=bias,
+            dropout=dropout,
+            activation=activation,
+            layer_norm_eps=layer_norm_eps,
+            norm_first=norm_first,
+        )
+        encoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
+        self.encoder = dnn.TransformerEncoder(
+            encoder_layer,
+            num_encoder_layers,
+            norm=encoder_norm,
+        )
+
+        decoder_layer = dnn.TransformerDecoderLayer(
+            d_model,
+            num_heads,
+            dim_feedforward,
+            bias=bias,
+            dropout=dropout,
+            activation=activation,
+            layer_norm_eps=layer_norm_eps,
+            norm_first=norm_first,
+        )
+        decoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
+        self.decoder = dnn.TransformerDecoder(
+            decoder_layer,
+            num_decoder_layers,
+            norm=decoder_norm,
+        )
+
+    def forward(
+        self,
+        src: Tensor,
+        tgt: Tensor,
+        src_mask: Tensor | None = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        src_key_padding_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        src_is_causal: bool = False,
+        tgt_is_causal: bool = False,
+        memory_is_causal: bool = False,
+    ) -> Tensor:
+        if src.size(-1) != self.d_model or tgt.size(-1) != self.d_model:
+            raise AssertionError(
+                'The feature number of `src` and `tgt` must be equal to `d_model`.'
+            )
+        if src.size(0) != tgt.size(0):
+            raise AssertionError('The batch size of `src` and `tgt` must be equal.')
+
+        memory = self.encoder(
+            src,
+            mask=src_mask,
+            src_key_padding_mask=src_key_padding_mask,
+            is_causal=src_is_causal,
+        )
+        output = self.decoder(
+            tgt,
+            memory,
+            tgt_mask=tgt_mask,
+            memory_mask=memory_mask,
+            tgt_key_padding_mask=tgt_key_padding_mask,
+            memory_key_padding_mask=memory_key_padding_mask,
+            tgt_is_causal=tgt_is_causal,
+            memory_is_causal=memory_is_causal,
+        )
+        return output
+
+
+transformer = Transformer(
     d_model=512,
-    nhead=8,
+    num_heads=8,
     num_encoder_layers=6,
     num_decoder_layers=6,
-    batch_first=True,
     norm_first=True,  # Pre-LN Transformer
 )
 ```
@@ -304,7 +398,7 @@ print('Output shape:', output.shape)
 - `tgt` 是 decoder 输入；
 - 输出是 decoder 的 hidden states。
 
-如果使用 `batch_first=True`，形状通常是：
+输入和输出的形状（如果默认 batch 是第一维）一般是：
 
 ```text
 src: (batch_size, src_seq_len, d_model)
@@ -312,7 +406,7 @@ tgt: (batch_size, tgt_seq_len, d_model)
 out: (batch_size, tgt_seq_len, d_model)
 ```
 
-需要注意的是，`nn.Transformer` 接收的不是 token id，而是已经 embedding 后的向量。
+需要注意的是，`Transformer` 接收的不是 token id，而是已经 embedding 后的向量。
 
 所以完整模型通常还要包括：
 
@@ -327,7 +421,7 @@ out: (batch_size, tgt_seq_len, d_model)
 ```{python}
 src = torch.randn(2, 32, 512)
 tgt = torch.randn(2, 16, 512)
-tgt_mask = transformer.generate_square_subsequent_mask(tgt.size(1))
+tgt_mask = dF.generate_causal_mask(tgt.size(1), device=tgt.device)
 src_key_padding_mask = torch.zeros(2, 32, dtype=torch.bool)
 tgt_key_padding_mask = torch.zeros(2, 16, dtype=torch.bool)
 memory_key_padding_mask = torch.zeros(2, 32, dtype=torch.bool)
@@ -345,12 +439,9 @@ print('Output shape:', output.shape)
 
 ## 8.8.8 Seq2Seq Transformer 的 PyTorch 实现
 
-下面写一个简化版 Seq2Seq Transformer。这里直接使用 `nn.Transformer`，重点放在完整调用流程，而不是重复实现 Encoder Block 和 Decoder Block。
+下面写一个简化版 seq2seq Transformer。这里直接使用前面写好的 `Transformer`，在它的基础上加上 token embedding、positional encoding 和输出投影层。
 
 ```{python}
-from dnnl.ch8 import SinusoidalPositionalEncoding
-
-
 class Seq2SeqTransformer(nn.Module):
     def __init__(
         self,
@@ -368,16 +459,15 @@ class Seq2SeqTransformer(nn.Module):
         self.d_model = d_model
         self.src_embedding = nn.Embedding(src_vocab_size, d_model)
         self.tgt_embedding = nn.Embedding(tgt_vocab_size, d_model)
-        self.pos_encoding = SinusoidalPositionalEncoding(d_model, max_len=max_len)
+        self.pos_encoding = dnn.SinusoidalPositionalEncoding(d_model, max_len)
 
-        self.transformer = nn.Transformer(
+        self.transformer = Transformer(
             d_model=d_model,
-            nhead=num_heads,
+            num_heads=num_heads,
             num_encoder_layers=num_encoder_layers,
             num_decoder_layers=num_decoder_layers,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
-            batch_first=True,
             norm_first=True,  # Pre-LN Transformer
         )
         self.output_proj = nn.Linear(d_model, tgt_vocab_size)
@@ -419,7 +509,7 @@ src_vocab_size = 100
 tgt_vocab_size = 100
 src = torch.randint(0, 100, size=(3, 32))
 tgt = torch.randint(0, 100, size=(3, 16))
-tgt_mask = transformer.generate_square_subsequent_mask(tgt.size(1))
+tgt_mask = dF.generate_causal_mask(tgt.size(1))
 
 seq2seq = Seq2SeqTransformer(
     src_vocab_size=src_vocab_size,
@@ -442,7 +532,7 @@ print('Output shape:', output.shape)
 
 ## 8.8.9 Seq2Seq Transformer 的训练流程
 
-要想训练这个模型，我们需要先构造 Decoder 输入和 labels。
+要想训练这个模型，我们需要先构造 decoder 输入和 labels。
 
 假设 `target_ids` 已经包含了 `<BOS>` 和 `<EOS>`：
 
@@ -469,18 +559,7 @@ tgt_labels = tgt_ids[:, 1:]
 然后生成 causal mask：
 
 ```{python}
-from torch.types import Device
-
-
-def generate_causal_mask(seq_len: int, device: Device = None) -> Tensor:
-    mask = torch.ones(seq_len, seq_len, device=device)
-    # Upper triangular part is 1, lower triangular part is 0
-    mask = mask.triu(diagonal=1)
-    mask = mask.masked_fill(mask == 1, -math.inf)
-    return mask
-
-
-tgt_mask = generate_causal_mask(
+tgt_mask = dF.generate_causal_mask(
     tgt_inputs.size(1),
     device=tgt_inputs.device,
 )
@@ -508,11 +587,11 @@ loss = F.cross_entropy(
 print('Loss:', loss.item())
 ```
 
-这里的含义是：对每个 Decoder 位置，模型都要根据当前位置之前的真实 token，以及源序列表示，预测当前位置的真实 token。
+这里的含义是：对每个 decoder 位置，模型都要根据当前位置之前的真实 token，以及源序列表示，预测当前位置的真实 token。
 
 ## 8.8.10 一个简单的自回归生成示例
 
-推理时，我们从 `<BOS>` 开始，不断把模型生成的新 token 接到 Decoder 输入后面。
+推理时，我们从 `<BOS>` 开始，不断把模型生成的新 token 接到 decoder 输入后面。
 
 ```{python}
 @torch.inference_mode()
@@ -592,7 +671,7 @@ $$
 
 ## 8.8.11 本章小结
 
-这一节里，我们把 Encoder 和 Decoder 放到完整的 Seq2Seq 任务中，理解 Encoder-Decoder Transformer 是如何工作的。
+这一节里，我们把 encoder 和 decoder 放到完整的 seq2seq 任务中，理解 Encoder-Decoder Transformer 是如何工作的。
 
 从概率角度看，模型学习的是：
 
@@ -600,15 +679,15 @@ $$
 p(Y \mid X) = \prod_{t=1}^{n} p(y_t \mid y_{<t}, X)
 $$
 
-其中，$X$ 由 Encoder 处理，$y_{<t}$ 由 Decoder 的目标前缀提供。Decoder 通过 masked self-attention 读取目标前缀，通过 cross-attention 读取 Encoder 输出。
+其中，$X$ 由 encoder 处理，$y_{<t}$ 由 decoder 的目标前缀提供。Decoder 通过 masked self-attention 读取目标前缀，通过 cross-attention 读取 encoder 输出。
 
-训练时，我们使用 teacher forcing，把目标序列右移一位作为 Decoder input，让模型在真实前缀条件下预测下一个 token。借助 causal mask，Transformer 可以并行计算所有位置的预测，同时保证每个位置不能看到未来 token。
+训练时，我们使用 teacher forcing，把目标序列右移一位作为 decoder input，让模型在真实前缀条件下预测下一个 token。借助 causal mask，Transformer 可以并行计算所有位置的预测，同时保证每个位置不能看到未来 token。
 
-推理时，没有真实答案可用，Decoder 只能从 `<BOS>` 开始自回归生成：每一步预测一个 token，再把这个 token 接回输入，继续预测下一个 token。
+推理时，没有真实答案可用，decoder 只能从 `<BOS>` 开始自回归生成：每一步预测一个 token，再把这个 token 接回输入，继续预测下一个 token。
 
-所以，Encoder-Decoder Transformer 的完整逻辑可以概括为：
+所以，encoder-decoder Transformer 的完整逻辑可以概括为：
 
-> **Encoder 先理解输入，Decoder 再在目标前缀和输入表示的共同条件下，一步一步生成输出。**
+> **Encoder 先理解输入，decoder 再在目标前缀和输入表示的共同条件下，一步一步生成输出。**
 
 下一节，我们继续看一个和推理效率密切相关的问题：既然自回归生成必须一步一步进行，为什么实际推理时不需要每一步都重复计算过去 token 的 key 和 value？
 

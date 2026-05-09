@@ -6,6 +6,7 @@ open-graph:
   title: ch8.5-positional-encoding
   description: "8.6 Transformer Encoder: Stacking Self-Attention Layers"
 title: "8.6 Transformer Encoder：把 Self-Attention 堆起来"
+order: 6
 ---
 
 前面几节里，我们已经把 Transformer 里最核心的几个组件拆开看过了。
@@ -31,8 +32,12 @@ $$
 这一节我们就来看看，Transformer encoder 是怎么把 self-attention 变成一个完整网络结构的。
 
 ```{python}
+from collections.abc import Callable
+
+import dnnl.nn as dnn
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
 print('PyTorch version:', torch.__version__)
@@ -226,7 +231,7 @@ $$
 
 ## 8.6.4 Transformer Encoder Block 的 PyTorch 实现
 
-下面我们实现一个简化版 Transformer encoder block。这里为了避免重复实现 multi-head attention，我们直接使用 PyTorch 提供的 `nn.MultiheadAttention`。
+下面我们实现一个简化版 Transformer encoder block。这里为了避免重复实现 multi-head attention，我们直接使用 8.4 节里实现的 `MultiheadAttention`。
 
 ```{python}
 class TransformerEncoderLayer(nn.Module):
@@ -234,33 +239,26 @@ class TransformerEncoderLayer(nn.Module):
         self,
         d_model: int,
         num_heads: int,
-        dim_feedforward: int | None = None,
+        dim_feedforward: int = 2048,
+        activation: Callable[[Tensor], Tensor] = F.relu,
+        bias: bool = True,
         dropout: float = 0.1,
     ):
         super().__init__()
-        self.d_model = d_model
-        self.num_heads = num_heads
-
-        if dim_feedforward is None:
-            dim_feedforward = 4 * d_model
-        self.d_ff = dim_feedforward
-
-        self.self_attn = nn.MultiheadAttention(
-            embed_dim=d_model,
-            num_heads=num_heads,
+        self.self_attn = dnn.MultiheadAttention(
+            d_model,
+            num_heads,
+            bias=bias,
             dropout=dropout,
-            batch_first=True,
         )
 
-        self.ffn = nn.Sequential(
-            nn.Linear(d_model, self.d_ff),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(self.d_ff, d_model),
-        )
+        self.linear1 = nn.Linear(d_model, dim_feedforward, bias=bias)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(dim_feedforward, d_model, bias=bias)
+        self.activation = activation
 
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
+        self.norm1 = nn.LayerNorm(d_model, bias=bias)
+        self.norm2 = nn.LayerNorm(d_model, bias=bias)
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
 
@@ -270,23 +268,35 @@ class TransformerEncoderLayer(nn.Module):
         src_mask: Tensor | None = None,
         src_key_padding_mask: Tensor | None = None,
     ) -> Tensor:
-        # Pre-LN: normalize before self-attention
-        # src: (batch_size, seq_len, d_model)
-        x = src
-        h = self.norm1(x)
-        attn_out, _ = self.self_attn(
-            h, h, h,
+        x = src + self._sa_block(
+            self.norm1(src),
             attn_mask=src_mask,
             key_padding_mask=src_key_padding_mask,
+        )
+        x = x + self._ff_block(self.norm2(x))
+        return x
+
+    def _sa_block(
+        self,
+        x: Tensor,
+        attn_mask: Tensor | None,
+        key_padding_mask: Tensor | None,
+    ) -> Tensor:
+        x, _ = self.self_attn(
+            x, x, x,
+            attn_mask=attn_mask,
+            key_padding_mask=key_padding_mask,
             need_weights=False,
         )  # fmt: skip
-        x = x + self.dropout1(attn_out)
+        x = self.dropout1(x)
+        return x
 
-        # Pre-LN: normalize before FFN
-        h = self.norm2(x)
-        ffn_out = self.ffn(h)
-        x = x + self.dropout2(ffn_out)
-
+    def _ff_block(self, x: Tensor) -> Tensor:
+        x = self.linear1(x)
+        x = self.activation(x)
+        x = self.dropout(x)
+        x = self.linear2(x)
+        x = self.dropout2(x)
         return x
 
 
@@ -302,13 +312,13 @@ print('Encoder block output shape:', output.shape)
 这段代码里最关键的是两条残差路径：
 
 ```python
-x = x + self.dropout1(attn_out)
+x = src + self._sa_block(...)
 ```
 
 以及：
 
 ```python
-x = x + self.dropout2(ffn_out)
+x = x + self._ff_block(...)
 ```
 
 第一条残差对应 multi-head self-attention，第二条残差对应 FFN。
@@ -324,7 +334,9 @@ class TransformerEncoder(nn.Module):
         d_model: int,
         num_heads: int,
         num_layers: int,
-        dim_feedforward: int | None = None,
+        dim_feedforward: int = 2048,
+        activation: Callable[[Tensor], Tensor] = F.relu,
+        bias: bool = True,
         dropout: float = 0.1,
     ):
         super().__init__()
@@ -334,6 +346,8 @@ class TransformerEncoder(nn.Module):
                     d_model=d_model,
                     num_heads=num_heads,
                     dim_feedforward=dim_feedforward,
+                    activation=activation,
+                    bias=bias,
                     dropout=dropout,
                 )
                 for _ in range(num_layers)
@@ -344,18 +358,19 @@ class TransformerEncoder(nn.Module):
     def forward(
         self,
         src: Tensor,
-        src_mask: Tensor | None = None,
+        mask: Tensor | None = None,
         src_key_padding_mask: Tensor | None = None,
     ) -> Tensor:
-        x = src
+        output = src
         for layer in self.layers:
-            x = layer(
-                x,
-                src_mask=src_mask,
+            output = layer(
+                output,
+                src_mask=mask,
                 src_key_padding_mask=src_key_padding_mask,
             )
-        x = self.norm(x)
-        return x
+
+        output = self.norm(output)
+        return output
 
 
 x = torch.randn(2, 32, 512)  # (batch_size, seq_len, d_model)
@@ -464,7 +479,7 @@ $$
 
 ## 8.6.8 本章小结
 
-这一节里，我们把前面学过的 self-attention、multi-head attention 和 positional encoding 组合了起来，形成了完整的 Transformer Encoder。
+这一节里，我们把前面学过的 self-attention、multi-head attention 和 positional encoding 组合了起来，形成了完整的 Transformer encoder。
 
 一个 encoder block 主要由两部分组成：multi-head self-attention 和 position-wise feed-forward network。前者负责让不同 token 之间交换上下文信息，后者负责对每个 token 的表示做非线性加工。每个子模块外面还会配上残差连接和 LayerNorm，让深层网络更容易训练。
 

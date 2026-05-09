@@ -6,6 +6,7 @@ open-graph:
   title: ch8.5-positional-encoding
   description: "8.5 Positional Encoding：Adding Sequential Information to Attention"
 title: "8.5 位置编码：给 Attention 补上位置信息"
+order: 5
 ---
 
 在前面的 self-attention 里，我们已经看到，每个 token 都可以直接和序列中的所有 token 建立联系。相比 RNN 只能一步一步传递信息，self-attention 的好处就是，它可以并行计算，也更容易捕捉长距离依赖。但 self-attention 也有一个很重要的问题：**它本身并不知道 token 的顺序。**
@@ -160,7 +161,15 @@ $$
 
 ```{python}
 class SinusoidalPositionalEncoding(nn.Module):
+    """Add fixed sinusoidal position encodings to batch-first sequences."""
+
     def __init__(self, embed_dim: int, max_len: int = 5000):
+        """Precompute sinusoidal encodings.
+
+        Args:
+            embed_dim (int): Embedding dimension of each token.
+            max_len (int, default: 5000): Maximum supported sequence length.
+        """
         super().__init__()
         self.embed_dim = embed_dim
         self.max_len = max_len
@@ -171,14 +180,15 @@ class SinusoidalPositionalEncoding(nn.Module):
 
         pe = torch.zeros(max_len, embed_dim)
         pe[:, 0::2] = torch.sin(position / div_term)
-        pe[:, 1::2] = torch.cos(position / div_term)
+        pe[:, 1::2] = torch.cos(position / div_term[: pe[:, 1::2].size(1)])
 
         # Add a batch dimension for broadcasting
         self.register_buffer('pe', pe.unsqueeze(0))
 
     def forward(self, x: Tensor) -> Tensor:
+        """Add positional encodings to ``x``."""
         seq_len = x.size(1)
-        return x + self.pe[:, :seq_len]
+        return x + self.pe[:, :seq_len]  # type: ignore
 
 
 x = torch.zeros(2, 32, 512)  # (batch_size, seq_len, d_model)
