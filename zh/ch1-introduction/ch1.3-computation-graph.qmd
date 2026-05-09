@@ -6,6 +6,7 @@ open-graph:
   title: ch1.3-computation-graph
   description: "Forward Propagation, Backpropagation, and Computation Graph"
 title: "1.3 前向传播、反向传播与计算图"
+order: 3
 ---
 
 **计算图（Computational Graph）**是深度学习中最核心的概念之一。理解了计算图，我们就能理解神经网络是如何计算输出的，以及它是如何根据误差自动调整参数的。
@@ -73,7 +74,7 @@ $$ f(x,y) = \sin(x \cdot y) $$
 我们可以把这个过程表示成一个计算图：
 
 <figure class="figure" style="text-align: center;">
-  <img src="figures/ch1.3-computation-graph.svg" alt="图 1：一个简单的计算图" style="width: 60%;">
+  <img src="figures/ch1.3-computation-graph.svg" style="width: 60%;">
   <figcaption>图 1：一个简单的计算图</figcaption>
 </figure>
 
