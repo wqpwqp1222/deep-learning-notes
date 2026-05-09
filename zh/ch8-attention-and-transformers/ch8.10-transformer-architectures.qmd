@@ -3,7 +3,7 @@ author: jshn9515
 date: 2026-05-08
 date-modified: 2026-05-08
 open-graph:
-  title: ch8.11-transformer-architectures
+  title: ch8.10-transformer-architectures
   description: "8.10 Three Different Architectures of Transformer: Understanding, Generation, and Input-Output Conversion"
 title: "8.10 Transformer 的三种不同架构：理解、生成与输入输出转换"
 order: 10
@@ -148,13 +148,13 @@ $$
 不同任务会用这些表示的不同部分。对于文本分类，通常会取一个特殊 token 的表示，比如 BERT 里的 `[CLS]`：
 
 $$
-h_{\mathrm{[cls]}}
+h_{\mathrm{[CLS]}}
 $$
 
 然后接一个分类头：
 
 $$
-\hat{y} = \mathrm{Classifier}(h_{\mathrm{[cls]}})
+\hat{y} = \mathrm{Classifier}(h_{\mathrm{[CLS]}})
 $$
 
 对于命名实体识别这类 token-level 任务，则会对每个 token 的表示分别分类：
@@ -286,7 +286,7 @@ $$
 同时，decoder 通过 cross-attention 读取 encoder 的输出：
 
 $$
-\mathrm{CrossAttention}(Q_{\mathrm{decoder}}, K_{\mathrm{encoder}}, V_{\mathrm{encoder}})
+\operatorname{CrossAttention}(Q_{\mathrm{decoder}}, K_{\mathrm{encoder}}, V_{\mathrm{encoder}})
 $$
 
 这种结构特别适合 seq2seq 任务，也就是输入和输出都是序列，但二者不一定长度相同。典型任务包括机器翻译、文本摘要、文本改写、语法纠错、文本到 SQL、文本到代码，以及多模态任务中的图像描述生成。典型模型包括原始 Transformer、T5、BART 等。
