@@ -6,6 +6,7 @@ open-graph:
   title: ch1.3-computation-graph
   description: "Forward Propagation, Backpropagation, and Computation Graphs"
 title: "1.3 Forward Propagation, Backpropagation, and Computation Graph"
+order: 3
 ---
 
 **Computational Graph** is one of the most core concepts in deep learning. Once we understand computational graphs, we can understand how neural networks compute outputs, and how they automatically adjust parameters according to errors.
@@ -25,18 +26,24 @@ In deep learning, what we need to do is very simple: make the loss function $L$ 
 
 And **gradient** is used to answer these two questions.
 
-I believe everyone has learned partial derivatives. If we have a function $f(x, y)$, when we want to know "how $f$ changes if only $x$ is changed", we look at $rac{\partial f}{\partial x}$; when we want to know "how $f$ changes if only $y$ is changed", we look at $rac{\partial f}{\partial y}$. The magnitude of a partial derivative can be understood as a kind of "sensitivity". The larger the absolute value of the partial derivative is, the more a slight change in this parameter will make $f$ change a lot; conversely, the smaller the absolute value of the partial derivative is, the smaller the influence of a slight change in this parameter on $f$.
+I believe everyone has learned partial derivatives. If we have a function $f(x, y)$, when we want to know "how $f$ changes if only $x$ is changed", we look at $
+rac{\partial f}{\partial x}$; when we want to know "how $f$ changes if only $y$ is changed", we look at $
+rac{\partial f}{\partial y}$. The magnitude of a partial derivative can be understood as a kind of "sensitivity". The larger the absolute value of the partial derivative is, the more a slight change in this parameter will make $f$ change a lot; conversely, the smaller the absolute value of the partial derivative is, the smaller the influence of a slight change in this parameter on $f$.
 
 When there is more than one parameter, we can "package" the partial derivatives of these parameters into a vector, and this vector is the gradient. For the function $f(x, y)$, its gradient is $
 abla f = \left(\frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right)$. We can imagine the gradient as an arrow. The direction of the arrow indicates the direction in which the function value increases the fastest (not decreases!), and the length of the arrow indicates the speed at which the function value increases.
 
 More generally, if the model parameters are a high-dimensional vector:
 
-$$\theta = (w_1, w_2, ..., w_n)$$
+$$
+\theta = (w_1, w_2, ..., w_n)
+$$
 
 Assume the loss function is $L(\theta)$, then the corresponding gradient is:
 
-$$ \nabla L = \left( \frac{\partial L}{\partial w_1}, \frac{\partial L}{\partial w_2}, ..., \frac{\partial L}{\partial w_n} \right) $$
+$$
+\nabla L = \left( \frac{\partial L}{\partial w_1}, \frac{\partial L}{\partial w_2}, ..., \frac{\partial L}{\partial w_n} \right)
+$$
 
 Each component of the gradient corresponds to one parameter, indicating how much this parameter is "responsible" for the current loss. If the gradient component of a certain parameter is large, it means this parameter has a large influence on the current value of the loss; if the gradient component of a certain parameter is small, it means this parameter has little influence on the current value of the loss.
 
@@ -64,7 +71,9 @@ Now let us formally introduce the computational graph. A computational graph is 
 
 Suppose we have a very simple function:
 
-$$ f(x,y) = \sin(x \cdot y) $$
+$$
+f(x,y) = \sin(x \cdot y)
+$$
 
 We can decompose this function into several simple operations:
 
@@ -74,7 +83,7 @@ We can decompose this function into several simple operations:
 We can represent this process as a computational graph:
 
 <figure class="figure" style="text-align: center;">
-  <img src="figures/ch1.3-computation-graph.svg" alt="Figure 1: A simple computational graph" style="width: 60%;">
+  <img src="figures/ch1.3-computation-graph.svg" style="width: 60%;">
   <figcaption>Figure 1: A simple computational graph</figcaption>
 </figure>
 
@@ -100,7 +109,9 @@ With the "dependency chain" of a computational graph, we can clearly describe tw
 
 For example, for the function:
 
-$$ f(x,y) = \sin(x \cdot y) $$
+$$
+f(x,y) = \sin(x \cdot y)
+$$
 
 The computation order of forward propagation is:
 
@@ -114,7 +125,9 @@ That is, the value of each node is computed from its input nodes. Therefore, for
 
 **Backward Propagation** refers to the process of starting from the final output and gradually computing the gradient of each variable with respect to the loss function in the reverse direction of the computational graph. The core of backpropagation is the **Chain Rule**. The influence of a variable on the final result can be decomposed into the product of multiple local influences.
 
-Assume the loss function is $L = L(f)$, and we want to compute the gradients of the input variables $x$ and $y$ with respect to the loss function, $rac{\partial L}{\partial x}$ and $rac{\partial L}{\partial y}$. According to the chain rule, we can compute the gradient of each node step by step along the reverse direction of the computational graph:
+Assume the loss function is $L = L(f)$, and we want to compute the gradients of the input variables $x$ and $y$ with respect to the loss function, $
+rac{\partial L}{\partial x}$ and $
+rac{\partial L}{\partial y}$. According to the chain rule, we can compute the gradient of each node step by step along the reverse direction of the computational graph:
 
 $$
 \begin{aligned}
@@ -123,7 +136,8 @@ $$
 \end{aligned}
 $$
 
-Here, $rac{\partial L}{\partial f}$ is the gradient of the loss function with respect to the output $f$, and it is determined by the specific form of the loss function.
+Here, $
+rac{\partial L}{\partial f}$ is the gradient of the loss function with respect to the output $f$, and it is determined by the specific form of the loss function.
 
 In backpropagation, we start from the output node, gradually compute the gradient of each node, and propagate toward the input direction along the computational graph. The gradient of each node is determined by two factors:
 
