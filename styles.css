@@ -34,13 +34,8 @@ img {
   height: auto;
 }
 
-/* make stdout output wrap and break long lines */
-.cell-output.cell-output-stdout {
-  overflow-x: visible !important;
-  max-width: 100%;
-}
-
-.cell-output.cell-output-stdout pre {
+/* make code blocks wrap and be scrollable if too wide */
+.cell-output pre {
   white-space: pre-wrap !important;
   word-break: break-word !important;
   overflow-wrap: anywhere !important;
@@ -48,7 +43,7 @@ img {
   max-width: 100%;
 }
 
-.cell-output.cell-output-stdout pre code {
+.cell-output pre code {
   white-space: inherit !important;
 }
 
