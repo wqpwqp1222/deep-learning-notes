@@ -5,7 +5,7 @@ date-modified: 2026-05-03
 open-graph:
   title: ch8.5-positional-encoding
   description: "8.6 Transformer Encoder: Stacking Self-Attention Layers"
-title: "8.6 Transformer Encoder: Stacking Self-Attention"
+title: "8.6 Transformer Encoder: Stacking Self-Attention Layers"
 order: 6
 ---
 
