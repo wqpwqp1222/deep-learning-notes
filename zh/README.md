@@ -10,7 +10,7 @@
 - 2.1 PyTorch 中的自动微分
 - 2.2 PyTorch 中的梯度记录与控制
 
-## Chapter 8: Attention 与 Transformer：从固定长度编码到动态上下文建模
+## Chapter 8: Attention 与 Transformers：从固定长度编码到动态上下文建模
 
 - 8.1 Bahdanau Attention：从信息压缩到动态检索
 - 8.2 Cross-Attention：一个序列查询另一个序列
@@ -24,16 +24,16 @@
 - 8.10 Transformer 的三种不同架构：理解、生成与输入输出转换
 - 8.11 Hugging Face Transformers API：从结构到调用
 
-## Chapter 10: FlashAttention: 高效的注意力机制实现
+## Chapter 10: FlashAttention：高效的注意力机制实现
 
 - 10.1 为什么 Attention 是 IO-Bound
 - 10.2 Flash Attention v1：消除 Attention 的 IO 瓶颈
 
-## Chapter 12: GAN: 生成对抗网络
+## Chapter 12: GAN：生成对抗网络
 
 - 12.1 GAN 基础：生成对抗网络的核心思想与训练流程
 
-## Chapter 13: VAE: 变分自编码器
+## Chapter 13: VAE：变分自编码器
 
 - 13.1 AutoEncoder：从压缩与重建开始
 - 13.2 VAE：概率建模与重参数化技巧
@@ -41,7 +41,7 @@
 - 13.4 VAE 的训练现象与潜空间直觉
 - 13.5 VAE 的优点、局限与后续发展
 
-## Chapter 14: Diffusion Models: 从去噪到生成
+## Chapter 14: Diffusion Models：从去噪到生成
 
 - 14.1 DDPM：从去噪到生成
 - 14.2 DDPM 的前向加噪过程
@@ -49,6 +49,6 @@
 - 14.4 DDPM 的网络结构与采样过程
 - 14.5 从变分推导看 DDPM：ELBO 从哪里来
 
-## Chapter 15: CLIP: 融合视觉和语言的多模态模型
+## Chapter 15: CLIP：融合视觉和语言的多模态模型
 
 - 15.1 CLIP：把图像和文本映射到同一个语义空间
