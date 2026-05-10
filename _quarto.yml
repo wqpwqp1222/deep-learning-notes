@@ -94,7 +94,7 @@ website:
               contents: "en/ch2-pytorch-introduction/*.qmd"
         - section: "Part 4: Attention Mechanism and Transformer"
           contents:
-            - section: "Chapter 8: Attention and Transformer: From Fixed-Length Encoding to Dynamic Context Modeling"
+            - section: "Chapter 8: Attention and Transformers: From Fixed-Length Encoding to Dynamic Context Modeling"
               contents: "en/ch8-attention-and-transformers/*.qmd"
             - section: "Chapter 10: FlashAttention: Efficient Implementation of Attention Mechanism"
               contents: "en/ch10-flash-attention/*.qmd"
