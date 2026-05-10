@@ -5,7 +5,7 @@ date-modified: 2026-04-04
 open-graph:
   title: ch10.2-flash-attention-v1
   description: "10.2 Flash Attention v1: Eliminating the IO Bottleneck in Attention Mechanisms"
-title: "10.2 Flash Attention v1: Eliminating the IO Bottleneck in Attention"
+title: "10.2 Flash Attention v1: Eliminating the IO Bottleneck in Attention Mechanisms"
 order: 2
 ---
 
