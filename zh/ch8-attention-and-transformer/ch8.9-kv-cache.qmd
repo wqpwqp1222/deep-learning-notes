@@ -19,7 +19,7 @@ $$
 
 > **每生成一个新 token，都要重新计算一遍前面所有 token 的 attention 表示。**
 
-KV Cache 要解决的就是这个问题。
+KV cache 要解决的就是这个问题。
 
 ```{python}
 import math

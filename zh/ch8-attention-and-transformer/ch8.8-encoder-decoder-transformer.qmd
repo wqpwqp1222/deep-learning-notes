@@ -9,7 +9,7 @@ title: "8.8 Encoder-Decoder Transformer：把 Encoder 和 Decoder 连接起来"
 order: 8
 ---
 
-前面几节里，我们已经分别看过 Transformer encoder 和 Transformer decoder。Encoder 的核心任务是把输入序列编码成一组上下文表示；decoder 的核心任务是在 causal mask 的限制下，根据已有目标前缀继续预测后面的 token。
+前面几节里，我们已经分别看过 Transformer Encoder 和 Transformer Decoder。Encoder 的核心任务是把输入序列编码成一组上下文表示；decoder 的核心任务是在 causal mask 的限制下，根据已有目标前缀继续预测后面的 token。
 
 这一节，我们不再重复拆解 encoder block 或 decoder block 的内部结构，而是把它们连接起来，从整体上看完整的 **Encoder-Decoder Transformer** 是如何完成序列到序列生成的。
 
@@ -34,7 +34,7 @@ print('PyTorch version:', torch.__version__)
 
 ## 8.8.1 从 Seq2Seq 到条件自回归生成
 
-Encoder-decoder Transformer 适合处理一类任务：**给定一个输入序列，生成另一个输出序列。**
+Encoder-Decoder Transformer 适合处理一类任务：**给定一个输入序列，生成另一个输出序列。**
 
 比如机器翻译：
 
@@ -82,16 +82,16 @@ $$
 
 这个公式里有两个关键信息来源。第一个是输入序列 $X$，它告诉模型“要根据什么内容生成”；第二个是目标前缀 $y_{<t}$，它告诉模型“现在已经生成到哪里了”。
 
-这也正好对应 encoder-decoder Transformer 的两个部分：
+这也正好对应 Encoder-Decoder Transformer 的两个部分：
 
 - Encoder 负责处理输入序列 $X$；
 - Decoder 负责根据目标前缀 $y_{<t}$，并结合 encoder 输出，预测下一个目标 token $y_t$。
 
-所以，encoder-decoder Transformer 的核心不是简单地把 encoder 和 decoder 拼在一起，而是让模型在生成每个 token 时同时利用两类信息：**源序列的内容**，以及**目标端已经生成的前缀**。
+所以，Encoder-Decoder Transformer 的核心不是简单地把 encoder 和 decoder 拼在一起，而是让模型在生成每个 token 时同时利用两类信息：**源序列的内容**，以及**目标端已经生成的前缀**。
 
 ## 8.8.2 Encoder-Decoder Transformer 的信息流
 
-完整 encoder-decoder Transformer 的信息流可以写成：
+完整 Encoder-Decoder Transformer 的信息流可以写成：
 
 <figure class="figure" style="text-align: center;">
   <img src="figures/ch8.8-transformer.png" alt="图 1：Transformer 网络结构图" style="height: 600px;">
@@ -237,13 +237,13 @@ Step 4 输入: <BOS>, y1, y2, y3
   - 串行
 :::
 
-训练和推理使用的是同一个 encoder-decoder Transformer，只是 decoder 的输入来源不同。
+训练和推理使用的是同一个 Encoder-Decoder Transformer，只是 decoder 的输入来源不同。
 
 训练时，目标序列已经给定，所以可以用右移后的真实目标序列作为前缀，并行预测所有位置；推理时，真实目标序列不存在，模型只能把自己刚生成的 token 拼回输入，再继续预测下一个 token。
 
 ## 8.8.6 Encoder-Decoder 中的 Mask
 
-完整 encoder-decoder Transformer 里通常会涉及几种 mask。前面我们已经重点讲过 causal mask，这里只简单梳理它们各自屏蔽什么。
+完整 Encoder-Decoder Transformer 里通常会涉及几种 mask。前面我们已经重点讲过 causal mask，这里只简单梳理它们各自屏蔽什么。
 
 ::: {.list-table tbl-colwidths="[25,25,50]"}
 - - Mask
@@ -278,7 +278,7 @@ Step 4 输入: <BOS>, y1, y2, y3
 
 ## 8.8.7 Transformer 的 PyTorch 实现
 
-接下来，我们来完整实现一下 encoder-decoder Transformer。我们直接使用 8.6 和 8.7 中实现的 encoder block 和 decoder block，来构建一个完整的 Transformer 模型。
+接下来，我们来完整实现一下 Encoder-Decoder Transformer。我们直接使用 8.6 和 8.7 中实现的 encoder block 和 decoder block，来构建一个完整的 Transformer 模型。
 
 ```{python}
 class Transformer(nn.Module):
@@ -439,7 +439,7 @@ print('Output shape:', output.shape)
 
 ## 8.8.8 Seq2Seq Transformer 的 PyTorch 实现
 
-下面写一个简化版 seq2seq Transformer。这里直接使用前面写好的 `Transformer`，在它的基础上加上 token embedding、positional encoding 和输出投影层。
+下面写一个简化版 Seq2Seq Transformer。这里直接使用前面写好的 `Transformer`，在它的基础上加上 token embedding、positional encoding 和输出投影层。
 
 ```{python}
 class Seq2SeqTransformer(nn.Module):
@@ -685,7 +685,7 @@ $$
 
 推理时，没有真实答案可用，decoder 只能从 `<BOS>` 开始自回归生成：每一步预测一个 token，再把这个 token 接回输入，继续预测下一个 token。
 
-所以，encoder-decoder Transformer 的完整逻辑可以概括为：
+所以，Encoder-Decoder Transformer 的完整逻辑可以概括为：
 
 > **Encoder 先理解输入，decoder 再在目标前缀和输入表示的共同条件下，一步一步生成输出。**
 
