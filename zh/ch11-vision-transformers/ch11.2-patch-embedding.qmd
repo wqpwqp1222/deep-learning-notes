@@ -239,7 +239,7 @@ class ViTLinearPatchEmbedding(nn.Module):
     ):
         super().__init__()
         if image_size % patch_size != 0:
-            raise AssertionError('image_size must be divisible by patch_size.')
+            raise AssertionError('`image_size` must be divisible by `patch_size`.')
 
         self.image_size = image_size
         self.patch_size = patch_size
@@ -319,7 +319,7 @@ class ViTConvPatchEmbedding(nn.Module):
     ):
         super().__init__()
         if image_size % patch_size != 0:
-            raise AssertionError('image_size must be divisible by patch_size.')
+            raise AssertionError('`image_size` must be divisible by `patch_size`.')
 
         self.image_size = image_size
         self.patch_size = patch_size
@@ -365,8 +365,8 @@ $$
 这仍然是一个二维特征图。为了交给 Transformer，我们需要把后两个空间维度展平成序列长度：
 
 ```python
-x = x.flatten(2)      # (B, D, H/P * W/P)
-x = x.transpose(1, 2) # (B, N, D)
+x = x.flatten(2)  # (B, D, H/P * W/P)
+x = x.transpose(1, 2)  # (B, N, D)
 ```
 
 最终得到的形状还是：
@@ -377,7 +377,7 @@ $$
 
 因此，用 `Conv2d` 写 patch embedding 只是一个更简洁、更高效的工程实现。它并不意味着 ViT 又变回了传统 CNN。这里的卷积层只负责把图像切成 patch token，而不是像 CNN 那样通过多层局部卷积逐步提取层级特征。
 
-## 11.2.6 两种实现为什么等价？
+## 11.2.6 为什么两种实现是等价的？
 
 我们可以更具体地理解一下 `Linear` 版本和 `Conv2d` 版本的关系。
 
@@ -410,7 +410,7 @@ $$
 
 当然，我们也可以手动把 `Linear` 的权重复制到 `Conv2d` 里，验证两者输出一致。
 
-## 11.2.7 Patch size 的影响
+## 11.2.7 Patch Size 的影响
 
 Patch size 不只是一个实现细节，它会影响 ViT 的计算量和建模方式。
 
@@ -432,18 +432,22 @@ $$
 - - Patch size
   - Patch 网格
   - 序列长度 $N$
+  - 单头 Attention 矩阵大小
 
 - - $8 \times 8$
   - $28 \times 28$
   - $784$
+  - 约 2.35 MB
 
 - - $16 \times 16$
   - $14 \times 14$
   - $196$
+  - 约 0.15 MB
 
 - - $32 \times 32$
   - $7 \times 7$
   - $49$
+  - 约 0.009 MB
 :::
 
 由于 attention 矩阵大小大约是 $N \times N$，所以从 $16 \times 16$ patch 改成 $8 \times 8$ patch，不只是序列长度变成 4 倍，attention 矩阵规模会变成大约 16 倍。
