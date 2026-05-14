@@ -282,6 +282,11 @@ $$
 
 因为 positional embedding 需要和最终输入序列中的每个 token 一一对应。如果先给 patch token 加位置，再拼接 class token，那么 class token 还需要单独处理自己的位置嵌入。先把 class token 拼进去，再统一加一个长度为 $N+1$ 的 position embedding，会更直接。
 
+<figure class="figure" style="text-align: center;">
+  <img src="figures/ch11.4-vit.png" style="width: 70%;" />
+  <figcaption>图 1：ViT 模型结构 [@dosovitskiy2021ViT]</figcaption>
+</figure>
+
 下面我们把上一节的 patch embedding 和这一节讲的 class token、positional embedding 合在一起，得到一个完整的 ViT 输入模块。
 
 ```{python}
