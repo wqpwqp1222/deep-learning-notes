@@ -33,6 +33,7 @@
 
 - 11.1 从 CNN 到 Vision Transformer：把图像当成序列
 - 11.2 Patch Embedding：把图像切成 Token
+- 11.3 Class Token 与 Positional Embedding：让序列表示整张图
 
 ## Chapter 12: GAN：在对抗中学习生成
 
