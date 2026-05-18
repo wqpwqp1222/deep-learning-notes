@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   package-zh:
+    name: Package Chinese Notebooks
     runs-on: ubuntu-latest
 
     steps:
@@ -70,6 +71,7 @@ jobs:
           path: dnnl-zh.tar.gz
 
   package-en:
+    name: Package English Notebooks
     runs-on: ubuntu-latest
 
     steps:
