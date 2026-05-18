@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   build-deploy:
+    name: Build and Deploy Quarto Website
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
