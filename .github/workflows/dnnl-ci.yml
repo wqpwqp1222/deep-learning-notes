@@ -20,7 +20,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-and-build:
+  dnnl-test-build:
+    name: Test and Build dnnl Package
     runs-on: ubuntu-latest
 
     steps:
