@@ -14,6 +14,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 concurrency:
   group: dnnl-ci-build-${{ github.ref }}
@@ -53,6 +55,11 @@ jobs:
 
       - name: Build dnnl package
         run: uv build --python 3.14 --out-dir dist --clear ./dnnl
+
+      - name: Generate package attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: "dist/*"
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v7
