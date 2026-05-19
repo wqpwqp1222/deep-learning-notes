@@ -13,7 +13,6 @@ def patchify(x: Tensor, patch_size: int) -> Tensor:
         ``(batch_size, num_patches, channels * patch_size * patch_size)``.
     """
     batch_size, _, height, width = x.size()
-
     if height % patch_size != 0 or width % patch_size != 0:
         raise AssertionError(
             'Image height and width must be divisible by `patch_size`.'
