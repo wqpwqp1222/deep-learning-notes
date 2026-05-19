@@ -16,18 +16,18 @@ class ViTLinearPatchEmbedding(nn.Module):
 
     def __init__(
         self,
-        image_size: int,
-        patch_size: int,
-        in_channels: int,
-        embed_dim: int,
+        image_size: int = 224,
+        patch_size: int = 16,
+        in_channels: int = 3,
+        embed_dim: int = 768,
     ):
         """Initialize an unfold-based patch embedding layer.
 
         Args:
-            image_size (int): Height and width of the square input image.
-            patch_size (int): Height and width of each square image patch.
-            in_channels (int): Number of input image channels.
-            embed_dim (int): Output embedding dimension for each patch.
+            image_size (int, default: 224): Height and width of the square input image.
+            patch_size (int, default: 16): Height and width of each square image patch.
+            in_channels (int, default: 3): Number of input image channels.
+            embed_dim (int, default: 768): Output embedding dimension for each patch.
         """
         super().__init__()
         if image_size % patch_size != 0:
@@ -36,6 +36,7 @@ class ViTLinearPatchEmbedding(nn.Module):
         self.image_size = image_size
         self.patch_size = patch_size
         self.num_patches = (image_size // patch_size) ** 2
+
         self.unfold = nn.Unfold(kernel_size=patch_size, stride=patch_size)
         self.proj = nn.Linear(in_channels * patch_size * patch_size, embed_dim)
 
@@ -52,18 +53,18 @@ class ViTConvPatchEmbedding(nn.Module):
 
     def __init__(
         self,
-        image_size: int,
-        patch_size: int,
-        in_channels: int,
-        embed_dim: int,
+        image_size: int = 224,
+        patch_size: int = 16,
+        in_channels: int = 3,
+        embed_dim: int = 768,
     ):
         """Initialize a convolution-based patch embedding layer.
 
         Args:
-            image_size (int): Height and width of the square input image.
-            patch_size (int): Height and width of each square image patch.
-            in_channels (int): Number of input image channels.
-            embed_dim (int): Output embedding dimension for each patch.
+            image_size (int, default: 224): Height and width of the square input image.
+            patch_size (int, default: 16): Height and width of each square image patch.
+            in_channels (int, default: 3): Number of input image channels.
+            embed_dim (int, default: 768): Output embedding dimension for each patch.
         """
         super().__init__()
         if image_size % patch_size != 0:
@@ -104,8 +105,7 @@ class ViTAddClassToken(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         """Prepend the class token to each batch item."""
-        batch_size = x.size(0)
-        cls_token = self.cls_token.expand(batch_size, -1, -1)
+        cls_token = self.cls_token.expand(x.size(0), -1, -1)
         x = torch.concat([cls_token, x], dim=1)
         return x
 
@@ -115,21 +115,19 @@ class ViTPositionalEmbedding(nn.Module):
 
     def __init__(
         self,
-        num_patches: int,
         embed_dim: int,
+        num_patches: int,
         use_cls_token: bool = True,
     ):
         """Initialize learnable positional embeddings.
 
         Args:
-            num_patches (int): Number of image patch tokens.
             embed_dim (int): Embedding dimension of each token.
+            num_patches (int): Number of image patch tokens.
             use_cls_token (bool, default: True): Whether the sequence includes a
                 leading class token.
         """
         super().__init__()
-        self.num_patches = num_patches
-        self.embed_dim = embed_dim
         self.use_cls_token = use_cls_token
 
         num_tokens = num_patches + int(use_cls_token)
@@ -200,19 +198,19 @@ class ViTEmbedding(nn.Module):
 
     def __init__(
         self,
-        image_size: int,
-        patch_size: int,
-        in_channels: int,
-        embed_dim: int,
+        image_size: int = 224,
+        patch_size: int = 16,
+        in_channels: int = 3,
+        embed_dim: int = 768,
         dropout: float = 0.0,
     ):
         """Initialize the complete ViT embedding stem.
 
         Args:
-            image_size (int): Height and width of the square input image.
-            patch_size (int): Height and width of each square patch.
-            in_channels (int): Number of input image channels.
-            embed_dim (int): Output embedding dimension for each token.
+            image_size (int, default: 224): Height and width of the square input image.
+            patch_size (int, default: 16): Height and width of each square patch.
+            in_channels (int, default: 3): Number of input image channels.
+            embed_dim (int, default: 768): Output embedding dimension for each token.
             dropout (float, default: 0.0): Dropout probability applied after embeddings.
         """
         super().__init__()
