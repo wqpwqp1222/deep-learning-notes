@@ -4,8 +4,8 @@ date: 2026-05-12
 date-modified: 2026-05-17
 open-graph:
   title: ch11.2-patch-embedding
-  description: "11.2 Patch Embedding: Translating Images into Transformer Language"
-title: "11.2 Patch Embedding：把图像翻译成 Transformer 的语言"
+  description: "11.2 Patch Embedding: Cutting Images into Tokens"
+title: "11.2 Patch Embedding：把图像切成 Token"
 order: 2
 ---
 
