@@ -59,7 +59,9 @@ jobs:
       - name: Generate package attestation
         uses: actions/attest@v4
         with:
-          subject-path: "dist/*"
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.whl
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v7
