@@ -81,7 +81,7 @@ Here, `**inputs` expands the dictionary returned by the tokenizer into the argum
 
 `outputs` is also a structured object containing the results of the forward pass. Common fields include `last_hidden_state`, `logits`, `pooler_output`, `attentions`, `past_key_values`, and so on. But these fields do not always appear; the exact fields depend on the model type, task head, and arguments you set when calling the model.
 
-## 8.11.2 AutoTokenizer: From Text to Token IDs
+### 8.11.1.1 AutoTokenizer: From Text to Token IDs
 
 A Transformer cannot directly process strings. It needs token IDs. For example:
 
@@ -127,7 +127,7 @@ where 1 means a real token and 0 means a padding token.
 
 This is essentially the `key_padding_mask` we discussed earlier. It tells the model which positions can be attended to and which positions should not participate in attention.
 
-## 8.11.3 AutoModel: Only the Transformer Backbone
+### 8.11.1.2 AutoModel: The Transformer Backbone
 
 `AutoModel` loads the base Transformer backbone without a task-specific head. For example:
 
@@ -165,7 +165,40 @@ $$
 
 So if you only want sentence or token representations, `AutoModel` is a good fit.
 
-## 8.11.4 SequenceClassification: Encoder + Classification Head
+### 8.11.1.3 ModelOutput: Why It Is Not an Ordinary Tuple
+
+After calling a model, we often see:
+
+```python
+outputs = model(**inputs)
+```
+
+Then we can use:
+
+```python
+outputs.last_hidden_state
+outputs.logits
+outputs.attentions
+outputs.past_key_values
+```
+
+This is because model outputs in Hugging Face Transformers are usually subclasses of `ModelOutput`. It is a bit like a dictionary and a bit like a tuple, but it is recommended to access fields by attribute name. For example, `outputs.logits` expresses what we want more clearly than `outputs[0]`. Different models and different task heads return different fields.
+
+- The common field of `AutoModel` is `last_hidden_state`.
+- The common field of `AutoModelForSequenceClassification` is `logits`.
+- The common fields of `AutoModelForCausalLM` are `logits` and `past_key_values`.
+- Setting `output_attentions=True` additionally returns `attentions`.
+- Setting `output_hidden_states=True` additionally returns `hidden_states`.
+
+So when you see `outputs`, do not think of it as a mysterious object. It simply organizes the results of the model's forward pass into a structured output.
+
+## 8.11.2 Encoder-Only Models: Understanding Input Sequences
+
+We have already seen that `AutoModel` can load a Transformer backbone and return the contextual representation of every token. For encoder-only models, this is exactly their central use: through bidirectional self-attention, every position in the sequence can see both left and right context, producing representations better suited for understanding tasks.
+
+However, contextual representations alone are usually not enough. Real tasks often need further predictions on top of these representations: for text classification, we want to predict one class for the whole text; for named entity recognition, we want to predict one label for every token. Therefore, in addition to `AutoModel`, the Transformers library provides many models with task heads.
+
+### 8.11.2.1 SequenceClassification: Encoder + Classification Head
 
 If we want to do text classification, we usually do not use only `AutoModel`; instead, we use a model with a task head:
 
@@ -222,7 +255,7 @@ So in summary:
 
 This is what `For...` means in Hugging Face API names: the model is prepared for a specific task.
 
-## 8.11.5 TokenClassification: One Prediction per Token
+### 8.11.2.2 TokenClassification: One Prediction per Token
 
 If the task is named entity recognition or another token-level classification task, we can use:
 
@@ -268,7 +301,64 @@ $$
 \hat{y}_i = \mathrm{Classifier}(h_i)
 $$
 
-## 8.11.6 CausalLM: Decoder-Only Language Models
+### 8.11.2.3 A Complete Encoder-Only Example
+
+Here is a BERT-style text representation example:
+
+```{python}
+import torch
+from transformers import AutoTokenizer, AutoModel
+
+model_id = 'bert-base-uncased'
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModel.from_pretrained(model_id)
+ipy.clear_output()
+
+texts = [
+    'I love deep learning.',
+    'Transformers are powerful models.',
+]
+
+inputs = tokenizer(
+    texts,
+    return_tensors='pt',
+    padding=True,
+    truncation=True,
+)
+
+with torch.inference_mode():
+    outputs = model(**inputs)
+
+last_hidden_state = outputs.last_hidden_state
+sentence_embedding = last_hidden_state.mean(dim=1)
+
+print('Last hidden state shape:', last_hidden_state.shape)
+print('Sentence embedding shape:', sentence_embedding.shape)
+```
+
+Here, `last_hidden_state` is the contextual representation of every token.
+
+If the input batch contains padding, a more rigorous average pooling should use `attention_mask` and average only over real tokens:
+
+```{python}
+mask = inputs['attention_mask'].unsqueeze(-1)
+masked_hidden = last_hidden_state * mask
+
+sentence_embedding = masked_hidden.sum(dim=1) / mask.sum(dim=1)
+```
+
+This corresponds to the core use of encoder-only models:
+
+> **Encode input text into contextual representations.**
+
+## 8.11.3 Decoder-Only Models: Autoregressive Generation
+
+If encoder-only models are better at understanding a given input, decoder-only models are better at continuing from existing content. They use masked self-attention, so each position can only see previous tokens, and then predict the next token step by step.
+
+However, each model forward pass does not directly generate complete text. It outputs logits at each position, which are used to predict the next token. Complete autoregressive generation needs to repeatedly predict the next token and append it back to the input sequence. The Transformers library lets us inspect logits directly, and it also provides the `generate` interface to wrap this generation loop.
+
+### 8.11.3.1 CausalLM: Decoder-Only Language Models
 
 If we want to load a GPT-style decoder-only model, we usually use:
 
@@ -324,7 +414,7 @@ $$
 p(x_{t+1} \mid x_{\le t})
 $$
 
-## 8.11.7 `generate`: The Wrapper for Autoregressive Generation
+### 8.11.3.2 `generate`: The Wrapper for Autoregressive Generation
 
 Although we can manually take `logits[:, -1, :]` and sample step by step, in real use we usually call:
 
@@ -377,7 +467,7 @@ print(text)
 
 You can see that after adjusting the sampling parameters, the generated text becomes more diverse and at least does not simply repeat itself. `generate()` has many parameters, and we will discuss its usage techniques later.
 
-## 8.11.8 `use_cache`: The KV Cache Interface
+### 8.11.3.3 `use_cache`: The KV Cache Interface
 
 Earlier, we discussed KV cache. Its core idea is to cache the keys and values of past tokens during inference, avoiding recomputation of the full prefix at every step. In Hugging Face Transformers, this is usually related to the `use_cache=True` argument.
 
@@ -413,7 +503,51 @@ When calling `generate()` in practice, KV cache is usually managed internally by
 
 This corresponds exactly to what we discussed in Section 8.9.
 
-## 8.11.9 AutoModelForSeq2SeqLM: Encoder-Decoder Generation Models
+### 8.11.3.4 A Complete Decoder-Only Example
+
+Here is a minimal GPT-style generation example:
+
+```{python}
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+model_id = 'gpt2'
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(model_id)
+ipy.clear_output()
+
+text = 'I love deep learning because'
+inputs = tokenizer(text, return_tensors='pt')
+
+with torch.inference_mode():
+    output_ids = model.generate(
+        **inputs,
+        max_new_tokens=100,
+        do_sample=True,
+        temperature=0.8,
+        top_p=0.9,
+    )
+
+output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+print(output_text)
+```
+
+What happens behind this code is:
+
+1. The tokenizer turns text into `input_ids`.
+2. The decoder-only Transformer applies causal self-attention to the prefix.
+3. The LM head outputs logits for the next token.
+4. `generate()` selects the next token according to the sampling strategy.
+5. The new token is appended back to the input.
+6. This repeats until generation ends.
+
+This is the practical API manifestation of autoregressive generation and KV cache discussed in Sections 8.8 and 8.9.
+
+## 8.11.4 Encoder-Decoder Models: Input-to-Output Sequence Conversion
+
+Unlike decoder-only models, encoder-decoder models do not simply continue from previous text. They first understand an input sequence, then generate another output sequence from that input. Typical tasks include machine translation, text summarization, and text rewriting. These models are usually called through the `Seq2SeqLM` interface.
+
+### 8.11.4.1 Seq2SeqLM: Encoder-Decoder Generation Models
 
 If we want to load encoder-decoder models such as T5 or BART, we usually use:
 
@@ -460,11 +594,56 @@ $$
 p(y_t \mid y_{<t}, X) = \operatorname{Decoder}(y_{<t}, \operatorname{Encoder}(X))
 $$
 
-## 8.11.10 `output_attentions`: Extracting Attention Weights
+### 8.11.4.2 A Complete Encoder-Decoder Example
+
+Here is a T5-style text-to-text example:
+
+```{python}
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+model_id = 't5-small'
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
+ipy.clear_output()
+
+text = 'Translate English to German: I love deep learning.'
+inputs = tokenizer(text, return_tensors='pt')
+
+with torch.inference_mode():
+    output_ids = model.generate(
+        **inputs,
+        max_new_tokens=50,
+    )
+
+output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+print(output_text)
+```
+
+What happens behind this code is:
+
+1. The tokenizer processes the input text.
+2. The encoder bidirectionally encodes the complete input.
+3. The decoder starts autoregressive generation from a start token.
+4. Decoder self-attention uses a causal mask.
+5. Decoder cross-attention reads the encoder output.
+6. `generate()` returns the generated result.
+
+This exactly corresponds to the encoder-decoder structure:
+
+$$
+X \rightarrow \operatorname{Encoder} \rightarrow H \rightarrow \operatorname{Decoder} \rightarrow Y
+$$
+
+## 8.11.5 Model Internal Information: Attention and Hidden States
+
+Transformer internals contain many important pieces of structural information, such as attention weights, hidden states, KV cache, and so on. These are useful for understanding model behavior, debugging, and visualization. In the Transformers library, we can extract this internal information by setting a few arguments.
+
+### 8.11.5.1 `output_attentions`: Extracting Attention Weights
 
 If we want to visualize an attention map, we first need to obtain the attention weights inside the model. In Hugging Face Transformers, we can set `output_attentions=True` when calling the model:
 
-::: {.callout-note}
+::: {.callout-warning}
 In newer Transformers versions, some models may use efficient attention implementations such as SDPA or FlashAttention by default, and these implementations sometimes do not return attention weights. If you need to visualize attention, you can set `attn_implementation='eager'` when loading the model, but this usually sacrifices some performance.
 :::
 
@@ -538,7 +717,7 @@ They correspond to:
 
 Among them, cross-attention is the most suitable for observing alignment between input and output.
 
-## 8.11.11 `hidden_states`: Extracting Layer Representations
+### 8.11.5.2 `hidden_states`: Extracting Layer Representations
 
 Besides attention weights, sometimes we also want to inspect the hidden states of every layer. In that case, we can set:
 
@@ -572,34 +751,49 @@ $$
 
 If we want to study what the model learns at different layers, `hidden_states` is useful.
 
-## 8.11.12 ModelOutput: Why It Is Not an Ordinary Tuple
+### 8.11.5.3 An Attention Visualization Interface Example
 
-After calling a model, we often see:
+If we want to extract attention weights, we can write:
 
-```python
-outputs = model(**inputs)
+```{python}
+from transformers import AutoTokenizer, AutoModel
+
+model_id = 'bert-base-uncased'
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModel.from_pretrained(
+    model_id,
+    attn_implementation='eager',
+)
+ipy.clear_output()
+
+text = 'The animal did not cross the street because it was tired.'
+inputs = tokenizer(text, return_tensors='pt')
+
+with torch.inference_mode():
+    outputs = model(
+        **inputs,
+        output_attentions=True,
+    )
+
+attentions = outputs.attentions
+tokens = tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
+
+layer_idx = 0
+head_idx = 0
+attn = attentions[layer_idx][0, head_idx]
+
+print('Attention weights shape:', attn.shape)
+print('Tokens:', tokens)
 ```
 
-Then we can use:
+At this point, `attn` has shape `(seq_len, seq_len)`. It can be used to draw a heatmap and observe the attention-weight distribution of this head over input tokens at this layer. But note:
 
-```python
-outputs.last_hidden_state
-outputs.logits
-outputs.attentions
-outputs.past_key_values
-```
+> **This figure shows the attention weights of one head in one layer; it is not a complete explanation of the model's final prediction.**
 
-This is because model outputs in Hugging Face Transformers are usually subclasses of `ModelOutput`. It is a bit like a dictionary and a bit like a tuple, but it is recommended to access fields by attribute name. For example, `outputs.logits` expresses what we want more clearly than `outputs[0]`. Different models and different task heads return different fields.
+We will explain why later.
 
-- The common field of `AutoModel` is `last_hidden_state`.
-- The common field of `AutoModelForSequenceClassification` is `logits`.
-- The common fields of `AutoModelForCausalLM` are `logits` and `past_key_values`.
-- Setting `output_attentions=True` additionally returns `attentions`.
-- Setting `output_hidden_states=True` additionally returns `hidden_states`.
-
-So when you see `outputs`, do not think of it as a mysterious object. It simply organizes the results of the model's forward pass into a structured output.
-
-## 8.11.13 `labels`: Where the Training Loss Comes From
+## 8.11.6 `labels`: Where the Training Loss Comes From
 
 Many `For...` models accept `labels=...` in their forward pass. If labels are passed in, the model automatically computes the loss.
 
@@ -661,7 +855,7 @@ At this point, the model computes the next-token prediction loss. In other words
 
 > **During training, the complete target sequence is known, so the model can compute predictions at every position in parallel and align them with labels to compute the loss.**
 
-## 8.11.14 A Mapping Table from Structure to API
+## 8.11.7 A Mapping Table from Structure to API
 
 We can map the concepts discussed earlier to Hugging Face APIs:
 
@@ -720,181 +914,7 @@ The purpose of this table is to connect structural understanding to code calls. 
 
 This makes the interface much less of a black box.
 
-## 8.11.15 A Complete Decoder-Only Example
-
-Here is a minimal GPT-style generation example:
-
-```{python}
-from transformers import AutoTokenizer, AutoModelForCausalLM
-
-model_id = 'gpt2'
-
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id)
-ipy.clear_output()
-
-text = 'I love deep learning because'
-inputs = tokenizer(text, return_tensors='pt')
-
-with torch.inference_mode():
-    output_ids = model.generate(
-        **inputs,
-        max_new_tokens=100,
-        do_sample=True,
-        temperature=0.8,
-        top_p=0.9,
-    )
-
-output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-print(output_text)
-```
-
-What happens behind this code is:
-
-1. The tokenizer turns text into `input_ids`.
-2. The decoder-only Transformer applies causal self-attention to the prefix.
-3. The LM head outputs logits for the next token.
-4. `generate()` selects the next token according to the sampling strategy.
-5. The new token is appended back to the input.
-6. This repeats until generation ends.
-
-This is the practical API manifestation of autoregressive generation and KV cache discussed in Sections 8.8 and 8.9.
-
-## 8.11.16 A Complete Encoder-Only Example
-
-Here is a BERT-style text representation example:
-
-```{python}
-import torch
-from transformers import AutoTokenizer, AutoModel
-
-model_id = 'bert-base-uncased'
-
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModel.from_pretrained(model_id)
-ipy.clear_output()
-
-texts = [
-    'I love deep learning.',
-    'Transformers are powerful models.',
-]
-
-inputs = tokenizer(
-    texts,
-    return_tensors='pt',
-    padding=True,
-    truncation=True,
-)
-
-with torch.inference_mode():
-    outputs = model(**inputs)
-
-last_hidden_state = outputs.last_hidden_state
-sentence_embedding = last_hidden_state.mean(dim=1)
-
-print('Last hidden state shape:', last_hidden_state.shape)
-print('Sentence embedding shape:', sentence_embedding.shape)
-```
-
-Here, `last_hidden_state` is the contextual representation of every token.
-
-If the input batch contains padding, a more rigorous average pooling should use `attention_mask` and average only over real tokens:
-
-```{python}
-mask = inputs['attention_mask'].unsqueeze(-1)
-masked_hidden = last_hidden_state * mask
-
-sentence_embedding = masked_hidden.sum(dim=1) / mask.sum(dim=1)
-```
-
-This corresponds to the core use of encoder-only models:
-
-> **Encode input text into contextual representations.**
-
-## 8.11.17 A Complete Encoder-Decoder Example
-
-Here is a T5-style text-to-text example:
-
-```{python}
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-
-model_id = 't5-small'
-
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
-ipy.clear_output()
-
-text = 'Translate English to German: I love deep learning.'
-inputs = tokenizer(text, return_tensors='pt')
-
-with torch.inference_mode():
-    output_ids = model.generate(
-        **inputs,
-        max_new_tokens=50,
-    )
-
-output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-print(output_text)
-```
-
-What happens behind this code is:
-
-1. The tokenizer processes the input text.
-2. The encoder bidirectionally encodes the complete input.
-3. The decoder starts autoregressive generation from a start token.
-4. Decoder self-attention uses a causal mask.
-5. Decoder cross-attention reads the encoder output.
-6. `generate()` returns the generated result.
-
-This exactly corresponds to the encoder-decoder structure:
-
-$$
-X \rightarrow \operatorname{Encoder} \rightarrow H \rightarrow \operatorname{Decoder} \rightarrow Y
-$$
-
-## 8.11.18 An Attention Visualization Interface Example
-
-If we want to extract attention weights, we can write:
-
-```{python}
-from transformers import AutoTokenizer, AutoModel
-
-model_id = 'bert-base-uncased'
-
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModel.from_pretrained(
-    model_id,
-    attn_implementation='eager',
-)
-ipy.clear_output()
-
-text = 'The animal did not cross the street because it was tired.'
-inputs = tokenizer(text, return_tensors='pt')
-
-with torch.inference_mode():
-    outputs = model(
-        **inputs,
-        output_attentions=True,
-    )
-
-attentions = outputs.attentions
-tokens = tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
-
-layer_idx = 0
-head_idx = 0
-attn = attentions[layer_idx][0, head_idx]
-
-print('Attention weights shape:', attn.shape)
-print('Tokens:', tokens)
-```
-
-At this point, `attn` has shape `(seq_len, seq_len)`. It can be used to draw a heatmap and observe the attention-weight distribution of this head over input tokens at this layer. But note:
-
-> **This figure shows the attention weights of one head in one layer; it is not a complete explanation of the model's final prediction.**
-
-We will explain why later.
-
-## 8.11.19 Summary
+## 8.11.8 Summary
 
 In this section, we mapped Transformer structures to commonly used Hugging Face Transformers APIs.
 
