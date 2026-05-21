@@ -36,15 +36,24 @@ img {
 
 /* make code blocks wrap and be scrollable if too wide */
 .cell-output pre {
-  white-space: pre-wrap !important;
-  word-break: break-word !important;
-  overflow-wrap: anywhere !important;
-  overflow-x: visible !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  overflow-x: visible;
   max-width: 100%;
 }
 
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .cell-output pre code {
-  white-space: inherit !important;
+  white-space: inherit;
+}
+
+pre code {
+  white-space: inherit;
 }
 
 /* style for blockquotes */
