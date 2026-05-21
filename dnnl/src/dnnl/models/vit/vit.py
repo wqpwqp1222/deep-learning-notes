@@ -152,7 +152,7 @@ class ViTEncoder(nn.Module):
 
 
 class ViTModel(nn.Module):
-    """Vision Transformer backbone that outputs encoded token representations."""
+    """Vision Transformer backbone without a task-specific prediction head."""
 
     def __init__(
         self,
@@ -200,7 +200,7 @@ class ViTModel(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Return encoded token representations for a batch of images."""
+        """Return class and patch token representations for a batch of images."""
         x = self.embedding(x)
         x = self.encoder(x)
         return x
@@ -227,7 +227,7 @@ class ViTClassificationHead(nn.Module):
 
 
 class ViTForImageClassification(nn.Module):
-    """Vision Transformer image classifier."""
+    """Vision Transformer with a class-token image classification head."""
 
     def __init__(
         self,
