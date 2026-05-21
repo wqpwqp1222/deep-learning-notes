@@ -1,5 +1,7 @@
 from torch import Tensor
 
+__all__ = ['patchify']
+
 
 def patchify(x: Tensor, patch_size: int) -> Tensor:
     """Split images into flattened patches.
