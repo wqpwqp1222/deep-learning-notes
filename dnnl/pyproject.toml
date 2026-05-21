@@ -1,12 +1,12 @@
 [project]
 name = "dnnl"
 version = "2026.05.16"
-keywords = ["deep learning", "quarto", "tutorial"]
-description = "Deep Learning Notes Library"
+keywords = ["deep learning notes", "library", "utilities"]
+description = "A utility library for deep learning notes, providing common functions and tools to support the main content of the deep learning notes collection."
 authors = [{ name = "jshn9515", email = "jshn9510@gmail.com" }]
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Operating System :: OS Independent",
@@ -19,13 +19,10 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
-dependencies = [
-    'numpy>=2.4.0',
-    'torch>=2.10.0',
-]
+dependencies = ['numpy~=2.4.0', 'torch~=2.12.0']
 
 [project.optional-dependencies]
-test = ['pytest>=9.0.0']
+test = ['pytest~=9.0.0']
 
 [project.urls]
 Homepage = "https://github.com/jshn9515/deep-learning-notes"
@@ -37,3 +34,7 @@ torch = { index = "pytorch" }
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[build-system]
+requires = ["uv_build~=0.11.0"]
+build-backend = "uv_build"
