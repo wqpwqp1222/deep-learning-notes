@@ -2,14 +2,15 @@ import pytest
 import torch
 
 from dnnl.models.vit import (
-    VisionTransformer,
     ViTClassificationHead,
     ViTConvPatchEmbedding,
     ViTEmbedding,
     ViTEncoder,
     ViTEncoderLayer,
+    ViTForImageClassification,
     ViTLinearPatchEmbedding,
     ViTMLP,
+    ViTModel,
     ViTPositionalEmbedding,
     patchify,
 )
@@ -184,8 +185,27 @@ def test_vit_classification_head_uses_class_token():
     assert torch.equal(output, torch.tensor([[2.0, 3.0], [5.0, 7.0]]))
 
 
-def test_vision_transformer_returns_class_logits():
-    module = VisionTransformer(
+def test_vit_model_returns_encoded_tokens():
+    module = ViTModel(
+        image_size=8,
+        patch_size=4,
+        in_channels=3,
+        embed_dim=6,
+        num_heads=2,
+        num_layers=2,
+        hidden_dim=12,
+        dropout=0.0,
+        attn_dropout=0.0,
+    )
+    x = torch.randn(2, 3, 8, 8)
+
+    output = module(x)
+
+    assert output.shape == (2, 5, 6)
+
+
+def test_vit_for_image_classification_returns_class_logits():
+    module = ViTForImageClassification(
         image_size=8,
         patch_size=4,
         in_channels=3,
