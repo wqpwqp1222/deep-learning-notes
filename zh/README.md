@@ -29,12 +29,13 @@
 - 10.1 为什么 Attention 是 IO-Bound
 - 10.2 Flash Attention v1：消除 Attention 的 IO 瓶颈
 
-## Chapter 11: Vision Transformers：从图像分类到视觉序列建模
+## Chapter 11: Vision Transformer：从图像分类到视觉序列建模
 
 - 11.1 从 CNN 到 Vision Transformer：把图像当成序列
 - 11.2 Patch Embedding：把图像切成 Token
 - 11.3 Class Token 与 Positional Embedding：让序列表示整张图
-- 11.4 ViT Encoder：图像上的 Transformer Encoder
+- 11.4 ViT Encoder：让 Patch Token 之间交换信息
+- 11.5 ViT Backbone：预训练与微调
 
 ## Chapter 12: GAN：在对抗中学习生成
 
