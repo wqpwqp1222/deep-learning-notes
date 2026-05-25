@@ -19,7 +19,6 @@ order: 2
 
 这也代表了 PyTorch 的一个设计理念：计算怎么做是算子的事，要不要记账是 Autograd 的事。接下来我们就从最常见的 `no_grad()` 开始，了解这些梯度记录模式。
 
-
 ```{python}
 import torch
 import torch.nn as nn
@@ -28,7 +27,7 @@ import torch.nn.functional as F
 print('PyTorch version:', torch.__version__)
 ```
 
-## 2.2.1 `torch.no_grad()`：暂停记账
+## 2.2.1 `no_grad()`：暂停记账
 
 在默认情况下，只要张量的 `requires_grad=True`，并且我们对它进行了运算，PyTorch 就会自动构建计算图。也就是说，只要你在可求导的范围里做计算，Autograd 就会默默地帮你把账记下来。但是有时候，我们并不需要这本账。
 
@@ -102,7 +101,7 @@ print('`x.requires_grad` after `requires_grad_()`:', x.requires_grad)
 
 那么，接下来一个自然的问题是：如果梯度可以被关闭，那么它能不能在局部重新开启？如果我们在推理阶段的某个小步骤突然需要梯度怎么办？这就引出了下一节：`torch.enable_grad()`。
 
-## 2.2.2 `torch.enable_grad()`：重新开始记账
+## 2.2.2 `enable_grad()`：重新开始记账
 
 在上一节里，我们看到 `no_grad()` 可以让 Autograd 暂停记录。那么一个自然的问题来了：如果我们已经在 `no_grad()` 里了，能不能只对其中一小段计算重新开启梯度？
 
@@ -147,7 +146,7 @@ with torch.set_grad_enabled(is_training):
 
 到目前为止，我们已经介绍了两种常用的梯度控制上下文：`no_grad()` 和 `enable_grad()`。它们分别用于关闭和开启梯度记录，并且可以嵌套使用，形成一个灵活的栈式管理系统。接下来，我们还会介绍一个更专门针对推理优化的上下文：`torch.inference_mode()`，它在性能和内存效率上比 `no_grad()` 更进一步。
 
-## 2.2.3 `torch.inference_mode()`：干脆以后都别记账了
+## 2.2.3 `inference_mode()`：干脆以后都别记账了
 
 在前面两节中，我们已经有了一个相当灵活的机制：
 
@@ -162,13 +161,13 @@ with torch.set_grad_enabled(is_training):
 
 这就是 `inference_mode()` 的设计动机[^1]。
 
+[^1]: `inference_mode()` 是在 PyTorch 1.9 版本引入的，专门针对推理阶段的性能优化。关于它的具体实现，可以参考 [RFC-0011-InferenceMode](https://github.com/ailzhang/rfcs/blob/rfc0011/RFC-0011-InferenceMode.md)。
+
 在 `no_grad()` 模式里，PyTorch 还会维护版本计数器（version counter）和视图追踪（view tracking），以及一些用于确保梯度正确性的内部检查。这些机制在训练时是必要的。它们可以防止原地操作破坏图结构，或者共享内存导致梯度错误。但在纯推理阶段，它们其实是额外开销。既然这一段代码的结果永远不会参与梯度计算，框架就可以不再维护与梯度相关的版本检查与视图追踪，做更激进的内存优化。因此，`inference_mode()` 通常会比 `no_grad()` 更快、更省内存。
 
 但是，它是不可逆的。
 
 我们知道，在 `no_grad()` 里创建的张量，可以在之后重新启用梯度：
-
-[^1]: `inference_mode()` 是在 PyTorch 1.9 版本引入的，专门针对推理阶段的性能优化。关于它的具体实现，可以参考 [RFC-0011-InferenceMode](https://github.com/ailzhang/rfcs/blob/rfc0011/RFC-0011-InferenceMode.md)。
 
 ```{python}
 with torch.no_grad():
@@ -222,3 +221,13 @@ except RuntimeError as err:
 - 在该模式下创建的张量无法再重新加入自动微分系统
 
 这是不可逆的关闭。这种模式的优化最激进，但限制也最大。适用于纯推理、模型评估和数据处理等场景。
+
+## 2.2.5 本章小结
+
+这一节，我们讨论了 PyTorch 中的梯度记录控制。默认情况下，只要张量参与了可求导计算，Autograd 就会动态构建计算图。但在验证、推理或只需要数值结果的场景下，继续记录计算图往往是不必要的开销。
+
+`torch.no_grad()` 可以临时关闭梯度记录，但不会改变张量本身的 `requires_grad` 属性；`torch.enable_grad()` 可以在局部重新开启梯度记录；`torch.set_grad_enabled()` 则可以根据条件动态控制是否记录梯度，常用于统一训练和评估代码。
+
+相比之下，`torch.inference_mode()` 更适合纯推理场景。它不仅关闭计算图记录，还会跳过一些 Autograd 内部检查，因此通常更快、更省内存。但它的限制也更强：在 `inference_mode()` 中创建的张量，之后不能再重新加入自动微分系统。
+
+了解了
