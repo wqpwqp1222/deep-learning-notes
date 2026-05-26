@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "dnnl/**"
+      - "pyproject.toml"
       - ".github/workflows/dnnl-ci.yml"
   pull_request:
     paths:
       - "dnnl/**"
+      - "pyproject.toml"
       - ".github/workflows/dnnl-ci.yml"
   workflow_dispatch:
 
