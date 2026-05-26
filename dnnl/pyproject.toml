@@ -19,10 +19,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
-dependencies = ['numpy~=2.4.0', 'torch~=2.12.0']
+dependencies = [
+    'numpy>=2.4.0,<2.5.0',
+    'matplotlib>=3.10.6,<3.11.0',
+    'torch>=2.12.0,<2.13.0',
+]
 
 [project.optional-dependencies]
-test = ['pytest~=9.0.0']
+test = ['pytest>=9.0.0,<9.1.0']
 
 [project.urls]
 Homepage = "https://github.com/jshn9515/deep-learning-notes"
@@ -36,5 +40,5 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [build-system]
-requires = ["uv_build~=0.11.0"]
+requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
