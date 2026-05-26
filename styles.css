@@ -89,6 +89,17 @@ table td {
   vertical-align: middle;
 }
 
+/* center figures in cell outputs */
+.cell-output-display figure {
+  text-align: center;
+}
+
+.cell-output-display figure img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* style for plaintext blocks */
 pre.text {
   background-color: #f1f3f5;
