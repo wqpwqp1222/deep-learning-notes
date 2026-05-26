@@ -22,7 +22,7 @@ def set_matplotlib_format(fmt: str, dpi_ratio: int = 3) -> None:
 
     Args:
         fmt (str):
-            One figure format to enable: {'png', 'retina', 'jpeg', 'svg', 'pdf'}.
+            One figure format to enable: {'png', 'retina', 'highdpi', 'jpeg', 'svg', 'pdf'}.
         dpi_ratio (int, default: 3):
             The dpi ratio to use for 'highdpi' format. Default is 3, which means
             3 times the normal dpi. Only used when fmt is 'highdpi'.
@@ -94,7 +94,7 @@ def set_figure_format(shell: InteractiveShell, fmt: str, dpi_ratio: int = 3) -> 
         shell (InteractiveShell):
             The main IPython instance.
         format (str):
-            One figure format to enable: {'png', 'retina', 'jpeg', 'svg', 'pdf'}.
+            One figure format to enable: {'png', 'retina', 'highdpi', 'jpeg', 'svg', 'pdf'}.
         dpi_ratio (int, default: 3):
             The dpi ratio to use for 'highdpi' format. Default is 3, which means
             3 times the normal dpi. Only used when fmt is 'highdpi'.
