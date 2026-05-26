@@ -107,27 +107,26 @@ def set_figure_format(shell: InteractiveShell, fmt: str, dpi_ratio: int = 3) -> 
     for fig in shell.display_formatter.formatters.values():
         fig.pop(Figure, None)
 
-    supported = {'png', 'retina', 'jpg', 'jpeg', 'svg', 'highdpi', 'pdf'}
-    if fmt not in supported:
-        raise NotImplementedError(
-            f"Unsupported figure format '{fmt}'. Supported formats are: {supported}."
-        )
-
     if fmt == 'png':
         png_printer = partial(print_figure, fmt='png', base64=True)
         png_formatter.for_type(Figure, png_printer)
-    if fmt == 'retina':
+    elif fmt == 'retina':
         retina_printer = partial(highdpi_figure, dpi_ratio=2, base64=True)
         png_formatter.for_type(Figure, retina_printer)
-    if fmt == 'highdpi':
+    elif fmt == 'highdpi':
         highdpi_printer = partial(highdpi_figure, dpi_ratio=dpi_ratio, base64=True)
         png_formatter.for_type(Figure, highdpi_printer)
-    if fmt in ('jpg', 'jpeg'):
+    elif fmt in ('jpg', 'jpeg'):
         jpg_printer = partial(print_figure, fmt='jpg', base64=True)
         jpg_formatter.for_type(Figure, jpg_printer)
-    if fmt == 'svg':
+    elif fmt == 'svg':
         svg_printer = partial(print_figure, fmt='svg')
         svg_formatter.for_type(Figure, svg_printer)
-    if fmt == 'pdf':
+    elif fmt == 'pdf':
         pdf_printer = partial(print_figure, fmt='pdf', base64=True)
         pdf_formatter.for_type(Figure, pdf_printer)
+    else:
+        supported = {'png', 'retina', 'highdpi', 'jpeg', 'svg', 'pdf'}
+        raise NotImplementedError(
+            f"Unsupported figure format '{fmt}'. Supported formats are: {supported}."
+        )
