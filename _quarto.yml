@@ -28,6 +28,7 @@ format:
     syntax-highlighting: github
     code-annotations: hover
     license: CC BY-NC
+    quarto-required: ">=1.9.0"
 
 website:
   title: deep-learning-notes
