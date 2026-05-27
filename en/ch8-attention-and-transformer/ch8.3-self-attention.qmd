@@ -20,13 +20,15 @@ This is also one of the key reasons why Transformer can process sequence informa
 ```{python}
 import math
 
+import dnnl
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
+dnnl.set_matplotlib_format('svg')
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -144,13 +146,8 @@ ax.set_xlabel('key/value position')
 ax.set_ylabel('query position')
 ax.set_title('Self-Attention Weights')
 fig.colorbar(im, ticks=cbar_ticks)
-fig.savefig('figures/ch8.3-self-attn-weights.svg')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.3-self-attn-weights.svg">
-</figure>
 
 The thing most worth noticing here is the shape of `attention weights`. For a sequence with length 5, the attention weight matrix is $5 \times 5$. Its $i$-th row represents the weights assigned by the $i$-th token to all tokens in the whole sequence when updating itself. For self-attention, the weight matrix is always a square matrix, and both the number of rows and columns are equal to the sequence length.
 

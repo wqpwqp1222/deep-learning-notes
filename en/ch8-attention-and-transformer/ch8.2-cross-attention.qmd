@@ -20,6 +20,7 @@ In this section, we focus on cross-attention. Self-attention will be discussed s
 ```{python}
 import math
 
+import dnnl
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
@@ -27,7 +28,8 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
+dnnl.set_matplotlib_format('svg')
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -247,13 +249,8 @@ ax.set_ylabel('query position')
 ax.set_title('Cross-Attention Weights')
 ax.set_aspect('equal')
 fig.colorbar(im, shrink=0.85, ticks=cbar_ticks)
-fig.savefig('figures/ch8.2-cross-attn-weights.svg')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.2-cross-attn-weights.svg">
-</figure>
 
 The $i$-th row and $j$-th column in the figure represent how much the $i$-th position in the query sequence attends to the $j$-th position in the queried sequence. The darker the color, the larger the weight, meaning that the query position pays more attention to the information from the queried position. Since this is cross-attention, the horizontal axis and vertical axis correspond to two different sequences.
 
@@ -315,13 +312,8 @@ ax.set_xlabel('$d_k$')
 ax.set_ylabel('Average Entropy')
 ax.legend(['Unscaled', r'Scaled by $\sqrt{d_k}$'], loc='center right')
 ax.set_title('Scaling Effect on Softmax Sharpness')
-fig.savefig('figures/ch8.2-attn-normalize.svg')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.2-attn-normalize.svg">
-</figure>
 
 You can see that without scaling, as $d_k$ increases, softmax becomes sharper and the entropy drops more obviously. After scaling, the distribution becomes much more stable. This is an important reason why scaled dot-product attention became the standard setup.
 
