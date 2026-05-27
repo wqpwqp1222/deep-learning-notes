@@ -13,7 +13,7 @@ on:
           - "false"
 
       commit_back:
-        description: "Commit _freeze and README changes back to the repository?"
+        description: "Commit _freeze and README.md changes back to the repository?"
         required: true
         default: "false"
         type: choice
@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   build-deploy:
-    name: Build and Deploy Quarto Website
+    name: Manual Publish Quarto Website
     runs-on: ubuntu-latest
 
     steps:
@@ -61,9 +61,6 @@ jobs:
         run: |
           uv python install 3.14
           uv sync --python 3.14 --all-packages
-
-      - name: Generate TOC for the website
-        run: uv run python generate_toc.py
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
