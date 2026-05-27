@@ -21,7 +21,9 @@ order: 1
 
 ```{python}
 import math
+import os
 
+import dnnl
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
@@ -34,7 +36,7 @@ from torch import Tensor
 from torchmetrics import MeanMetric
 from torchvision.utils import make_grid
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -222,8 +224,7 @@ class AutoEncoder(nn.Module):
 这就是 AutoEncoder 最核心的训练逻辑。
 
 ```{python}
-# Change the root path to your local directory where you want to store the MNIST dataset
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 
 train_ds = datasets.MNIST(root, train=True, download=True, transform=transform)
@@ -278,13 +279,9 @@ ax = fig.add_subplot(1, 1, 1)
 ax.imshow(grid, cmap='gray')
 ax.axis('off')
 ax.set_title('Original (top) vs Reconstructed (bottom)')
-fig.savefig('figures/ch13.1-reconstructed.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.1-reconstructed.png" style="width: 640px; height: auto;">
-</figure>
 
 ## 13.1.5 AutoEncoder 的局限性
 
@@ -314,8 +311,8 @@ ax = fig.add_subplot(1, 1, 1)
 ax.imshow(grid, cmap='gray')
 ax.axis('off')
 ax.set_title('Randomly Generated Images from Latent Space')
-fig.savefig('figures/ch13.1-random-generate.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
 
 <figure class="figure" style="text-align: center;">
@@ -349,13 +346,9 @@ ax.set_xlabel('z1')
 ax.set_ylabel('z2')
 ax.set_title('Latent means of test samples')
 fig.colorbar(scatter)
-fig.savefig('figures/ch13.1-latent-space.svg')
-plt.close(fig)
+dnnl.set_matplotlib_format('svg')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.1-latent-space.svg">
-</figure>
 
 你会发现，潜空间中的点分布非常不规整，甚至可能形成一些离散的簇。这些簇对应着训练数据中不同类别的样本，但它们之间可能存在很大的空洞。也就是说，潜空间中有很多区域是没有被训练数据覆盖的。当我们从这些区域中采样 $z$ 时，decoder 无法正确地将其映射为有效的图像，因此生成的结果往往是模糊或无意义的。
 

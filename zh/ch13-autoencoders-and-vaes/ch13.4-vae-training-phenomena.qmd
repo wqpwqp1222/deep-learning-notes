@@ -32,8 +32,10 @@ $$
 这一节我们不只讲结论，而是直接通过代码来观察这些现象。为了更方便地观察潜空间的分布，我们使用 t-SNE 对潜空间进行可视化，并在 MNIST 上训练一个小型 VAE。
 
 ```{python}
+import os
 from collections import defaultdict
 
+import dnnl
 import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
@@ -45,7 +47,7 @@ from sklearn.manifold import TSNE
 from torchmetrics.aggregation import MeanMetric
 from torchvision.utils import make_grid
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -66,8 +68,7 @@ print(f'Using device: {device}')
 这里我们创建 MNIST 数据集。
 
 ```{python}
-# Change the path to your dataset directory if needed
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 train_ds = datasets.MNIST(root, train=True, download=True, transform=transform)
 test_ds = datasets.MNIST(root, train=False, download=True, transform=transform)
@@ -146,13 +147,9 @@ for ax in axes:
 axes[0].legend(loc='upper right')
 axes[1].legend(loc='lower right')
 axes[1].set_yscale('log')
-fig.savefig('figures/ch13.4-vae-training-curves.svg')
-plt.close(fig)
+dnnl.set_matplotlib_format('svg')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.4-vae-training-curves.svg">
-</figure>
 
 上图左侧是原始尺度的损失曲线，右侧是对数尺度。在一开始，重建损失很大，但随着训练的进行，重建损失迅速下降。而 KL 损失在一开始很小，并在前几个 step 里来回震荡，但随着训练的进行逐渐增加，最后趋于稳定。总损失总体趋势和重建损失相同，但由于 KL 损失的增加，下降速度比重建损失慢一些。模型在大约 2000 个 step 后收敛。
 
@@ -185,13 +182,9 @@ ax = fig.add_subplot(1, 1, 1)
 ax.imshow(grid, cmap='gray')
 ax.axis('off')
 ax.set_title('Original (top) vs Reconstructed (bottom)')
-fig.savefig('figures/ch13.4-reconstructed.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.4-reconstructed.png" style="width: 640px; height: auto;">
-</figure>
 
 如果你把它和普通 AutoEncoder 对比就会发现，AutoEncoder 的重建通常更锐利，因为它不需要服从一个先验概率；而 VAE 的重建往往更平滑，因为它必须让潜空间保持连续、可采样。这也是为什么很多人第一次看 VAE 的生成结果，会觉得它有点糊。这种模糊并不一定说明模型没学会，而是它在为可生成、可插值、可采样的潜空间付出的代价。
 
@@ -215,13 +208,9 @@ ax = fig.add_subplot(1, 1, 1)
 ax.imshow(grid, cmap='gray')
 ax.axis('off')
 ax.set_title('Randomly Generated Images from Latent Space')
-fig.savefig('figures/ch13.4-randomly-generated.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.4-randomly-generated.png" style="width: 640px; height: auto;">
-</figure>
 
 这一步生成出来的结果还比较像手写数字，虽然仍然很模糊，但起码有了明显的数字形状。说明 KL 项确实把潜空间拉向了标准正态附近，并且 decoder 也确实学会了如何把这个潜空间解释成数据。这正是普通 AutoEncoder 很难稳定做到的。普通 AE 的潜空间往往很零散，就像 13.1 节里的实验一样，我们随便采样一个点，decoder 往往会输出一个很奇怪的结果。
 
@@ -252,13 +241,9 @@ fig.colorbar(scatter)
 ax.set_xlabel('z1')
 ax.set_ylabel('z2')
 ax.set_title('Latent means of test samples')
-fig.savefig('figures/ch13.4-latent-space.svg')
-plt.close(fig)
+dnnl.set_matplotlib_format('svg')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.4-latent-space.svg" alt="ch13.4-latent-space">
-</figure>
 
 可以看到，同类数字会在潜空间中形成相对接近的区域，不同数字之间并不是完全割裂，而是带有一定的连续过渡。潜空间的整体分布不会无限发散，而会被 KL 项拉在中心附近。VAE 学到的潜空间不只是能编码数据，还往往具有几何结构。
 
@@ -295,13 +280,9 @@ ax = fig.add_subplot(1, 1, 1)
 ax.imshow(x_hat, cmap='gray')
 ax.axis('off')
 ax.set_title('Interpolation in Latent Space')
-fig.savefig('figures/ch13.4-interpolation.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.4-interpolation.png" style="width: 795px; height: auto;">
-</figure>
 
 你会发现插值结果是平滑变化的，而不是突然跳变的。随着插值系数从 0 变到 1，数字形状会慢慢变化，笔画会逐渐移动、弯曲或合并。虽然中间态不一定是标准数字，但通常不像噪声。这说明 latent space 不是一堆毫无关系的离散点，而更像一个连续的语义空间。
 
@@ -369,13 +350,9 @@ for i, label in enumerate(row_labels):
 
 ax.axis('off')
 ax.set_title('Original vs Reconstructions with Different β Values')
-fig.savefig('figures/ch13.4-beta-comparison.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch13.4-beta-comparison.png" style="width: 499px; height: auto;">
-</figure>
 
 图中第一行是原图，第二行是 $\beta=0.1$ 的重建，第三行是 $\beta=1.0$ 的重建，第四行是 $\beta=4.0$ 的重建。
 
