@@ -24,6 +24,7 @@ import os
 import random
 
 import IPython.display as ipy
+import dnnl
 import matplotlib.pyplot as plt
 import PIL.Image as Image
 import seaborn as sns
@@ -34,7 +35,7 @@ import transformers
 from torch import Tensor
 from transformers import CLIPModel, CLIPProcessor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
 print('PyTorch version:', torch.__version__)
 print('Transformers version:', transformers.__version__)
 ```
@@ -182,13 +183,9 @@ sns.heatmap(
 ax.set_xlabel('text')
 ax.set_ylabel('image')
 ax.set_title('CLIP similarity matrix')
-fig.savefig('figures/ch15.1-clip-similarity-matrix.svg')
-plt.close(fig)
+dnnl.set_matplotlib_format('svg')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip-similarity-matrix.svg">
-</figure>
 
 This similarity matrix explains very well how CLIP works: it pulls correctly paired images and text closer. From the figure, we can see that the highest score in each row appears on the diagonal. For example, the dog image has the highest score with the dog text, and the cat image has the highest score with the cat text. This shows that the model can basically judge which text this image is most like.
 
@@ -274,8 +271,7 @@ That is to say, CLIP does not use a fixed linear layer to output categories like
 Of course, there is also a very important practical detail here. The text encoder of the original OpenAI CLIP was mainly trained on English data, so in many cases English prompts work obviously better than Chinese prompts. This is not a limitation of the CLIP theory itself, but a result of the training corpus distribution.
 
 ```{python}
-# Change the root path to your local directory where you want to store the CIFAR10 dataset
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 dataset = datasets.Caltech101(root, target_type='category', download=True)
 idx = random.randrange(len(dataset))
 image, label = dataset[idx]
@@ -296,17 +292,13 @@ ax = fig.add_subplot(1, 1, 1)
 ax.imshow(image)
 ax.axis('off')
 ax.set_title(f'GT: {dataset.categories[label]}')
-fig.savefig('figures/ch15.1-clip-zero-shot-example.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 
 z = zip(pred_names, pred_scores, strict=True)
 for rank, (name, score) in enumerate(z, start=1):
     print(f'{rank}. {name:<15s} prob={score:.4f}')
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip-zero-shot-example.png" style="width: 330px; height: auto;">
-</figure>
 
 This code actually goes through the whole zero-shot inference process of CLIP:
 
@@ -362,8 +354,8 @@ ax.imshow(attacked_img)
 ax.set_title('apple with "iPod" text')
 ax.axis('off')
 fig.tight_layout()
-fig.savefig('figures/ch15.1-clip-typographic-attack.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 
 z = zip(prompts, clean_probs, attacked_probs, strict=True)
 table = '| prompt | clean | attacked |\n|:---:|:---:|:---:|\n'
@@ -372,10 +364,6 @@ for prompt, clean, attacked in z:
 
 ipy.display(ipy.Markdown(table))
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip-typographic-attack.png" style="width: 490px; height: auto;">
-</figure>
 
 You can see a very intuitive failure case:
 
