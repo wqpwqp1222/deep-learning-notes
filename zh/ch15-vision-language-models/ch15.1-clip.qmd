@@ -24,6 +24,7 @@ import os
 import random
 
 import IPython.display as ipy
+import dnnl
 import matplotlib.pyplot as plt
 import PIL.Image as Image
 import seaborn as sns
@@ -34,7 +35,7 @@ import transformers
 from torch import Tensor
 from transformers import CLIPModel, CLIPProcessor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
 print('PyTorch version:', torch.__version__)
 print('Transformers version:', transformers.__version__)
 ```
@@ -180,13 +181,9 @@ sns.heatmap(
 ax.set_xlabel('text')
 ax.set_ylabel('image')
 ax.set_title('CLIP similarity matrix')
-fig.savefig('figures/ch15.1-clip-similarity-matrix.svg')
-plt.close(fig)
+dnnl.set_matplotlib_format('svg')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip-similarity-matrix.svg">
-</figure>
 
 这张相似度矩阵很好地说明了 CLIP 是怎么工作的：它会把配对正确的图像和文本拉得更近。从图里可以看到，每一行里最高的分数都出现在对角线上，比如 dog 图片和 dog 文本的分数最高，cat 图片和 cat 文本的分数也最高。这说明模型基本能判断出这张图最像哪段文本。
 
@@ -272,8 +269,7 @@ print('text -> image predictions:', pred_image_idx.tolist())
 当然，这里也有一个很重要的现实细节。OpenAI 原始 CLIP 的文本编码器主要是按英文数据训练的，所以很多时候英文 prompt 的效果会明显好于中文 prompt。这不是 CLIP 理论本身的限制，而是训练语料分布带来的结果。
 
 ```{python}
-# Change the root path to your local directory where you want to store the CIFAR10 dataset
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 dataset = datasets.Caltech101(root, target_type='category', download=True)
 idx = random.randrange(len(dataset))
 image, label = dataset[idx]
@@ -294,17 +290,13 @@ ax = fig.add_subplot(1, 1, 1)
 ax.imshow(image)
 ax.axis('off')
 ax.set_title(f'GT: {dataset.categories[label]}')
-fig.savefig('figures/ch15.1-clip-zero-shot-example.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 
 z = zip(pred_names, pred_scores, strict=True)
 for rank, (name, score) in enumerate(z, start=1):
     print(f'{rank}. {name:<15s} prob={score:.4f}')
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip-zero-shot-example.png" style="width: 330px; height: auto;">
-</figure>
 
 这段代码其实把 CLIP 的 zero-shot 推理过程完整走了一遍：
 
@@ -360,8 +352,8 @@ ax.imshow(attacked_img)
 ax.set_title('apple with "iPod" text')
 ax.axis('off')
 fig.tight_layout()
-fig.savefig('figures/ch15.1-clip-typographic-attack.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 
 z = zip(prompts, clean_probs, attacked_probs, strict=True)
 table = '| prompt | clean | attacked |\n|:---:|:---:|:---:|\n'
@@ -370,10 +362,6 @@ for prompt, clean, attacked in z:
 
 ipy.display(ipy.Markdown(table))
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip-typographic-attack.png" style="width: 490px; height: auto;">
-</figure>
 
 你能看到一个很直观的失败案例：
 
