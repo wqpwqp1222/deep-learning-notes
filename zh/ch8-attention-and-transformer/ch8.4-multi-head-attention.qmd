@@ -28,13 +28,15 @@ order: 4
 ```{python}
 import math
 
+import dnnl
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
+dnnl.set_matplotlib_format('svg')
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -362,13 +364,8 @@ for i, ax in enumerate(axes):
 axes[0].invert_yaxis()
 cbar_ticks = np.arange(0, 0.5, 0.1)
 fig.colorbar(im, ax=axes, ticks=cbar_ticks)
-fig.savefig('figures/ch8.4-multi-head-attn-weights.svg')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.4-multi-head-attn-weights.svg">
-</figure>
 
 ## 8.4.7 为什么最后还需要输出投影
 

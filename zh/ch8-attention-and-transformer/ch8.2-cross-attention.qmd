@@ -20,6 +20,7 @@ order: 2
 ```{python}
 import math
 
+import dnnl
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
@@ -27,7 +28,8 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
+dnnl.set_matplotlib_format('svg')
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -213,8 +215,11 @@ class CrossAttention(nn.Module):
             return output, attn_weights
 
         return output, None
+```
 
+我们来测试一下这个 cross-attention 的输入输出形状：
 
+```{python}
 x = torch.randn(3, 5, 16)  # query sequence, length = 5
 y = torch.randn(3, 8, 16)  # key/value sequence, length = 8
 cross_attn = CrossAttention(embed_dim=16)
@@ -251,13 +256,8 @@ ax.set_ylabel('query position')
 ax.set_title('Cross-Attention Weights')
 ax.set_aspect('equal')
 fig.colorbar(im, shrink=0.85, ticks=cbar_ticks)
-fig.savefig('figures/ch8.2-cross-attn-weights.svg')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.2-cross-attn-weights.svg">
-</figure>
 
 图中的第 $i$ 行第 $j$ 列表示查询序列的第 $i$ 个位置对被查询序列的第 $j$ 个位置的关注程度。颜色越深表示权重越大，也就是查询位置越关注被查询位置的信息。由于这是 cross-attention，横轴和纵轴对应的是两个不同序列。
 
@@ -319,13 +319,8 @@ ax.set_xlabel('$d_k$')
 ax.set_ylabel('Average Entropy')
 ax.legend(['Unscaled', r'Scaled by $\sqrt{d_k}$'], loc='center right')
 ax.set_title('Scaling Effect on Softmax Sharpness')
-fig.savefig('figures/ch8.2-attn-normalize.svg')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.2-attn-normalize.svg">
-</figure>
 
 你看，不缩放时，随着 $d_k$ 的增大，softmax 会越来越尖锐，熵下降得更明显；而做了缩放之后，分布会稳定很多。这就是 scaled dot-product attention 成为标准配置的重要原因。
 
