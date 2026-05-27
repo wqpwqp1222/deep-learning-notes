@@ -30,16 +30,19 @@ $$
 3. 为什么 DDPM 最后通常把训练目标写成预测噪声。
 
 ```{python}
+import os
 import random
 
 import dnnl.models.ddpm.utils as dutils
+import dnnl
 import matplotlib.pyplot as plt
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms.v2 as v2
 from torch import Tensor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
+dnnl.set_matplotlib_format('highdpi')
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -132,8 +135,7 @@ $$
 现在我们来做一个实验。使用 MNIST 数据集，假设我们手里有原始图像 $x_0$，我们先把一张图像按照前向公式加噪到高斯噪声，然后再从高斯噪声一步步走回去。我们来看看这个过程中图像的变化。
 
 ```{python}
-# Change the root path to your local directory if needed
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 ds = datasets.MNIST(root, train=False, download=True, transform=transform)
 
@@ -181,13 +183,8 @@ for i, ax in enumerate(axes):
     ax.axis('off')
     ax.set_title(f't={idx[i]}', fontsize=10)
 fig.tight_layout(pad=0.5)
-fig.savefig('figures/ch14.3-denoise-v1.png')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.3-denoise-v1.png" style="width: 806px; height: auto;">
-</figure>
 
 你看，我们成功恢复出了原始图像！但是，这里又有一个问题：我们在恢复图像的过程中利用了原始图像 $x_0$。可是我们生成图像就是要生成 $x_0$ 的啊，如果我们都知道了 $x_0$，那我们还要生成什么？
 

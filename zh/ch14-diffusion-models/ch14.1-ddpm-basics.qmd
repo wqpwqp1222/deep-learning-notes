@@ -18,14 +18,17 @@ order: 1
 这一节我们先不急着上完整推导，而是先把这个核心直觉讲清楚。你会看到，DDPM 的出发点其实非常简单：如果一步生成太难，那就把它拆成很多个简单的小步骤。
 
 ```{python}
+import os
 import random
 
+import dnnl
 import matplotlib.pyplot as plt
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms.v2 as v2
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
+dnnl.set_matplotlib_format('highdpi')
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -50,8 +53,7 @@ print('PyTorch version:', torch.__version__)
 下面我们先不训练任何模型，只是拿一张图片来做一件简单的事：每隔几步，就给它加一些高斯噪声，并且噪声水平逐渐增大。我们来看看图像是如何逐渐失去结构的。
 
 ```{python}
-# Change the root path to your local directory if needed
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 ds = datasets.MNIST(root, train=False, download=True, transform=transform)
 
@@ -70,13 +72,8 @@ for ax, sigma in zip(axes, noise_levels, strict=True):
     ax.axis('off')
     ax.set_title(f'sigma={sigma:.2f}', fontsize=10)
 fig.tight_layout(pad=0.5)
-fig.savefig('figures/ch14.1-add-noise.png')
-plt.close(fig)
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.1-add-noise.png" style="width: 806px; height: auto;">
-</figure>
 
 从上面的图里我们可以发现，当噪声很小时，图像的大体结构还在；当噪声逐渐增大时，模型需要恢复的信息越来越多；当噪声大到一定程度时，图像几乎就只剩下随机的像素点了。
 

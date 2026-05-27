@@ -21,9 +21,11 @@ order: 4
 
 ```{python}
 import math
+import os
 import random
 
 import dnnl.models.ddpm.utils as dutils
+import dnnl
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -35,7 +37,7 @@ import torchvision.transforms.v2 as v2
 from dnnl.models.ddpm import DDPMScheduler, UNet2DModel
 from torch import Tensor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -136,13 +138,9 @@ ax.set_yticks(yticks + 0.5, timesteps.tolist())
 ax.set_xlabel('Embedding Dimension')
 ax.set_title('Illustration of sinusoidal time embedding')
 fig.colorbar(im)
-fig.savefig('figures/ch14.4-time-embedding.svg')
-plt.close(fig)
+dnnl.set_matplotlib_format('svg')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.4-time-embedding.svg">
-</figure>
 
 这张图中的每一行表示某一个时间步的编码结果，每一列表示某一个编码维度在不同时间步上的取值变化。有些列颜色变化较快，说明这些维度对应较高频率，对时间步的细微变化更敏感；有些列变化较慢，说明这些维度对应较低频率，能够提供更平滑、更粗粒度的时间信息。
 
@@ -237,8 +235,7 @@ $$
 当然，后来也有很多变体（例如 DDIM）把 DDPM 的随机采样过程改写成了一个可以是确定性的更新过程。但在最基础的 DDPM 里，**逐步采样 + 每步带一点随机性** 是标准做法。
 
 ```{python}
-# Change the root path to your local directory if needed
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 ds = datasets.MNIST(root, train=False, download=True, transform=transform)
 
@@ -288,13 +285,9 @@ for i, ax in enumerate(axes):
     ax.axis('off')
     ax.set_title(f't={idx[i]}', fontsize=10)
 fig.tight_layout(pad=0.5)
-fig.savefig('figures/ch14.4-denoise-v2.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.4-denoise-v2.png" style="width: 806px; height: auto;">
-</figure>
 
 ## 14.4.5 DDPM 训练与采样的简化代码
 

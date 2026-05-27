@@ -18,16 +18,18 @@ order: 2
 这一节，我们就来把前向扩散过程讲清楚。这一部分很重要，因为它几乎决定了整个 DDPM 的建模框架。
 
 ```{python}
+import os
 import random
 import time
 
+import dnnl
 import matplotlib.pyplot as plt
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms.v2 as v2
 from torch import Tensor
 
-plt.rc('savefig', dpi=300, bbox='tight')
+plt.rc('figure', dpi=100)
 print('PyTorch version:', torch.__version__)
 ```
 
@@ -79,8 +81,7 @@ $$
 所以，这种设计保证了在不断加噪的同时，整体数值尺度不会失控。也就使网络的训练和推理过程更稳定，更容易分析。
 
 ```{python}
-# Change the root path to your local directory if needed
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 ds = datasets.MNIST(root, train=False, download=True, transform=transform)
 
@@ -116,13 +117,9 @@ for i, ax in enumerate(axes):
     ax.axis('off')
     ax.set_title(f't={idx[i]}', fontsize=10)
 fig.tight_layout(pad=0.5)
-fig.savefig('figures/ch14.2-add-noise-v1.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.2-add-noise-v1.png" style="width: 806px; height: auto;">
-</figure>
 
 我们对原始图像 $x_0$ 进行 1000 这样的加噪操作，并在 1~1000 步中选取 8 个不同的时间点来观察图像的变化。我们会发现，在开头几步，图像的结构非常清晰；随着步数的增加，图像逐渐变得模糊；到 300 步以后，原本的结构已经完全淹没在噪声里了。加噪步数越多，最终得到的图像就越接近高斯分布，反向采样得到的图像也就越好。
 
@@ -169,13 +166,9 @@ ax.plot(sqrt_cosine.betas, label='cosine')
 ax.set_yscale('log')
 ax.set_title('Cosine Schedule')
 fig.tight_layout()
-fig.savefig('figures/ch14.2-beta-schedules.svg')
-plt.close(fig)
+dnnl.set_matplotlib_format('svg')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.2-beta-schedules.svg">
-</figure>
 
 ## 14.2.4 多步展开：$x_t$ 可以直接写成 $x_0$ 和噪声的组合
 
@@ -224,8 +217,7 @@ $$
 这正好对应我们想要的效果：时间越往后，图像中的原始结构越少，噪声越多。
 
 ```{python}
-# Change the root path to your local directory if needed
-root = 'D:/Workspaces/Python Project/datasets'
+root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 ds = datasets.MNIST(root, train=False, download=True, transform=transform)
 
@@ -262,13 +254,9 @@ for i, ax in enumerate(axes):
     ax.axis('off')
     ax.set_title(f't={idx[i]}', fontsize=10)
 fig.tight_layout(pad=0.5)
-fig.savefig('figures/ch14.2-add-noise-v2.png')
-plt.close(fig)
+dnnl.set_matplotlib_format('highdpi')
+plt.show()
 ```
-
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.2-add-noise-v2.png" style="width: 806px; height: auto;">
-</figure>
 
 这段代码不是按逐步递推来生成 $x_t$，而是直接使用闭式公式：
 
