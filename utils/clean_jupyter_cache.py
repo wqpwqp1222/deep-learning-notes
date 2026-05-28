@@ -3,9 +3,9 @@
 from pathlib import Path
 import shutil
 
-root = Path('.').resolve()
+ROOT = Path(__file__).resolve().parent.parent
 
-for cache_dir in root.rglob('.jupyter_cache'):
+for cache_dir in ROOT.rglob('.jupyter_cache'):
     if cache_dir.is_dir():
         print(f'Deleting: {cache_dir}')
         shutil.rmtree(cache_dir)
