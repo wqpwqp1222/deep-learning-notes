@@ -5,7 +5,7 @@ date-modified: 2026-05-23
 open-graph:
   title: ch2.3-dataset-and-dataloader
   description: "2.3 Dataset and DataLoader in PyTorch"
-title: "2.3 Dataset 与 DataLoader：从样本到小批量数据"
+title: "2.3 PyTorch 中的 Dataset 与 DataLoader"
 order: 3
 ---
 
