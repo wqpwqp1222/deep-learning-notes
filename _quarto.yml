@@ -3,8 +3,10 @@ project:
   output-dir: _site
   render:
     - "*.qmd"
-  pre-render: utils/render_mermaid.py
+  pre-render:
+    - utils/render_mermaid.py
   post-render:
+    - utils/clean_checkpoint.py
     - utils/clean_mermaid_svg.py
     - utils/generate_toc.py
 
