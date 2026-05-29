@@ -29,7 +29,6 @@ import matplotlib.pyplot as plt
 import PIL.Image as Image
 import seaborn as sns
 import torch
-import torch.accelerator as accl
 import torch.nn.functional as F
 import torchvision.datasets as datasets
 import transformers
@@ -42,9 +41,7 @@ print('Transformers version:', transformers.__version__)
 ```
 
 ```{python}
-device = accl.current_accelerator(check_available=True)
-if device is None:
-    device = torch.device('cpu')
+device = dnnl.get_default_device()
 print('Using device:', device)
 ```
 
@@ -270,7 +267,7 @@ print('text -> image predictions:', pred_image_idx.tolist())
 当然，这里也有一个很重要的现实细节。OpenAI 原始 CLIP 的文本编码器主要是按英文数据训练的，所以很多时候英文 prompt 的效果会明显好于中文 prompt。这不是 CLIP 理论本身的限制，而是训练语料分布带来的结果。
 
 ```{python}
-root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
+root = dnnl.get_data_root()
 dataset = datasets.Caltech101(root, target_type='category', download=True)
 idx = random.randrange(len(dataset))
 image, label = dataset[idx]
