@@ -7,8 +7,13 @@
 
 ## Chapter 2: Getting Started with PyTorch
 
-- 2.1 Automatic Differentiation in PyTorch
-- 2.2 Gradient Recording and Control in PyTorch
+- 2.1 Automatic Differentiation in PyTorch: From Forward Computation to Backpropagation
+- 2.2 Gradient Modes in PyTorch: Controlling Computation Graph Recording
+- 2.3 Data Loading in PyTorch: Dataset, DataLoader, and Batching
+- 2.4 nn.Module in PyTorch: Organizing Models, Parameters, and State
+- 2.5 Optimizers in PyTorch: From Manual Updates to Parameter Groups and State Management
+- 2.6 Training Loops in PyTorch: Connecting Data, Models, and Optimizers
+- 2.7 Checkpoints in PyTorch: Resuming Training After Interruptions
 
 ## Chapter 8: Attention and Transformer: From Dynamic Retrieval to Sequence Modeling
 
@@ -31,7 +36,7 @@
 
 ## Chapter 12: GAN: Learning to Generate through Adversarial Training
 
-- 12.1 Generative Adversarial Network (GAN)
+- 12.1 GAN Basics: Core Ideas and Training Flow of Generative Adversarial Networks
 
 ## Chapter 13: VAE: From Compression and Reconstruction to Probabilistic Generation
 
@@ -51,4 +56,4 @@
 
 ## Chapter 15: Vision-Language Models: From Image-Text Alignment to Multimodal Dialogue
 
-- 15.1 CLIP: Connecting Images and Language with Contrastive Learning
+- 15.1 CLIP: Mapping Images and Text into the Same Semantic Space
