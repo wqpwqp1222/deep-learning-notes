@@ -32,13 +32,11 @@ $$
 这一节我们不只讲结论，而是直接通过代码来观察这些现象。为了更方便地观察潜空间的分布，我们使用 t-SNE 对潜空间进行可视化，并在 MNIST 上训练一个小型 VAE。
 
 ```{python}
-import os
 from collections import defaultdict
 
 import dnnl
 import matplotlib.pyplot as plt
 import torch
-import torch.accelerator as accl
 import torch.optim as optim
 import torch.utils.data as utils
 import torchvision.datasets as datasets
@@ -53,15 +51,9 @@ print('PyTorch version:', torch.__version__)
 ```
 
 ```{python}
-torch.manual_seed(42)
-torch.use_deterministic_algorithms(False)
-torch.backends.cudnn.deterministic = False
-torch.backends.cudnn.benchmark = True
-
-device = accl.current_accelerator(check_available=True)
-if device is None:
-    device = torch.device('cpu')
-print(f'Using device: {device}')
+dnnl.set_seed(42)
+device = dnnl.get_default_device()
+print('Using device:', device)
 ```
 
 ## 13.4.1 训练一个最小 VAE
@@ -69,7 +61,7 @@ print(f'Using device: {device}')
 这里我们创建 MNIST 数据集。
 
 ```{python}
-root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
+root = dnnl.get_data_root()
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 train_ds = datasets.MNIST(root, train=True, download=True, transform=transform)
 test_ds = datasets.MNIST(root, train=False, download=True, transform=transform)
