@@ -1,11 +1,17 @@
 """Clean up .jupyter_cache directories in the current directory and its subdirectories."""
 
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-for cache_dir in ROOT.rglob('.jupyter_cache'):
-    if cache_dir.is_dir():
-        print(f'Deleting: {cache_dir}')
-        shutil.rmtree(cache_dir)
+
+def main():
+    for cache_dir in ROOT.rglob('.jupyter_cache'):
+        if cache_dir.is_dir():
+            print(f'Deleting: {cache_dir}')
+            shutil.rmtree(cache_dir)
+
+
+if __name__ == '__main__':
+    main()
