@@ -20,7 +20,6 @@ At this point, we should already be able to answer what VAE is and why VAE is de
 
 In this section, we look at the advantages and limitations of VAE, and then look at its position in the field of generative models.
 
-
 ## 13.5.1 Advantages of VAE: Why It Is Important
 
 VAE is classic not only because it can generate images, but because it naturally combines several very important ideas for the first time:
@@ -161,14 +160,34 @@ Simply speaking, it maintains a codebook. After the encoder outputs a continuous
 
 At this point, let us first compare several generative models together:
 
-|    Model    |          Core idea          |              Advantages              |              Limitations              |
-| :---------: | :-------------------------: | :----------------------------------: | :-----------------------------------: |
-|     GAN     | Adversarial training between generator and discriminator | Sharp and realistic samples | Unstable training, prone to mode collapse |
-| AutoEncoder | Compress and reconstruct the input | Simple structure, suitable for representation learning | Latent space is irregular, not suitable for direct sampling |
-|     VAE     | Latent variable probabilistic modeling and variational inference | Stable training, smooth latent space, can sample | Results tend to be blurry, posterior collapse may exist |
-|  Diffusion  | Generation through gradual noising and denoising | High quality, relatively stable training | Slow sampling, relatively complex system |
+::: {.list-table}
+Table 1: Comparison of the advantages and disadvantages of generative models
 
-: Table 1: Comparison of the advantages and disadvantages of generative models
+- - Model
+  - Core idea
+  - Advantages
+  - Limitations
+
+- - GAN
+  - Adversarial training between generator and discriminator
+  - Sharp and realistic samples
+  - Unstable training, prone to mode collapse
+
+- - AutoEncoder
+  - Compress and reconstruct the input
+  - Simple structure, suitable for representation learning
+  - Latent space is irregular, not suitable for direct sampling
+
+- - VAE
+  - Latent variable probabilistic modeling and variational inference
+  - Stable training, smooth latent space, can sample
+  - Results tend to be blurry, posterior collapse may exist
+
+- - Diffusion
+  - Generation through gradual noising and denoising
+  - High quality, relatively stable training
+  - Slow sampling, relatively complex system
+:::
 
 So, VAE is not a model that pursues the strongest visual quality. Instead, it pursues a more regular, more interpretable, and more probabilistically meaningful generation framework. Therefore, if our question is how to combine probabilistic modeling and representation learning, and how to make the latent space more structured, then VAE is almost an unavoidable step.
 
