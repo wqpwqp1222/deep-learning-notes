@@ -21,7 +21,6 @@ This process looks simple, but it is important. Because it tells us that neural 
 
 ```{python}
 import math
-import os
 
 import dnnl
 import matplotlib.pyplot as plt
@@ -41,15 +40,9 @@ print('PyTorch version:', torch.__version__)
 ```
 
 ```{python}
-torch.manual_seed(42)
-torch.use_deterministic_algorithms(False)
-torch.backends.cudnn.deterministic = False
-torch.backends.cudnn.benchmark = True
-
-device = torch.accelerator.current_accelerator(check_available=True)
-if device is None:
-    device = torch.device('cpu')
-print(f'Using device: {device}')
+dnnl.set_seed(42)
+device = dnnl.get_default_device()
+print('Using device:', device)
 ```
 
 ## 13.1.1 What Is an AutoEncoder
@@ -223,7 +216,7 @@ You can see that the whole training process only does three things:
 This is the core training logic of AutoEncoder.
 
 ```{python}
-root = os.getenv('DNNL_DATA_ROOT', os.path.expanduser('~/datasets'))
+root = dnnl.get_data_root()
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 
 train_ds = datasets.MNIST(root, train=True, download=True, transform=transform)
@@ -339,7 +332,7 @@ ax = fig.add_subplot(1, 1, 1)
 scatter = ax.scatter(z_2d[:, 0], z_2d[:, 1], c=label_list, s=8, alpha=0.7)
 ax.set_xlabel('z1')
 ax.set_ylabel('z2')
-ax.set_title('Latent Means of Test Samples')
+ax.set_title('Latent means of test samples')
 fig.colorbar(scatter)
 dnnl.set_matplotlib_format('svg')
 plt.show()
