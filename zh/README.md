@@ -7,12 +7,13 @@
 
 ## Chapter 2: PyTorch 入门
 
-- 2.1 PyTorch 中的自动微分
-- 2.2 PyTorch 中的梯度记录与控制
-- 2.3 PyTorch 中的 Dataset 与 DataLoader
-- 2.4 PyTorch 中的 nn.Module
-- 2.5 PyTorch 中的优化器
-- 2.6 PyTorch 中的训练循环
+- 2.1 PyTorch 中的自动微分：从前向计算到反向传播
+- 2.2 PyTorch 中的梯度模式：控制计算图的记录
+- 2.3 PyTorch 中的数据加载：Dataset、DataLoader 与批处理
+- 2.4 PyTorch 中的 nn.Module：组织模型、参数与状态
+- 2.5 PyTorch 中的优化器：从手动更新到参数组与状态管理
+- 2.6 PyTorch 中的训练循环：把数据、模型和优化器连接起来
+- 2.7 PyTorch 中的 Checkpoint：中断训练后如何继续
 
 ## Chapter 8: Attention 与 Transformer：从动态检索到序列建模
 
