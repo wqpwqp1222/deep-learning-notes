@@ -14,6 +14,6 @@ listing:
   date-format: iso
 
 open-graph:
-  title: part4-attention-mechanism-and-transformer
-  description: "Part 4: Attention Mechanism and Transformer"
+  title: part5-modern-computer-vision
+  description: "Part 5: Modern Computer Vision"
 ---
