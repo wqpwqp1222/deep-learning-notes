@@ -20,6 +20,7 @@ order: 8
 3. 推理时为什么必须自回归生成。
 
 ```{python}
+from collections.abc import Callable
 import math
 
 import dnnl.nn as dnn
