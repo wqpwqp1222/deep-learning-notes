@@ -86,7 +86,7 @@ def print_figure(
 
     bytes_io = BytesIO()
     if fig.canvas is None:
-        FigureCanvasBase(fig)
+        fig.set_canvas(FigureCanvasBase(fig))
 
     fig.canvas.print_figure(bytes_io, **kwargs)
     data = bytes_io.getvalue()
