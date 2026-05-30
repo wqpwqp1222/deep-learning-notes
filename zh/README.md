@@ -15,6 +15,10 @@
 - 2.6 PyTorch 中的训练循环：把数据、模型和优化器连接起来
 - 2.7 PyTorch 中的 Checkpoint：中断训练后如何继续
 
+## Chapter 4: 深度学习中的优化算法
+
+- 4.1 从梯度下降到 SGD
+
 ## Chapter 8: Attention 与 Transformer：从动态检索到序列建模
 
 - 8.1 Bahdanau Attention：从信息压缩到动态检索
