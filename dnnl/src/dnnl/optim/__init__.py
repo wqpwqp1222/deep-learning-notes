@@ -1,3 +1,9 @@
+from .adagrad import Adagrad as Adagrad
 from .base import Optimizer as Optimizer
-from .sgd import SGDWithMomentum as SGDWithMomentum
+from .sgd import SGD as SGD
 from .sgd import SimpleSGD as SimpleSGD
+from .sgd import SimpleSGDWithMomentum as SimpleSGDWithMomentum
+from .sgd import SimpleSGDWithNesterovMomentum as SimpleSGDWithNesterovMomentum
+from .utils import run_adagrad as run_adagrad
+from .utils import run_sgd as run_sgd
+from .utils import run_sgd_with_momentum as run_sgd_with_momentum
