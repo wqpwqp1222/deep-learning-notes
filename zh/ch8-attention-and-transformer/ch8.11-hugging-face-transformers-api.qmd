@@ -51,7 +51,7 @@ print('Transformers version:', transformers.__version__)
 ```{python}
 from transformers import AutoTokenizer, AutoModel
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModel.from_pretrained(model_id)
@@ -134,7 +134,7 @@ pprint(inputs)
 ```{python}
 from transformers import AutoTokenizer, AutoModel
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModel.from_pretrained(model_id)
@@ -205,7 +205,7 @@ outputs.past_key_values
 ```{python}
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForSequenceClassification.from_pretrained(
@@ -262,7 +262,7 @@ print(logits.shape)
 ```{python}
 from transformers import AutoModelForTokenClassification
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 model = AutoModelForTokenClassification.from_pretrained(
     model_id,
@@ -309,7 +309,7 @@ $$
 import torch
 from transformers import AutoTokenizer, AutoModel
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModel.from_pretrained(model_id)
@@ -365,7 +365,7 @@ sentence_embedding = masked_hidden.sum(dim=1) / mask.sum(dim=1)
 ```{python}
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-model_id = 'gpt2'
+model_id = 'openai-community/gpt2'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id)
@@ -510,7 +510,7 @@ next_outputs = model(
 ```{python}
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-model_id = 'gpt2'
+model_id = 'openai-community/gpt2'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id)
@@ -554,7 +554,7 @@ print(output_text)
 ```{python}
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-model_id = 't5-small'
+model_id = 'google-t5/t5-small'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
@@ -601,7 +601,7 @@ $$
 ```{python}
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-model_id = 't5-small'
+model_id = 'google-t5/t5-small'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
@@ -650,7 +650,7 @@ $$
 ```{python}
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForSequenceClassification.from_pretrained(
@@ -758,7 +758,7 @@ $$
 ```{python}
 from transformers import AutoTokenizer, AutoModel
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModel.from_pretrained(
@@ -802,7 +802,7 @@ print('Tokens:', tokens)
 ```{python}
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-model_id = 'bert-base-uncased'
+model_id = 'google-bert/bert-base-uncased'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForSequenceClassification.from_pretrained(
@@ -835,7 +835,7 @@ $$
 ```{python}
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-model_id = 'gpt2'
+model_id = 'openai-community/gpt2'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id)
