@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterable
+from typing import Any
 
 from torch import Tensor
 
@@ -9,14 +10,17 @@ __all__ = ['Optimizer']
 class Optimizer(ABC):
     """Abstract interface for gradient-based parameter optimizers."""
 
-    def __init__(self, params: Sequence[Tensor]):
+    def __init__(self, params: Iterable[Tensor], **kwargs: Any):
         """Store the parameters managed by the optimizer.
 
         Args:
-            params (Sequence[Tensor]): Parameters whose gradients drive the
+            params (Iterable[Tensor]): Parameters whose gradients drive the
                 optimizer updates.
+            **kwargs: Additional keyword arguments to store as attributes.
+                These may be used by concrete optimizer implementations.
         """
-        self.params = params
+        self.params = list(params)
+        self.kwargs = kwargs
 
     @abstractmethod
     def step(self):
