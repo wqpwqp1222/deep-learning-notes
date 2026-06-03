@@ -5,7 +5,7 @@ date-modified: 2026-05-04
 open-graph:
   title: ch8.5-positional-encoding
   description: "8.5 Positional Encoding: Adding Sequential Information to Attention"
-title: "8.5 位置编码：给 Attention 补上位置信息"
+title: "8.5 Positional Encoding：给 Attention 补上位置信息"
 order: 5
 ---
 
