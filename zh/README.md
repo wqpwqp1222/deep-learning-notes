@@ -27,7 +27,7 @@
 - 8.2 Cross-Attention：一个序列查询另一个序列
 - 8.3 Self-Attention：序列内部的信息交互
 - 8.4 Multi-Head Attention：从单一视角到多重视角
-- 8.5 位置编码：给 Attention 补上位置信息
+- 8.5 Positional Encoding：给 Attention 补上位置信息
 - 8.6 Transformer Encoder：把 Self-Attention 堆起来
 - 8.7 Transformer Decoder：Masked Self-Attention 与 Cross-Attention
 - 8.8 Encoder-Decoder Transformer：把 Encoder 和 Decoder 连接起来
