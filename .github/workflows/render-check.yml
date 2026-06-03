@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths-ignore:
       - "assets/**"
+      - "_freeze/**"
       - "**/LICENSE.*"
       - "**/*.md"
       - "**/ruff.toml"
