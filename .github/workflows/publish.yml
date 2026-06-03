@@ -39,6 +39,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Remove existing freeze cache
+        run: rm -rf _freeze
+
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
