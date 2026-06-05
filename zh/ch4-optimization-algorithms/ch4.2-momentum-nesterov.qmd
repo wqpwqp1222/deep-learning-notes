@@ -1,7 +1,7 @@
 ---
 author: jshn9515
 date: 2026-05-29
-date-modified: 2026-05-29
+date-modified: 2026-06-05
 open-graph:
   title: ch4.2-momentum-nesterov
   description: "4.2 Momentum 与 Nesterov Momentum"
@@ -28,7 +28,7 @@ $$
 > **不要只看当前这一步的梯度，也参考过去一段时间的更新方向。**
 
 ```{python}
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable
 from pprint import pprint
 from typing import override
 
@@ -55,40 +55,40 @@ print('PyTorch version:', torch.__version__)
 考虑一个二维参数：
 
 $$
-\theta = (\theta_1, \theta_2)
+\theta = (x, y)
 $$
 
-假设损失函数的形状像一个狭长的山谷。沿着 $\theta_1$ 方向，损失变化很快；沿着 $\theta_2$ 方向，损失变化很慢。这样的损失曲面在神经网络训练中并不少见。
+假设损失函数的形状像一个狭长的山谷。沿着 $x$ 方向，损失变化很快；沿着 $y$ 方向，损失变化很慢。这样的损失曲面在神经网络训练中并不少见。
 
 如果我们用 SGD 更新参数，负梯度方向未必总是正好沿着山谷底部前进。由于某些方向很陡，梯度可能主要指向山谷两侧，于是参数会在两侧来回震荡。与此同时，真正应该前进的方向反而走得很慢。这就好比一个人在狭长的山谷里下山，每一步都只根据脚下的坡度决定方向。由于两侧很陡，他可能不断撞向左边、再撞向右边，虽然总体在下降，但路线非常曲折。
 
 我们可以用一个简单的二次函数模拟这种情况：
 
 $$
-L(x, y) = x^2 + 25 y^2
+L(\theta) = 0.1(x - 2)^2 + 2.0(y + 1)^2
 $$
 
-这里 $y$ 方向更陡，$x$ 方向更平缓。最小值在 $(0, 0)$。
+这里 $y$ 方向更陡，$x$ 方向更平缓。最小值在 $(-2, 1)$。
 
 先定义损失函数：
 
 ```{python}
 def loss_fn(theta: Tensor) -> Tensor:
     x, y = theta[0], theta[1]
-    return x**2 + 25 * y**2
+    return 0.1 * (x - 2) ** 2 + 2.0 * (y + 1) ** 2
 ```
 
 运行 SGD 并画出更新轨迹：
 
 ```{python}
-theta = torch.tensor([-4.0, 1.0])
-history = dopt.run_sgd(loss_fn, theta, lr=0.035, steps=40)
+theta = torch.tensor([-5.0, 2.0])
+history = dopt.run_sgd(loss_fn, theta, lr=0.4, steps=40)
 history = torch.stack(history)
 
-x = torch.linspace(-4.5, 4.5, 200)
-y = torch.linspace(-1.5, 1.5, 200)
+x = torch.linspace(-6.5, 5.5, 200)
+y = torch.linspace(-3.5, 2.5, 200)
 X, Y = torch.meshgrid(x, y, indexing='ij')
-Z = X**2 + 20 * Y**2
+Z = 0.1 * (X - 2) ** 2 + 2.0 * (Y + 1) ** 2
 
 fig = plt.figure(1)
 ax = fig.add_subplot(1, 1, 1)
@@ -109,7 +109,7 @@ ax.set_title('SGD on a Narrow Valley')
 plt.show()
 ```
 
-从图中可以看到，参数不是平滑地向最低点移动，而是在两侧陡峭的山坡上来回摆动。这种摆动会浪费很多更新步数（实际上，如果你把学习率改成 0.04，甚至不会收敛）。
+从图中可以看到，参数不是平滑地向最低点移动，而是在两侧陡峭的山坡上来回摆动。这种摆动会浪费很多更新步数（实际上，如果你把学习率改成 0.05，甚至不会收敛）。
 
 这就引出了一个问题：如果很多步的梯度都大致指向同一个方向，我们能不能让参数在这个方向上越走越快？如果某个方向的梯度来回反复，我们能不能抵消掉这种震荡？
 
@@ -232,14 +232,14 @@ class SimpleSGDWithMomentum(dopt.Optimizer):
 然后比较普通 SGD 和 momentum 的轨迹：
 
 ::: {.callout-note}
-注意，当设置 momentum 时，学习率通常需要调小一些。以 `momentum=0.9` 为例，学习率通常需要比普通 SGD 小一个数量级，因此我们这里把 SGD + momentum 的学习率设置为 0.0035，而普通 SGD 的学习率设置为 0.035。
+注意，当设置 momentum 时，学习率通常需要调小一些。以 `momentum=0.9` 为例，学习率通常需要比普通 SGD 小一个数量级，因此我们这里把 SGD + momentum 的学习率设置为 0.04，而普通 SGD 的学习率设置为 0.4。
 :::
 
 ```{python}
-theta = torch.tensor([-4.0, 1.0])
-sgd_history = dopt.run_sgd(loss_fn, theta, lr=0.035, steps=40)
+theta = torch.tensor([-5.0, 2.0])
+sgd_history = dopt.run_sgd(loss_fn, theta, lr=0.4, steps=40)
 momentum_history = dopt.run_sgd_with_momentum(
-    loss_fn, theta, lr=0.0035, momentum=0.9, steps=40
+    loss_fn, theta, lr=0.04, momentum=0.9, steps=40
 )
 sgd_history = torch.stack(sgd_history)
 momentum_history = torch.stack(momentum_history)
@@ -250,16 +250,6 @@ ax.contourf(X, Y, Z, levels=25, cmap='YlGnBu')
 ax.plot(
     sgd_history[:, 0],
     sgd_history[:, 1],
-    color='#4B96EB',
-    marker='o',
-    markersize=3,
-    markerfacecolor='#2A74C8',
-    markeredgecolor='white',
-    markeredgewidth=0.5,
-)
-ax.plot(
-    momentum_history[:, 0],
-    momentum_history[:, 1],
     color='#EC705B',
     marker='o',
     markersize=3,
@@ -267,10 +257,20 @@ ax.plot(
     markeredgecolor='white',
     markeredgewidth=0.5,
 )
+ax.plot(
+    momentum_history[:, 0],
+    momentum_history[:, 1],
+    color='#4B96EB',
+    marker='o',
+    markersize=3,
+    markerfacecolor='#2A74C8',
+    markeredgecolor='white',
+    markeredgewidth=0.5,
+)
 ax.set_xlabel(r'$\theta_1$')
 ax.set_ylabel(r'$\theta_2$')
 ax.legend(['SGD', 'Momentum'])
-ax.set_title('SGD vs Momentum')
+ax.set_title('SGD vs Momentum Trajectory')
 plt.show()
 ```
 
