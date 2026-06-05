@@ -1,7 +1,7 @@
 ---
 author: jshn9515
 date: 2026-05-29
-date-modified: 2026-05-29
+date-modified: 2026-06-05
 open-graph:
   title: ch4.1-gradient-descent
   description: "4.1 From Gradient Descent to SGD"
@@ -92,16 +92,17 @@ $$
 为了更直观地理解梯度下降，我们先不考虑神经网络，而是看一个简单函数：
 
 $$
-L(\theta) = (\theta - 3)^2
+L(\theta) = 0.1 (x - 2)^2 + 2.0 (y + 1)^2
 $$
 
-这个函数的最小值显然出现在 $\theta = 3$。如果我们从一个较远的位置开始，比如 $\theta = -4$，梯度下降应该一步一步把参数推向 3。
+这个函数的最小值显然出现在 $(x, y) = (2, -1)$。如果我们从一个较远的位置开始，比如 $(x, y) = (-5, 2)$，梯度下降应该一步一步把参数推向 $(2, -1)$。
 
 先定义损失函数：
 
 ```{python}
 def loss_fn(theta: Tensor) -> Tensor:
-    return (theta - 3) ** 2
+    x, y = theta[0], theta[1]
+    return 0.1 * (x - 2) ** 2 + 2.0 * (y + 1) ** 2
 ```
 
 然后实现一个简单的梯度下降：
@@ -125,33 +126,42 @@ class SimpleSGD(dopt.Optimizer):
 运行梯度下降，并观察参数的更新轨迹：
 
 ```{python}
-theta = torch.tensor(-4.0)
-optimizer = SimpleSGD([theta], lr=0.2)
-history = dopt.run_sgd(loss_fn, theta, lr=0.2, steps=20)
+theta = torch.tensor([-5.0, 2.0])
+history = dopt.run_sgd(loss_fn, theta, lr=0.4, steps=40)
+history = torch.stack(history)
 
-print('Final theta:', history[-1].item())
+print('Final theta:', history[-1])
 print('Final loss:', loss_fn(history[-1]).item())
 ```
 
 我们可以把参数更新轨迹画出来：
 
 ```{python}
-thetas = torch.linspace(-5, 5, 200)
-losses = loss_fn(thetas)
-history = torch.stack(history)
-history_losses = loss_fn(history)
+x = torch.linspace(-6.5, 5.5, 200)
+y = torch.linspace(-3.5, 2.5, 200)
+X, Y = torch.meshgrid(x, y, indexing='ij')
+Z = 0.1 * (X - 2) ** 2 + 2.0 * (Y + 1) ** 2
 
-fig = plt.figure(1, figsize=(6, 4))
+fig = plt.figure(1)
 ax = fig.add_subplot(1, 1, 1)
-ax.plot(thetas, losses)
-ax.scatter(history, history_losses, color='tab:orange', zorder=2)
-ax.set_xlabel(r'$\theta$')
-ax.set_ylabel(r'$L(\theta)$')
-ax.set_title('Gradient Descent on a Simple Quadratic Function')
+ax.contourf(X, Y, Z, levels=25, cmap='YlGnBu')
+ax.plot(
+    history[:, 0],
+    history[:, 1],
+    color='#EC705B',
+    marker='o',
+    markersize=3,
+    markerfacecolor='#C0392B',
+    markeredgecolor='white',
+    markeredgewidth=0.5,
+)
+ax.set_xlabel(r'$\theta_1$')
+ax.set_ylabel(r'$\theta_2$')
+ax.set_title('SGD on a Simple Quadratic Function')
 plt.show()
 ```
 
-从图中可以看到，参数一开始离最优点较远，梯度较大，所以每一步移动也比较明显。随着参数逐渐接近 $\theta = 3$，梯度越来越小，更新步长也自然变小。这体现了梯度下降的一个基本特点：即使学习率固定，实际更新量也会受到梯度大小的影响。远离最低点时，梯度通常较大，参数移动较快；接近最低点时，梯度变小，参数移动变慢。
+从图中可以看到，参数一开始离最优点较远，梯度较大，所以每一步移动也比较明显。随着参数逐渐接近 $(2, -1)$，梯度越来越小，更新步长也自然变小。这体现了梯度下降的一个基本特点：即使学习率固定，实际更新量也会受到梯度大小的影响。远离最低点时，梯度通常较大，参数移动较快；接近最低点时，梯度变小，参数移动变慢。
 
 ## 4.1.3 从单个样本到整个数据集
 
@@ -384,41 +394,50 @@ class SimpleSGDWithWeightDecay(dopt.Optimizer):
 我们可以用同一个简单二次函数看一下它的效果：
 
 ```{python}
-theta = torch.tensor(-4.0)
-history_no_decay = dopt.run_sgd(loss_fn, theta, lr=0.2, steps=20)
+theta = torch.tensor([-5.0, 2.0])
+history_no_decay = dopt.run_sgd(loss_fn, theta, lr=0.4, steps=40)
 history_with_decay = dopt.run_sgd_with_weight_decay(
-    loss_fn, theta, lr=0.2, weight_decay=0.2, steps=20
+    loss_fn, theta, lr=0.4, weight_decay=0.2, steps=40
 )
 history_no_decay = torch.stack(history_no_decay)
 history_with_decay = torch.stack(history_with_decay)
 
-print('Without weight decay:', history_no_decay[-1].item())
-print('With weight decay:', history_with_decay[-1].item())
+print('Without weight decay:')
+print('Final theta:', history_no_decay[-1])
+print('Final loss:', loss_fn(history_no_decay[-1]).item())
+
+print('With weight decay:')
+print('Final theta:', history_with_decay[-1])
+print('Final loss:', loss_fn(history_with_decay[-1]).item())
 ```
 
+画出参数更新轨迹：
+
 ```{python}
-fig = plt.figure(1, figsize=(6, 4))
+fig = plt.figure(2)
 ax = fig.add_subplot(1, 1, 1)
-ax.plot(history_no_decay)
-ax.plot(history_with_decay)
-ax.axhline(3, linestyle='--', color='gray', linewidth=1, zorder=1)
+h1 = ax.plot(history_no_decay, color='royalblue')
+h2 = ax.plot(history_with_decay, color='coral')
+h3 = ax.axhline(2, linestyle='--', color='gray', linewidth=1, zorder=0)
+h4 = ax.axhline(-1, linestyle='--', color='gray', linewidth=1, zorder=0)
 ax.set_xlabel('Step')
 ax.set_ylabel(r'$\theta$')
-ax.legend(['weight_decay=0.0', 'weight_decay=0.2', 'Minimum Point'])
+labels = ['Without weight decay', 'With weight decay', 'Optimal point']
+ax.legend([h1[0], h2[0], h3], labels)
 ax.set_title('SGD with Weight Decay')
 plt.show()
 ```
 
-在没有 weight decay 时，参数会逐渐靠近原始损失函数的最优点 $\theta = 3$。加入 weight decay 之后，参数会受到额外的拉回 0 的力量，所以最后停在一个比 3 更小的位置。这并不是优化器出了问题，而是因为我们优化的目标已经变了。加入 weight decay 之后，优化器不再只最小化
+在没有 weight decay 时，参数会逐渐靠近原始损失函数的最优点 $(2, -1)$。加入 weight decay 之后，参数会受到额外的拉回 0 的力量，所以最后 $x$ 停在一个比 2 更小的位置，$y$ 停在一个比 -1 更大的位置。这并不是优化器出了问题，而是因为我们优化的目标已经变了。加入 weight decay 之后，优化器不再只最小化
 
 $$
-(\theta - 3)^2
+L(\theta) = 0.1 (x - 2)^2 + 2.0 (y + 1)^2
 $$
 
 而是在最小化
 
 $$
-(\theta - 3)^2 + \frac{\lambda}{2}\theta^2
+L(\theta) = 0.1 (x - 2)^2 + 2.0 (y + 1)^2 + \frac{\lambda}{2}(x^2 + y^2)
 $$
 
 因此，新的最优点会在原始最优点和 0 之间。
