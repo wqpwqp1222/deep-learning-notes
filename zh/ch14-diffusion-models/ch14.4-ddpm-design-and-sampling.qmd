@@ -182,7 +182,11 @@ U-Net 这个名字来自它的形状。它一般分成两部分：
 
 当然，在更现代的扩散模型里，除了时间嵌入，还常常会加入类别条件、文本条件，或者通过交叉注意力把外部信息融入到网络中。但在最基础的 DDPM 场景里，时间嵌入 + U-Net 就已经是非常经典的组合了。
 
-```python
+```{python}
+#| eval: false
+#| code-fold: true
+#| code-summary: "UNet2DModel: a U-Net structure for 2D image denoising"
+
 class UNet2DModel(nn.Module):
     def __init__(
         self,
@@ -198,14 +202,96 @@ class UNet2DModel(nn.Module):
             nn.SiLU(),
             nn.Linear(time_emb_dim, time_emb_dim),
         )
-        ...
+
+        first_ch = block_out_channels[0]
+        self.init_conv = nn.Conv2d(
+            in_channels,
+            first_ch,
+            kernel_size=3,
+            padding=1,
+        )
+
+        # Down path
+        self.downs = nn.ModuleList()
+        in_ch = block_out_channels[0]
+        skip_channels = []
+
+        for out_ch in block_out_channels:
+            is_last_ch = out_ch == block_out_channels[-1]
+            self.downs.append(
+                nn.ModuleList(
+                    [
+                        ResBlock(in_ch, out_ch, time_emb_dim),
+                        ResBlock(out_ch, out_ch, time_emb_dim),
+                        AttentionBlock(out_ch),
+                        Downsample(out_ch) if not is_last_ch else nn.Identity(),
+                    ]
+                )
+            )
+            in_ch = out_ch
+            skip_channels.append(out_ch)
+
+        # Middle
+        last_ch = block_out_channels[-1]
+        self.mid_block1 = ResBlock(last_ch, last_ch, time_emb_dim)
+        self.mid_attn = AttentionBlock(last_ch)
+        self.mid_block2 = ResBlock(last_ch, last_ch, time_emb_dim)
+
+        # Up path
+        self.ups = nn.ModuleList()
+        in_ch = block_out_channels[-1]
+
+        for out_ch in reversed(skip_channels):
+            is_first_ch = out_ch == skip_channels[0]
+            self.ups.append(
+                nn.ModuleList(
+                    [
+                        ResBlock(in_ch + out_ch, out_ch, time_emb_dim),
+                        ResBlock(out_ch, out_ch, time_emb_dim),
+                        AttentionBlock(out_ch),
+                        Upsample(out_ch) if not is_first_ch else nn.Identity(),
+                    ]
+                )
+            )
+            in_ch = out_ch
+
+        self.final_block = ConvBlock(in_ch, in_ch)
+        self.final_conv = nn.Conv2d(in_ch, out_channels, kernel_size=1)
 
     def forward(self, x: Tensor, timesteps: Tensor) -> Tensor:
-        time_emb = self.time_embedding(timesteps)
-        ...
-```
+        if x.size(0) != timesteps.size(0):
+            raise AssertionError(
+                f'Batch size of x and timesteps must match, '
+                f'but got {x.size(0)} and {timesteps.size(0)}.'
+            )
 
-我们省略了 U-Net 里具体的卷积层、下采样层、上采样层等细节实现，但核心就是在 `forward()` 方法里，先把时间步通过 `time_embedding` 转换成一个向量，然后在 U-Net 的各个阶段把这个向量融入到特征中去。
+        t_emb = self.time_embedding(timesteps)
+        x = self.init_conv(x)
+
+        skips = []
+        for block1, block2, attn, down in self.downs:  # type: ignore
+            x = block1(x, t_emb)
+            x = block2(x, t_emb)
+            x = attn(x)
+            skips.append(x)
+            x = down(x)
+
+        x = self.mid_block1(x, t_emb)
+        x = self.mid_attn(x)
+        x = self.mid_block2(x, t_emb)
+
+        for block1, block2, attn, up in self.ups:  # type: ignore
+            skip = skips.pop()
+            x = torch.concat([x, skip], dim=1)
+            x = block1(x, t_emb)
+            x = block2(x, t_emb)
+            x = attn(x)
+            x = up(x)
+
+        x = self.final_block(x)
+        x = self.final_conv(x)
+        return x
+```
 
 我们来测试一下我们写的 `UNet2DModel`：
 
