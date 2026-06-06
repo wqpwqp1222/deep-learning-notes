@@ -16,44 +16,59 @@ class Adagrad(Optimizer):
         self,
         params: Iterable[Tensor],
         lr: float = 1e-2,
-        eps: float = 1e-10,
+        lr_decay: float = 0.0,
         weight_decay: float = 0.0,
+        initial_accumulator_value: float = 0.0,
+        eps: float = 1e-10,
     ):
         """Create an Adagrad optimizer.
 
         Args:
             params (Iterable[Tensor]): Parameters to update.
             lr (float, default: 1e-2): Base learning rate.
-            eps (float, default: 1e-10): Small value added to the denominator
-                for numerical stability.
+            lr_decay (float, default: 0.0): Learning-rate decay multiplier.
             weight_decay (float, default: 0.0): Coefficient applied to the
                 parameters before adding them to the gradient.
+            initial_accumulator_value (float, default: 0.0): Initial value for
+                each squared-gradient accumulator.
+            eps (float, default: 1e-10): Small value added to the denominator
+                for numerical stability.
         """
         super().__init__(params)
         self.lr = lr
-        self.eps = eps
+        self.lr_decay = lr_decay
         self.weight_decay = weight_decay
-        self.sum_sq_grads = [torch.zeros_like(p) for p in self.params]
+        self.initial_accumulator_value = initial_accumulator_value
+        self.eps = eps
+
+        self.step_count = 0
+        self.sum_of_sq_grads = [
+            torch.full_like(p, initial_accumulator_value) for p in self.params
+        ]
 
     @override
     @torch.no_grad()
     def step(self):
         """Accumulate squared gradients and apply an Adagrad update."""
-        for p, sum_sq_grad in zip(self.params, self.sum_sq_grads, strict=True):
+        self.step_count += 1
+        clr = self.lr / (1 + (self.step_count - 1) * self.lr_decay)
+
+        for p, state_sum in zip(self.params, self.sum_of_sq_grads, strict=True):
             if p.grad is None:
                 continue
 
             if self.weight_decay > 0:
                 p.grad.add_(self.weight_decay * p)
 
-            sum_sq_grad.add_(p.grad.square())
-            effective_lr = self.lr / (sum_sq_grad.sqrt() + self.eps)
-            p.add_(-effective_lr * p.grad)
+            state_sum.add_(p.grad.square())
+            effective_lr = clr / (state_sum.sqrt() + self.eps)
+            p.sub_(effective_lr * p.grad)
 
     @torch.no_grad()
     def get_effective_lr(self) -> list[Tensor]:
         """Return the current per-parameter effective learning rates."""
+        clr = self.lr / (1 + max(self.step_count - 1, 0) * self.lr_decay)
         return [
-            self.lr / (sum_sq_grad.sqrt() + self.eps).clone()
-            for sum_sq_grad in self.sum_sq_grads
+            clr / (sum_sq_grad.sqrt() + self.eps).clone()
+            for sum_sq_grad in self.sum_of_sq_grads
         ]
