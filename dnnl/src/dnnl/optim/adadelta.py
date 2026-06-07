@@ -36,6 +36,7 @@ class Adadelta(Optimizer):
         self.rho = rho
         self.eps = eps
         self.weight_decay = weight_decay
+
         self.ema_of_sq_grads = [torch.zeros_like(p) for p in self.params]
         self.ema_of_sq_updates = [torch.zeros_like(p) for p in self.params]
 
@@ -66,3 +67,18 @@ class Adadelta(Optimizer):
                 alpha=1 - self.rho,
             )
             p.sub_(delta_x, alpha=self.lr)
+
+    @torch.no_grad()
+    def get_effective_lr(self) -> list[Tensor]:
+        """Return per-parameter effective learning rates."""
+        effective_lr = []
+
+        for v, u in zip(
+            self.ema_of_sq_grads,
+            self.ema_of_sq_updates,
+            strict=True,
+        ):
+            lr = self.lr * (u + self.eps).sqrt() / (v + self.eps).sqrt()
+            effective_lr.append(lr)
+
+        return effective_lr
