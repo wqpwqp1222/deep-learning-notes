@@ -10,17 +10,17 @@ __all__ = ['Optimizer']
 class Optimizer(ABC):
     """Abstract interface for gradient-based parameter optimizers."""
 
-    def __init__(self, params: Iterable[Tensor], **kwargs: Any):
+    def __init__(self, params: Iterable[Tensor], **defaults: Any):
         """Store the parameters managed by the optimizer.
 
         Args:
             params (Iterable[Tensor]): Parameters whose gradients drive the
                 optimizer updates.
-            **kwargs: Additional keyword arguments to store as attributes.
+            **defaults (Any): Additional keyword arguments to store as attributes.
                 These may be used by concrete optimizer implementations.
         """
         self.params = list(params)
-        self.kwargs = kwargs
+        self.defaults = defaults
 
     @abstractmethod
     def step(self):
