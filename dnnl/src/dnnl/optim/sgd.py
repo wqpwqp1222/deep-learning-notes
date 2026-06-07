@@ -36,7 +36,7 @@ class SimpleSGD(Optimizer):
             if p.grad is None:
                 continue
 
-            p.sub_(self.lr * p.grad)
+            p.sub_(p.grad, alpha=self.lr)
 
 
 class SimpleSGDWithWeightDecay(Optimizer):
@@ -71,7 +71,7 @@ class SimpleSGDWithWeightDecay(Optimizer):
             if self.weight_decay > 0:
                 p.grad.add_(self.weight_decay * p)
 
-            p.sub_(self.lr * p.grad)
+            p.sub_(p.grad, alpha=self.lr)
 
 
 class SimpleSGDWithMomentum(Optimizer):
@@ -105,7 +105,7 @@ class SimpleSGDWithMomentum(Optimizer):
                 continue
 
             v.mul_(self.momentum).add_(p.grad)
-            p.sub_(self.lr * v)
+            p.sub_(v, alpha=self.lr)
 
 
 class SimpleSGDWithNesterovMomentum(Optimizer):
@@ -139,7 +139,8 @@ class SimpleSGDWithNesterovMomentum(Optimizer):
                 continue
 
             v.mul_(self.momentum).add_(p.grad)
-            p.sub_(self.lr * (self.momentum * v + p.grad))
+            p.grad.add_(v, alpha=self.momentum)
+            p.sub_(p.grad, alpha=self.lr)
 
 
 class SGD(Optimizer):
