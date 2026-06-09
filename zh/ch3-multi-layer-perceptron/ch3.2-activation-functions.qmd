@@ -218,11 +218,9 @@ $$
 且上游梯度是 $\frac{\partial L}{\partial a}$，那么根据链式法则：
 
 $$
-\frac{\partial L}{\partial h}
-=
+\frac{\partial L}{\partial h} =
 \frac{\partial L}{\partial a}
-\frac{\partial a}{\partial h}
-=
+\frac{\partial a}{\partial h} =
 \frac{\partial L}{\partial a}\phi'(h)
 $$
 
@@ -344,7 +342,7 @@ $$
 ```{python}
 class Sigmoid(Module):
     def __init__(self):
-        self.ctx = None
+        super().__init__()
 
     @override
     def forward(self, x: np.ndarray) -> np.ndarray:
@@ -447,7 +445,7 @@ $$
 ```{python}
 class Tanh(Module):
     def __init__(self):
-        self.ctx = None
+        super().__init__()
 
     @override
     def forward(self, x: np.ndarray) -> np.ndarray:
@@ -475,8 +473,7 @@ $$
 也就是说：
 
 $$
-\operatorname{ReLU}(x)
-=
+\operatorname{ReLU}(x) =
 \begin{cases}
 x, & x > 0 \\
 0, & x \le 0
@@ -512,8 +509,7 @@ $$
 则在 $x \ne 0$ 时：
 
 $$
-\frac{\partial y}{\partial x}
-=
+\frac{\partial y}{\partial x} =
 \begin{cases}
 1, & x > 0 \\
 0, & x < 0
@@ -562,7 +558,7 @@ $$
 ```{python}
 class ReLU(Module):
     def __init__(self):
-        self.ctx = None
+        super().__init__()
 
     @override
     def forward(self, x: np.ndarray) -> np.ndarray:
@@ -582,7 +578,7 @@ class ReLU(Module):
 ```{python}
 class ReLUWithMask(Module):
     def __init__(self):
-        self.ctx = None
+        super().__init__()
 
     @override
     def forward(self, x: np.ndarray) -> np.ndarray:
