@@ -87,7 +87,6 @@ We first start from the most standard case, namely `beta = 1.0`. Later, we will 
 
 ```{python}
 num_epochs = 10
-global_step = 0
 history = defaultdict(list)
 
 loss_metric = MeanMetric().to(device)
@@ -117,10 +116,9 @@ for epoch in range(1, num_epochs + 1):
         history['recon_loss'].append(recon_loss.item())
         history['kl_loss'].append(kl_loss.item())
 
-        global_step += 1
-
+    n = len(str(num_epochs))
     print(
-        f'Epoch [{epoch:2d}/{num_epochs:2d}] '
+        f'Epoch [{epoch:{n}d}/{num_epochs:{n}d}] '
         f'| loss: {loss_metric.compute():.4f} '
         f'| recon_loss: {recon_loss_metric.compute():.4f} '
         f'| kl_loss: {kl_loss_metric.compute():.4f}'
