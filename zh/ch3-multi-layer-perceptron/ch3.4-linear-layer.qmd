@@ -42,10 +42,13 @@ $$
 这一节我们就来推导线性层的前向传播和反向传播，并用 NumPy 实现一个可以复用的 `Linear` 类。后面手写完整 MLP 时，我们会直接使用这个模块。
 
 ```{python}
-from typing import override
+import math
+from collections.abc import Iterable, Iterator
+from typing import Any, override
 
 import numpy as np
-from dnnl.models.mlp import Module
+import numpy.typing as npt
+from dnnl.models.mlp import Module, Optimizer
 
 rng = np.random.default_rng(42)
 print('NumPy version:', np.__version__)
@@ -350,63 +353,102 @@ print('db.shape:', db.shape)
 
 ## 3.4.3 用 NumPy 实现 Linear 层
 
-现在我们可以把线性层封装成一个类。
+在实现 Linear 层之前，我们先定义一个 `Parameter` 类来封装可学习的参数。
 
-它需要做几件事：
+这个类继承自 NumPy 的 ndarray，并添加了一个 `.grad` 属性来保存梯度。它的功能类似于 PyTorch 中的 `nn.Parameter`，但去掉了 Autograd 部分。你不需要看懂这个类的实现，只需要知道它是一个带有梯度属性的 NumPy 数组就行了。
+
+```{python}
+class Parameter(np.ndarray):
+    __array_priority__ = 1000
+
+    grad: np.ndarray | None
+
+    def __new__(cls, data: Any, dtype: npt.DTypeLike = np.float32):
+        obj = np.asarray(data, dtype=dtype).view(cls)
+        obj.grad = None
+        return obj
+
+    def __array_finalize__(self, obj: Any):
+        if obj is None:
+            return
+        self.grad = getattr(obj, 'grad', None)
+
+    def __array_wrap__(self, out_arr: Any, context=None, return_scalar=False):
+        return np.asarray(out_arr)
+
+    @property
+    def data(self) -> np.ndarray:
+        return np.asarray(self)
+```
+
+现在我们可以把线性层封装成一个类。它需要做几件事：
 
 1. 初始化参数 $W$ 和 $b$；
-2. 在 `forward` 中计算 $XW+b$；
+2. 在 `forward` 中计算 $XW + b$；
 3. 保存输入 $X$，因为 backward 时需要用到它；
-4. 在 `backward` 中计算 `dX`、`dW` 和 `db`。
+4. 在 `backward` 中计算 `dx`、`dW` 和 `db`。
 
 ```{python}
 class Linear(Module):
     def __init__(self, in_features: int, out_features: int):
+        super().__init__()
         self.in_features = in_features
         self.out_features = out_features
 
-        self.W = rng.standard_normal((in_features, out_features))
-        self.W = self.W * np.sqrt(2.0 / in_features)
-        self.b = np.zeros(out_features)
+        W = rng.standard_normal((in_features, out_features))
+        W = W * math.sqrt(2.0 / in_features)
+        b = np.zeros(out_features)
 
-        self.x = None
-        self.dW = None
-        self.db = None
+        self.W = Parameter(W)
+        self.b = Parameter(b)
 
     @override
     def forward(self, x: np.ndarray) -> np.ndarray:
-        self.x = x
+        self.ctx = x  # save input for backward
         return x @ self.W + self.b
 
     @override
     def backward(self, grad: np.ndarray) -> np.ndarray:
-        assert self.x is not None, 'Must call forward before backward.'
-        self.dW = self.x.T @ grad
-        self.db = np.sum(grad, axis=0)
-        dx = grad @ self.W.T
-        return dx
+        assert self.ctx is not None, 'Must call forward before backward.'
+        x = self.ctx  # recover saved input
+
+        self.W.grad = x.T @ grad  # dW
+        self.b.grad = np.sum(grad, axis=0)  # db
+        return grad @ self.W.T  # dx
 
     @override
-    def parameters(self) -> list[np.ndarray]:
-        return [self.W, self.b]
+    def parameters(self) -> Iterator[Parameter]:
+        for value in self.__dict__.values():
+            if isinstance(value, Parameter):
+                yield value
+            elif isinstance(value, Module):
+                yield from value.parameters()
 ```
 
-这里的 `grad` 就是上游梯度，也就是前面推导中的 $G$。
+其中，`grad` 就是上游梯度，也就是前面推导中的 $G$。
+
+在初始化权重 $W$ 时，我们使用了 He initialization：
+
+$$
+W \sim \mathcal{N}\left(0, \frac{2}{D_{\text{in}}}\right)
+$$
+
+它经常和 ReLU 搭配使用，目的是让信号在层与层之间传播时不要过快放大或缩小。这里我们不展开初始化理论，只把它作为一个比直接用标准正态分布更稳的默认选择。
 
 我们可以简单测试一下它的形状是否正确：
 
 ```{python}
 linear = Linear(in_features=3, out_features=2)
 x = rng.random((4, 3))
-out = linear.forward(x)
+out = linear(x)
 
 dout = rng.random(out.shape)
 dx = linear.backward(dout)
 
 print('out.shape:', out.shape)
 print('dx.shape:', dx.shape)
-print('dW.shape:', linear.dW.shape)
-print('db.shape:', linear.db.shape)
+print('dW.shape:', linear.W.grad.shape)
+print('db.shape:', linear.b.grad.shape)
 ```
 
 这说明 `Linear` 层已经可以像一个真正的神经网络模块一样使用：前向传播时接收输入，反向传播时接收上游梯度，并把梯度继续传回前一层。
@@ -427,36 +469,44 @@ $$
 用 NumPy 写就是：
 
 ```{python}
-class SGD:
-    def __init__(self, lr: float = 0.01):
+class SGD(Optimizer):
+    def __init__(self, params: Iterable[Parameter], lr: float = 0.1):
+        super().__init__(params)
         self.lr = lr
 
-    def step(self, params: list[np.ndarray], grads: list[np.ndarray]):
-        for param, grad in zip(params, grads, strict=True):
-            param -= self.lr * grad
+    @override
+    def step(self):
+        for p in self.params:
+            if p.grad is None:
+                continue
 
+            p -= self.lr * p.grad
+```
 
-optimizer = SGD(lr=0.1)
-params = linear.parameters()
-grads = [linear.dW, linear.db]
+我们可以测试一下这个优化器：
 
-print('Original W:', linear.W)
+```{python}
+optimizer = SGD(linear.parameters(), lr=0.1)
+
+print('Original W:\n', linear.W)
 print('Original b:', linear.b)
 
 print('\n', end='')
-optimizer.step(params, grads)
+optimizer.step()
 
-print('Updated W:', linear.W)
+print('Updated W:\n', linear.W)
 print('Updated b:', linear.b)
 ```
 
-在后面的完整 MLP 中，我们会把所有参数收集起来，然后统一进行更新。这里先记住一个原则：
+其中，`parameters()` 方法会返回该层的所有可学习参数（用 `Parameter` 封装），也就是权重 `W` 和偏置 `b`。如果某个模块中还包含子模块，那么 `parameters()` 会递归地返回这些子模块中的参数。
+
+这里有一个设计原则很重要：
 
 > **Forward 负责计算输出，backward 负责计算梯度，参数更新负责根据梯度修改参数。**
 
 这三个步骤虽然在训练循环里连续发生，但概念上应该分开理解。
 
-## 3.4.9 本章小结
+## 3.4.5 本章小结
 
 这一节我们推导并实现了线性层的前向传播和反向传播。
 
