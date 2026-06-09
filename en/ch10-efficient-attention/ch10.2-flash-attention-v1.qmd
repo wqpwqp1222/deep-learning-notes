@@ -351,7 +351,7 @@ print('dK max absolute error:', max_err_dK.item())
 print('dV max absolute error:', max_err_dV.item())
 ```
 
-## 10.2.5 Limitations of FlashAttention v1: Why Do We Need FlashAttention v2?
+## 10.2.5 Why Do We Need FlashAttention v2?
 
 At this point, FlashAttention v1 has already accomplished something very important: through tiled computation and online softmax, it avoids explicitly storing the full attention matrices $S$ and $P$, thereby significantly reducing HBM reads and writes. This is also the fundamental reason why it can be clearly faster than standard attention.
 
