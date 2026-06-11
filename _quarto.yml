@@ -107,6 +107,10 @@ website:
               contents: "en/ch1-introduction/*.qmd"
             - section: "Chapter 2: Getting Started with PyTorch"
               contents: "en/ch2-pytorch-introduction/*.qmd"
+            - section: "Chapter 3: Multi-Layer Perceptron: From Single Layer to Deep Nonlinear Modeling"
+              contents: "en/ch3-multi-layer-perceptron/*.qmd"
+            - section: "Chapter 4: Optimization Algorithms: How Neural Networks Update Parameters"
+              contents: "en/ch4-optimization-algorithms/*.qmd"
         - section: "Part 4: Attention Mechanism and Transformer"
           contents:
             - section: "Chapter 8: Attention and Transformer: From Dynamic Retrieval to Sequence Modeling"
