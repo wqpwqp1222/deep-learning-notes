@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -8,17 +6,22 @@ from torch import Tensor
 
 from .configtools import get_default_device
 
-if TYPE_CHECKING:
+try:
     from torchmetrics import Metric
+except ImportError:
+    raise ImportError(
+        'torchmetrics is required to use training tools. '
+        'Install it with `pip install torchmetrics`.'
+    )
 
 __all__ = [
-    'train_one_epoch',
-    'evaluate_on_epoch',
+    'train',
+    'evaluate',
     'train_and_evaluate',
 ]
 
 
-def train_one_epoch(
+def train(
     model: nn.Module,
     dataloader: utils.DataLoader[tuple[Tensor, Tensor]],
     loss_fn: nn.Module,
@@ -29,12 +32,12 @@ def train_one_epoch(
     """Train a model for one epoch and return average loss and metric values.
 
     Args:
-        model: Model to train.
-        dataloader: Batches of input tensors and target tensors.
-        loss_fn: Loss module used to optimize the model.
-        optimizer: Optimizer that updates model parameters.
-        metric: TorchMetrics metric updated from model predictions and targets.
-        device: Device where batches are moved before the forward pass.
+        model (Module): Model to train.
+        dataloader (DataLoader): Batches of input tensors and target tensors.
+        loss_fn (Module): Loss module used to optimize the model.
+        optimizer (Optimizer): Optimizer that updates model parameters.
+        metric (Metric): TorchMetrics metric updated from model predictions and targets.
+        device (torch.device): Device where batches are moved before the forward pass.
 
     Returns:
         A tuple containing the average loss and computed metric value.
@@ -63,7 +66,7 @@ def train_one_epoch(
     return avg_loss, avg_metric
 
 
-def evaluate_on_epoch(
+def evaluate(
     model: nn.Module,
     dataloader: utils.DataLoader[tuple[Tensor, Tensor]],
     loss_fn: nn.Module,
@@ -73,11 +76,11 @@ def evaluate_on_epoch(
     """Evaluate a model for one epoch and return average loss and metric values.
 
     Args:
-        model: Model to evaluate.
-        dataloader: Batches of input tensors and target tensors.
-        loss_fn: Loss module used to measure prediction error.
-        metric: TorchMetrics metric updated from model predictions and targets.
-        device: Device where batches are moved before the forward pass.
+        model (Module): Model to evaluate.
+        dataloader (DataLoader): Batches of input tensors and target tensors.
+        loss_fn (Module): Loss module used to measure prediction error.
+        metric (Optimizer): TorchMetrics metric updated from model predictions and targets.
+        device (torch.device): Device where batches are moved before the forward pass.
 
     Returns:
         A tuple containing the average loss and computed metric value.
@@ -117,15 +120,16 @@ def train_and_evaluate(
     """Train and validate a model for multiple epochs.
 
     Args:
-        model: Model to train and evaluate.
-        train_dl: Training dataloader.
-        val_dl: Validation dataloader.
-        loss_fn: Loss module used for both training and validation.
-        optimizer: Optimizer that updates model parameters.
-        train_metric: Metric used on the training split.
-        val_metric: Metric used on the validation split.
-        num_epochs: Number of epochs to run.
-        device: Device to use. Defaults to ``get_default_device()`` when omitted.
+        model (Module): Model to train and evaluate.
+        train_dl (DataLoader): Training dataloader.
+        val_dl (DataLoader): Validation dataloader.
+        loss_fn (Module): Loss module used for both training and validation.
+        optimizer (Optimizer): Optimizer that updates model parameters.
+        train_metric (Metric): Metric used on the training split.
+        val_metric (Metric): Metric used on the validation split.
+        num_epochs (int): Number of epochs to run.
+        device (torch.device | None, default: None): Device to use.
+            Defaults to ``get_default_device()`` when omitted.
     """
     if device is None:
         device = get_default_device()
@@ -135,7 +139,7 @@ def train_and_evaluate(
     val_metric.to(device)
 
     for epoch in range(1, num_epochs + 1):
-        loss, score = train_one_epoch(
+        loss, score = train(
             model=model,
             dataloader=train_dl,
             loss_fn=loss_fn,
@@ -143,7 +147,7 @@ def train_and_evaluate(
             metric=train_metric,
             device=device,
         )
-        val_loss, val_score = evaluate_on_epoch(
+        val_loss, val_score = evaluate(
             model=model,
             dataloader=val_dl,
             loss_fn=loss_fn,
