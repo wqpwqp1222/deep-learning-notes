@@ -51,7 +51,7 @@ class Seq2SeqTransformer(nn.Module):
             dropout=dropout,
             norm_first=True,  # Pre-LN Transformer
         )
-        self.output_proj = nn.Linear(d_model, tgt_vocab_size)
+        self.output_proj = dnn.Linear(d_model, tgt_vocab_size)
 
     def forward(
         self,
