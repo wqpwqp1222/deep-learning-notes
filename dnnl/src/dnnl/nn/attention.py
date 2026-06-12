@@ -2,11 +2,10 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from . import functional as F
+from . import functional as dF
+from .linear import Linear
 
 __all__ = ['MultiheadAttention']
-
-type AttentionOutput = tuple[Tensor, Tensor | None]
 
 
 class MultiheadAttention(nn.Module):
@@ -43,10 +42,10 @@ class MultiheadAttention(nn.Module):
             raise AssertionError('`embed_dim` must be divisible by `num_heads`.')
         self.head_dim = embed_dim // num_heads
 
-        self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        self.k_proj = nn.Linear(self.kdim, embed_dim, bias=bias)
-        self.v_proj = nn.Linear(self.vdim, embed_dim, bias=bias)
-        self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
+        self.q_proj = Linear(embed_dim, embed_dim, bias=bias)
+        self.k_proj = Linear(self.kdim, embed_dim, bias=bias)
+        self.v_proj = Linear(self.vdim, embed_dim, bias=bias)
+        self.out_proj = Linear(embed_dim, embed_dim, bias=bias)
 
     def forward(
         self,
@@ -58,15 +57,15 @@ class MultiheadAttention(nn.Module):
         need_weights: bool = False,
         is_causal: bool = False,
         average_attn_weights: bool = True,
-    ) -> AttentionOutput:
+    ) -> tuple[Tensor, Tensor | None]:
         """Compute attention over batch-first query, key, and value tensors.
 
         Args:
             query (Tensor): Query tensor of shape ``(batch, target_len, embed_dim)``.
             key (Tensor): Key tensor of shape ``(batch, source_len, kdim)``.
             value (Tensor): Value tensor of shape ``(batch, source_len, vdim)``.
-            attn_mask (Tensor | None, default: None): Optional attention mask where bool ``True`` masks out a
-                position and float masks are additive biases.
+            attn_mask (Tensor | None, default: None): Optional attention mask where
+                bool ``True`` masks out a position and float masks are additive biases.
             key_padding_mask (Tensor | None, default: None): Optional mask of padded key positions.
             need_weights (bool, default: False): Whether to return attention weights with the output.
             is_causal (bool, default: False): Whether to apply a causal mask.
@@ -86,7 +85,7 @@ class MultiheadAttention(nn.Module):
                 else attn_mask.masked_fill(padding_mask, -torch.inf)
             )
 
-        attn_output, attn_weights = F.multi_head_attention(
+        attn_output, attn_weights = dF.multi_head_attention(
             query,
             key,
             value,
