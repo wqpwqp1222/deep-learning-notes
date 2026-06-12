@@ -16,9 +16,9 @@ from matplotlib.figure import Figure
 if TYPE_CHECKING:
     from IPython.core.interactiveshell import InteractiveShell
 
-__all__ = ['set_matplotlib_format']
-
 type FigureFormat = Literal['png', 'retina', 'highdpi', 'jpeg', 'svg', 'pdf']
+
+__all__ = ['set_matplotlib_format']
 
 
 def _get_ipython_shell() -> InteractiveShell:
