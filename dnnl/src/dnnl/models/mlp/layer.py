@@ -6,11 +6,25 @@ import numpy as np
 from .base import Module, Parameter
 
 __all__ = [
+    'Identity',
     'Flatten',
     'Linear',
 ]
 
 rng = np.random.default_rng()
+
+
+class Identity(Module):
+    """A module that returns the input as is."""
+
+    def __init__(self):
+        """Initialize the Identity module."""
+        super().__init__()
+
+    @override
+    def forward(self, x: np.ndarray) -> np.ndarray:
+        """Return the input as is."""
+        return x
 
 
 class Flatten(Module):
@@ -56,22 +70,20 @@ class Linear(Module):
         self.b = Parameter(b)
 
     @override
-    def extra_repr(self) -> str:
-        """Return feature sizes for ``repr(layer)``."""
-        return f'in_features={self.in_features},\nout_features={self.out_features}'
-
-    @override
     def forward(self, x: np.ndarray) -> np.ndarray:
         """Return ``x @ W + b`` and cache ``x`` for backpropagation."""
-        self.save_to_context(x)
+        self.ctx = x
         return x @ self.W + self.b
 
     @override
     def backward(self, grad: np.ndarray) -> np.ndarray:
         """Store parameter gradients and return input gradients."""
         assert self.ctx is not None, 'Must call forward before backward.'
-        x = self.load_from_context()
-
-        self.W.grad = x.T @ grad  # dW
+        self.W.grad = self.ctx.T @ grad  # dW
         self.b.grad = np.sum(grad, axis=0)  # db
         return grad @ self.W.T  # dx
+
+    @override
+    def extra_repr(self) -> str:
+        """Return feature sizes for ``repr(layer)``."""
+        return f'in_features={self.in_features}, out_features={self.out_features}'
