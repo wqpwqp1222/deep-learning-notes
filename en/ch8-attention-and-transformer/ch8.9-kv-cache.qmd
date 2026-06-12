@@ -182,7 +182,7 @@ Therefore, without KV cache, the problem is not only that previous tokens are pr
 
 Of course, this analysis ignores the number of layers, the number of heads, batch size, constant factors, and the concrete kernel implementation. Its purpose is not to give an exact runtime, but to explain one core fact: if every generation step reprocesses the full prefix, the computation for historical tokens is repeatedly wasted, and the longer the sequence is, the more obvious this waste becomes.
 
-## 8.9.4 What Happens With KV Cache
+## 8.9.4 What Happens with KV Cache
 
 With KV cache, inference no longer needs to reprocess the full prefix at every step. The model stores the keys and values computed from historical tokens in each self-attention layer:
 
@@ -314,7 +314,7 @@ Inference is different. During inference, the model does not know the full outpu
 
 So, KV cache accelerates the autoregressive inference stage.
 
-## 8.9.5 The Cost of KV Cache: Faster, But More GPU Memory
+## 8.9.5 The Cost of KV Cache: Faster, but More GPU Memory
 
 KV cache can significantly reduce repeated computation, but it is not free. Because we store the keys and values for every layer, every head, and every historical token, the longer the generation is, the more GPU memory the cache occupies.
 
@@ -477,7 +477,7 @@ v = torch.concat([past_v, v], dim=1)
 
 Keep the key/value that were computed in the past, and continue to use them in the next step.
 
-## 8.9.7 Chapter Summary
+## 8.9.7 Summary
 
 In this section, we discussed a key optimization in Transformer decoder inference: KV cache. Autoregressive generation must proceed step by step, because the next token depends on the tokens that have already been generated. If the full prefix is recomputed at every step, a large amount of repeated computation will be spent on past tokens.
 

@@ -443,7 +443,7 @@ In this way, self-attention will ignore the padding positions during computation
 
 This is very important in NLP tasks. Otherwise, the model may treat `[PAD]` as a meaningful token, which would affect representation learning.
 
-## 8.6.7 What Can the Encoder Output Be Used For?
+## 8.6.7 What Can the Encoder Output Be Used for?
 
 The output of a Transformer Encoder is a set of contextualized token representations:
 
@@ -477,7 +477,7 @@ $$
 
 This is also why Transformer Encoder can be used for many different tasks. It is responsible for encoding the input sequence into contextualized representations. As for whether we attach a classification head, a tagging head, or a retrieval head afterward, that depends on the specific task.
 
-## 8.6.8 Chapter Summary
+## 8.6.8 Summary
 
 In this section, we combined the self-attention, multi-head attention, and positional encoding that we learned earlier to form the complete Transformer Encoder.
 

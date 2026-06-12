@@ -670,7 +670,7 @@ However, no matter how the selection strategy changes, the basic structure of au
 
 > **Generate one token, append it back to the Decoder input, and then generate the next token.**
 
-## 8.8.11 Chapter Summary
+## 8.8.11 Summary
 
 In this section, we put the Encoder and Decoder into a complete Seq2Seq task and understood how the Encoder-Decoder Transformer works.
 

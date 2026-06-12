@@ -4,7 +4,7 @@ date: 2026-05-09
 date-modified: 2026-05-09
 open-graph:
   title: ch8.11-hugging-face-transformers-api
-  description: "8.11 Hugging Face Transformers API: Mapping Structures to Calls"
+  description: "8.11 Hugging Face Transformers API: From Structure to Calls"
 title: "8.11 Hugging Face Transformers API: From Structure to Calls"
 order: 11
 ---

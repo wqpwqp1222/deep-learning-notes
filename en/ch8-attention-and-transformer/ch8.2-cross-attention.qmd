@@ -395,7 +395,7 @@ These tasks look different on the surface, but they can all be abstracted into t
 
 Therefore, cross-attention is an important mechanism for Transformers to connect different information sources. It allows the model not only to process relationships inside one sequence, but also to model relationships between different sequences, different modalities, and different information sources.
 
-## 8.2.9 Section Summary
+## 8.2.9 Summary
 
 In this section, we moved from the soft-alignment idea of Bahdanau attention to modern cross-attention.
 

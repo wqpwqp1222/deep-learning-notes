@@ -193,7 +193,7 @@ Once this point is understood, the later cross-attention, self-attention, and mu
 
 > **When the model processes one position, how should it dynamically find the currently most relevant part from a set of candidate information?**
 
-## 8.1.7 Chapter Summary
+## 8.1.7 Summary
 
 This section started from the fixed-length context vector of traditional seq2seq and introduced the core idea of Bahdanau attention.
 

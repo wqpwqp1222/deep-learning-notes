@@ -4,7 +4,7 @@ date: 2026-04-09
 date-modified: 2026-05-04
 open-graph:
   title: ch8.5-positional-encoding
-  description: "8.5 Positional Encoding：Adding Sequential Information to Attention"
+  description: "8.5 Positional Encoding: Adding Positional Information to Attention"
 title: "8.5 Positional Encoding: Adding Positional Information to Attention"
 order: 5
 ---
@@ -281,7 +281,7 @@ The effect of doing this is that from the first layer onward, the model can see 
 
 Of course, later Transformer variants introduced many different ways of modeling position, such as relative positional encoding, RoPE, ALiBi, and so on. They are not necessarily all simple additions of positional vectors to the input embeddings. Some directly modify the computation of attention scores. But in this section, we first understand the most basic method: adding positional information to the input.
 
-## 8.5.7 Chapter Summary
+## 8.5.7 Summary
 
 In this section, we solved a core problem of self-attention: it has no natural sense of order by itself.
 

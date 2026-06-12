@@ -4,8 +4,8 @@ date: 2026-04-09
 date-modified: 2026-05-04
 open-graph:
   title: ch8.3-self-attention
-  description: "8.3 Self-Attention: Internal Information Interaction within a Sequence"
-title: "8.3 Self-Attention: Internal Information Interaction within a Sequence"
+  description: "8.3 Self-Attention: Internal Information Interaction Within a Sequence"
+title: "8.3 Self-Attention: Internal Information Interaction Within a Sequence"
 order: 3
 ---
 
@@ -235,7 +235,7 @@ The third limitation is that the expressive ability of a single attention head i
 
 These three limitations also remind us: although self-attention provides the core mechanism for information interaction inside a sequence, it still needs to work together with other designs to form a complete Transformer. Positional encoding supplements order information, efficient attention methods try to reduce long-sequence cost, and multi-head attention lets the model observe the sequence from more than one perspective.
 
-## 8.3.7 Summary of This Chapter
+## 8.3.7 Summary
 
 In this section, we applied the attention mechanism introduced in the previous section to the inside of the same sequence. Different from cross-attention, the query, key, and value in self-attention all come from the same input sequence. Therefore, each token is no longer only representing itself in isolation, but can update its own representation according to the whole context.
 

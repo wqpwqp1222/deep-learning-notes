@@ -383,7 +383,7 @@ Second, it changes the output back to the dimension required by the model. Usual
 
 In other words, multi-head attention does not end after each head finishes its own computation. Before the result is truly output to the next layer, it still needs to go through $W^O$ for one round of fusion and organization.
 
-## 8.4.8 Chapter Summary
+## 8.4.8 Summary
 
 In this section, we started from the limitation of single-head attention and introduced multi-head attention.
 

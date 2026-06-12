@@ -4,7 +4,7 @@ date: 2026-05-08
 date-modified: 2026-05-20
 open-graph:
   title: ch8.10-transformer-architectures
-  description: "8.10 Three Different Architectures of Transformer: Understanding, Generation, and Input-Output Conversion"
+  description: "8.10 Three Different Transformer Architectures: Understanding, Generation, and Input-Output Conversion"
 title: "8.10 Three Different Transformer Architectures: Understanding, Generation, and Input-Output Conversion"
 order: 10
 ---
@@ -441,7 +441,7 @@ $$
 
 This uniformity is very suitable for large-scale pretraining and instruction tuning. Of course, this does not mean decoder-only is naturally better than encoder-only or encoder-decoder on every task. Architecture choice still depends on the task form, data scale, training method, and inference requirements.
 
-## 8.10.8 Chapter Summary
+## 8.10.8 Summary
 
 In this section, we made a side-by-side comparison of the three common Transformer architectures.
 
