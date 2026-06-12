@@ -4,8 +4,8 @@ date: 2026-03-19
 date-modified: 2026-04-04
 open-graph:
   title: ch10.1-attention-is-io-bound
-  description: "10.1 Why Attention is IO-Bound"
-title: "10.1 Why Attention is IO-Bound"
+  description: "10.1 Why Attention Is IO-Bound"
+title: "10.1 Why Attention Is IO-Bound"
 order: 1
 ---
 
