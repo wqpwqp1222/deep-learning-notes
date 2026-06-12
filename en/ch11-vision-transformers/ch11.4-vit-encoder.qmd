@@ -4,7 +4,7 @@ date: 2026-05-13
 date-modified: 2026-05-19
 open-graph:
   title: ch11.4-vit-encoder
-  description: "11.4 ViT Encoder: Letting Patch Tokens Communicate"
+  description: "11.4 ViT Encoder: Letting Patch Tokens Exchange Information"
 title: "11.4 ViT Encoder: Letting Patch Tokens Exchange Information"
 order: 4
 ---
@@ -535,7 +535,7 @@ print('Logits shape:', logits.shape)
 
 We can see that the input of ViT is `(B, C, H, W)`, and the output is `(B, num_classes)`. This is a minimal ViT classification model.
 
-## 11.4.8 Chapter Summary
+## 11.4.8 Summary
 
 In this section, we completed the core part of ViT: **ViT Encoder**.
 

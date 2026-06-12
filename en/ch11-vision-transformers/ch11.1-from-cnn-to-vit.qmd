@@ -220,7 +220,7 @@ ViT has weaker priors. It does not directly require each patch to look only at n
 
 This is also why the original ViT performs well on large-scale data, but is not necessarily naturally better than CNNs on smaller datasets. ViT's advantages come from a more general sequence modeling approach and better scalability. But it also needs a large amount of data and appropriate training strategies to fully realize its potential.
 
-## 11.1.7 Chapter Summary
+## 11.1.7 Summary
 
 In this section, we started from the way CNN models images and discussed the basic motivation of Vision Transformer.
 

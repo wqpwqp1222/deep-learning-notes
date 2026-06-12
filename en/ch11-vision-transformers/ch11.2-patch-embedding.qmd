@@ -475,7 +475,7 @@ The attention matrix size here is estimated by $N \times N$ `float32` elements. 
 
 Of course, patch size is not simply the smaller the better, nor the larger the better. It is related to data scale, model size, task type, and input resolution. For image classification, larger patches are sometimes already enough; for dense prediction tasks such as detection and segmentation, fine-grained spatial information is more important, so directly using a plain ViT architecture will encounter some difficulties. We will discuss these issues later when talking about visual Transformer variants.
 
-## 11.2.8 Chapter Summary
+## 11.2.8 Summary
 
 In this section, we solved the first problem in the input part of ViT: **how does an image become a token sequence that Transformer can receive?**
 

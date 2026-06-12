@@ -4,7 +4,7 @@ date: 2026-05-13
 date-modified: 2026-05-13
 open-graph:
   title: ch11.3-positional-embedding
-  description: "11.3 Class Token and Positional Embedding: Representing the Whole Image"
+  description: "11.3 Class Token and Positional Embedding: Letting a Sequence Represent the Whole Image"
 title: "11.3 Class Token and Positional Embedding: Letting a Sequence Represent the Whole Image"
 order: 3
 ---
@@ -414,7 +414,7 @@ print('New positional embedding shape:', new_pos_embed.shape)
 
 We can see that the original positional embedding length is 197 (196 patches + 1 class token), and the new positional embedding length is 577 (576 patches + 1 class token). In this way, it can adapt to inputs with different resolutions.
 
-## 11.3.8 Chapter Summary
+## 11.3.8 Summary
 
 In this section, we added two key designs in the ViT input module: **class token** and **position embedding**.
 

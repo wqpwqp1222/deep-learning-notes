@@ -4,8 +4,8 @@ date: 2026-05-19
 date-modified: 2026-05-19
 open-graph:
   title: ch11.5-vit-as-backbone
-  description: "11.5 ViT as a Backbone: Pretraining and Fine-tuning"
-title: "11.5 ViT Backbone: Pretraining and Fine-tuning"
+  description: "11.5 ViT Backbone: Pretraining and Fine-Tuning"
+title: "11.5 ViT Backbone: Pretraining and Fine-Tuning"
 order: 5
 ---
 
@@ -314,7 +314,7 @@ ipy.clear_output()
 
 However, in downstream classification tasks, it is more common to first load `AutoModelForImageClassification`, and then replace the classification head with the number of classes needed by the current dataset. This is because `AutoModelForImageClassification` already wraps `ViTModel` and the classification head together, and directly outputs the `logits` needed for classification. If we use `ViTModel`, we still need to write a classification head ourselves to receive the output of the backbone.
 
-## 11.5.5 Fine-tuning: Transferring the Backbone to a Specific Task
+## 11.5.5 Fine-Tuning: Transferring the Backbone to a Specific Task
 
 After pretraining is complete, whenever we encounter a new task, we usually do not train a ViT from scratch again. Instead, we directly take the pretrained backbone and perform **fine-tuning** for this specific task.
 
@@ -526,7 +526,7 @@ $$
 
 So, when we say “ViT is a backbone,” the focus is not the final classification head, but the token representation learning ability in front. ViT turns images into a group of reusable visual tokens, and the task heads afterward simply ask different questions over these tokens.
 
-## 11.5.7 Chapter Summary
+## 11.5.7 Summary
 
 In this section, we started from the complete ViT classification model and further discussed how ViT is used as a visual backbone.
 
