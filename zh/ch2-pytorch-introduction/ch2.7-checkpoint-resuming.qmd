@@ -252,7 +252,7 @@ num_epochs = 5
 crash_after_epoch = 3
 
 for epoch in range(1, num_epochs + 1):
-    loss, acc = dt.train_one_epoch(
+    loss, acc = dt.train(
         model=model,
         dataloader=train_dl,
         loss_fn=loss_fn,
@@ -260,7 +260,7 @@ for epoch in range(1, num_epochs + 1):
         metric=metric,
         device=device,
     )
-    val_loss, val_acc = dt.evaluate_on_epoch(
+    val_loss, val_acc = dt.evaluate(
         model=model,
         dataloader=val_dl,
         loss_fn=loss_fn,
@@ -340,7 +340,7 @@ print('Number of history records:', len(history))
 
 ```{python}
 for epoch in range(last_epoch + 1, num_epochs + 1):
-    train_loss, train_acc = dt.train_one_epoch(
+    train_loss, train_acc = dt.train(
         model=model,
         dataloader=train_dl,
         loss_fn=loss_fn,
@@ -348,7 +348,7 @@ for epoch in range(last_epoch + 1, num_epochs + 1):
         metric=metric,
         device=device,
     )
-    val_loss, val_acc = dt.evaluate_on_epoch(
+    val_loss, val_acc = dt.evaluate(
         model=model,
         dataloader=val_dl,
         loss_fn=loss_fn,
@@ -389,7 +389,7 @@ for epoch in range(last_epoch + 1, num_epochs + 1):
 
 ```{python}
 test_metric = MulticlassAccuracy(num_classes=10).to(device)
-test_loss, test_acc = dt.evaluate_on_epoch(
+test_loss, test_acc = dt.evaluate(
     model=model,
     dataloader=test_dl,
     loss_fn=loss_fn,
