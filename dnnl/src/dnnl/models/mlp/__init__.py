@@ -6,6 +6,7 @@ from .base import Module as Module
 from .base import Optimizer as Optimizer
 from .base import Parameter as Parameter
 from .layer import Flatten as Flatten
+from .layer import Identity as Identity
 from .layer import Linear as Linear
 from .loss import CrossEntropyLoss as CrossEntropyLoss
 from .mlp import MLP as MLP
