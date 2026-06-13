@@ -36,10 +36,7 @@ $$
 
 In other words, this is a 10-class classification problem. After seeing a handwritten digit image, the model needs to determine which class it belongs to.
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch3.1-mnist-samples.png">
-  <figcaption>Figure 1: MNIST handwritten digit classification dataset [@enwiki:MNIST]</figcaption>
-</figure>
+![Figure 1: MNIST handwritten digit classification dataset [@enwiki:MNIST]](figures/ch3.1-mnist-samples.png)
 
 For a computer, a $28 \times 28$ grayscale image can be viewed as a matrix:
 
@@ -136,10 +133,7 @@ $$
 Z = XW + b
 $$
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch3.1-single-neuron.svg">
-  <figcaption>Figure 2: Linear classifier model [@zhang2023d2l, fig. 3.1.2]</figcaption>
-</figure>
+![Figure 2: Linear classifier model [@zhang2023d2l, fig. 3.1.2]](figures/ch3.1-single-neuron.svg)
 
 Here, $X$ is the feature matrix of the input images, $W$ is the weight matrix, and $b$ is the bias vector. In the figure above, the input layer is $X$, the output layer is $Z$, and the lines in between represent the weight matrix $W$. At the same time, each output node also has a corresponding bias $b$, which is not shown in the figure.
 
@@ -286,10 +280,7 @@ H_2
 Z
 $$
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch3.1-mlp.svg">
-  <figcaption>Figure 3: MLP model [@zhang2023d2l, fig. 4.1.1]</figcaption>
-</figure>
+![Figure 3: MLP model [@zhang2023d2l, fig. 4.1.1]](figures/ch3.1-mlp.svg)
 
 Here, $\operatorname{Linear}_1$ denotes the first linear layer, $\operatorname{ReLU}$ is the activation function, $\operatorname{Linear}_2$ is the second linear layer, $H_1, H_2$ are the hidden layer's pre-activation and post-activation representations, and $Z$ is the output logits.
 
