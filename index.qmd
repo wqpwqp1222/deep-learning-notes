@@ -1,5 +1,5 @@
 ---
-title: Redirect
+title: "Deep Learning Notes"
 format: html
 author: jshn9515
 date: 2026-03-19
