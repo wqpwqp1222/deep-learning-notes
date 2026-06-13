@@ -74,10 +74,7 @@ CLIP 的结构可以概括成两部分。
 - 一个图像编码器 $f_\theta(\cdot)$，把图片编码成向量（比如 ResNet 或 ViT）；
 - 一个文本编码器 $g_\phi(\cdot)$，把文本编码成向量（比如 Transformer）。
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip.png" style="width: 60%;">
-  <figcaption>图 1：CLIP 网络结构 [@radford2021CLIP, fig. 1]</figcaption>
-</figure>
+![图 1：CLIP 网络结构 [@radford2021CLIP, fig. 1]](figures/ch15.1-clip.png){width="60%"}
 
 给定一张图片 $I_i$ 和一句文本 $T_j$，我们先分别得到它们的特征：
 
@@ -255,10 +252,7 @@ print('text -> image predictions:', pred_image_idx.tolist())
 
 然后把这些文本也编码成向量，和图像向量算相似度。哪个 prompt 最接近，就把图像判成哪个类别。
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch15.1-clip-zero-shot.png" width="60%">
-  <figcaption>图 2：CLIP zero-shot 分类 [@radford2021CLIP, fig. 1]</figcaption>
-</figure>
+![图 2：CLIP zero-shot 分类 [@radford2021CLIP, fig. 1]](figures/ch15.1-clip-zero-shot.png){width="60%"}
 
 也就是说，CLIP 并不像传统分类模型那样用一个固定的线性层来输出类别，而是在推理时用一组文本描述生成对应的类别向量，再根据图像和这些向量的相似度来做判断。这就是 zero-shot 的根源：
 
