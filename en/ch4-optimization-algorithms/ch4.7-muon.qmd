@@ -38,7 +38,7 @@ In this section, we will not treat Muon as a simple replacement for AdamW. Inste
 from collections.abc import Iterable
 from typing import override
 
-import dnnl.optim as dopt
+import dnnlpy.optim as dopt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

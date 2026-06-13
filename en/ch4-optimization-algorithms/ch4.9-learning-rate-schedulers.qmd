@@ -40,8 +40,8 @@ The learning rate scheduler answers this question:
 In this section, we will not implement schedulers ourselves. Instead, we will summarize common learning rate scheduling strategies from an intuitive perspective, and finally demonstrate their basic usage in PyTorch.
 
 ```{python}
-import dnnl
-import dnnl.optim as dopt
+import dnnlpy
+import dnnlpy.optim as dopt
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -50,7 +50,7 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr
 
 plt.rc('figure', dpi=100)
-dnnl.set_matplotlib_format('svg')
+dnnlpy.set_matplotlib_format('svg')
 print('PyTorch version:', torch.__version__)
 ```
 
