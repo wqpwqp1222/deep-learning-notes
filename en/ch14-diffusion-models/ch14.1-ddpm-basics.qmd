@@ -122,10 +122,7 @@ That is, input the current noisy image, predict how much noise should be removed
 
 Then, when we want to generate an image, it is very simple: start from random Gaussian noise, repeatedly call the denoising network, and finally generate a sample. So, DDPM's generation is not direct generation like GAN, but starts from noise and denoises gradually.
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.1-ddpm-chain.png" style="width: 80%;">
-  <figcaption>Figure 1: Schematic diagram of the DDPM generation process [@ho2020DDPM, fig. 2]</figcaption>
-</figure>
+![Figure 1: Schematic diagram of the DDPM generation process [@ho2020DDPM, fig. 2]](figures/ch14.1-ddpm-chain.png){width="80%"}
 
 Intuitively, we already feel that this makes sense. From the perspective of probabilistic modeling, it is actually also very natural.
 

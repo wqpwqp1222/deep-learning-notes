@@ -321,10 +321,7 @@ So generation is not completed in one step, but is a step-by-step denoising proc
 
 This is the pseudocode for the generation stage, and it is also very simple:
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.4-ddpm-sampling.png" style="width: 60%;">
-  <figcaption>Algorithm 2: DDPM generation process pseudocode [@ho2020DDPM, alg. 2]</figcaption>
-</figure>
+![Algorithm 2: DDPM generation process pseudocode [@ho2020DDPM, alg. 2]](figures/ch14.4-ddpm-sampling.png){width="60%"}
 
 If you look carefully at this pseudocode, you will find that we seem to also add noise during the sampling process, which is the $z$ in the pseudocode. But aren't we already trying to generate an image? Why do we still add noise while denoising at each step?
 

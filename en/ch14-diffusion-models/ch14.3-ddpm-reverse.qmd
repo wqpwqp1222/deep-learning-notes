@@ -296,10 +296,7 @@ Here, $x_0$ is sampled from the real data $p_{\text{data}}$, $t$ is a randomly s
 
 However, although it looks like just MSE on the surface, behind it is actually probabilistic modeling of the reverse diffusion process. In other words, this simple MSE loss function actually starts from a rigorous probabilistic model, goes through a series of equivalent or approximately equivalent transformations, and finally becomes a training objective that is very easy to optimize. Unlike many deep learning networks, it has theoretical support behind it. We use a piece of pseudocode to describe this process:
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch14.3-ddpm-training.png" style="width: 60%;">
-  <figcaption>Algorithm 1: DDPM training process pseudocode [@ho2020DDPM, alg. 1]</figcaption>
-</figure>
+![Algorithm 1: DDPM training process pseudocode [@ho2020DDPM, alg. 1]](figures/ch14.3-ddpm-training.png){width="60%"}
 
 You see, isn't it simple? Don't be fooled by it. Later, we will explain in detail where this training objective comes from and how it relates to probabilistic modeling.
 
