@@ -1,4 +1,3 @@
-import os
 import platform
 import subprocess
 from pathlib import Path
@@ -33,5 +32,4 @@ def main():
 
 
 if __name__ == '__main__':
-    if os.getenv('QUARTO_PROJECT_RENDER_ALL'):
-        main()
+    main()

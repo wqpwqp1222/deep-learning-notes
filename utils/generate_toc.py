@@ -1,6 +1,5 @@
 """Generate English and Chinese TOC files from the Quarto sidebars."""
 
-import os
 import re
 from pathlib import Path
 
@@ -96,5 +95,4 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    if os.getenv('QUARTO_PROJECT_RENDER_ALL'):
-        main()
+    main()

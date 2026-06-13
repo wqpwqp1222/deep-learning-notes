@@ -1,6 +1,5 @@
 """Clean up checkpoint files in the current directory and its subdirectories."""
 
-import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,5 +13,4 @@ def main():
 
 
 if __name__ == '__main__':
-    if os.getenv('QUARTO_PROJECT_RENDER_ALL'):
-        main()
+    main()
