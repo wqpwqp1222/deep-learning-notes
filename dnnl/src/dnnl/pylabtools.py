@@ -4,6 +4,10 @@
 # pyright: reportOptionalMemberAccess=false
 # pyright: reportAttributeAccessIssue=false
 
+# TODO: Remove this when the minimum supported Python version is 3.14.
+# See <PEP 649> and <PEP 749> for more details.
+from __future__ import annotations
+
 import struct
 from binascii import b2a_base64
 from functools import partial
