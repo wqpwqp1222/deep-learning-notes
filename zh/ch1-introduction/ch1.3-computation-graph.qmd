@@ -73,10 +73,7 @@ $$ f(x,y) = \sin(x \cdot y) $$
 
 我们可以把这个过程表示成一个计算图：
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch1.3-computation-graph.svg" style="width: 60%;">
-  <figcaption>图 1：一个简单的计算图</figcaption>
-</figure>
+![图 1：一个简单的计算图](figures/ch1.3-computation-graph.svg){width="60%"}
 
 在这个计算图中，圆圈表示变量，方框表示操作，箭头表示数据流动的方向。输入 $x$ 和 $y$ 通过乘法操作得到中间变量 $z$，然后 $z$ 通过正弦操作得到输出 $f$。
 
