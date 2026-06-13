@@ -23,7 +23,7 @@ order: 6
 ```{python}
 import random
 
-import dnnl
+import dnnlpy
 import numpy as np
 import torch
 import torch.accelerator as accl
@@ -163,7 +163,7 @@ y = y.to(device)
 为了把注意力放在训练模板本身，这里直接使用 MNIST 数据集。
 
 ```{python}
-root = dnnl.get_data_root()
+root = dnnlpy.get_data_root()
 transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 ds_rng = torch.Generator().manual_seed(42)
 
