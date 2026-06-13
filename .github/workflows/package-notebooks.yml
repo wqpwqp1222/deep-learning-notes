@@ -33,36 +33,40 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.14
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Mermaid CLI
+        run: |
+          npm init -y
+          npm install @mermaid-js/mermaid-cli
+
+      - name: Set Chrome path for Puppeteer
+        if: runner.os == 'Linux'
+        run: echo "PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable" >> "$GITHUB_ENV"
+
       - name: Convert zh qmd to ipynb
         shell: bash
-        run: |
-          set -euo pipefail
-
-          OUT_DIR="dnnl/zh"
-          mkdir -p "$OUT_DIR"
-
-          if [ -d "zh" ]; then
-            while IFS= read -r -d '' qmd; do
-              rel="${qmd#zh/}"
-              rel_dir="$(dirname "$rel")"
-              stem="$(basename "$qmd" .qmd)"
-
-              out_subdir="$OUT_DIR/$rel_dir"
-              mkdir -p "$out_subdir"
-
-              quarto convert "$qmd" --output "$out_subdir/$stem.ipynb"
-              if [ -d "zh/$rel_dir/figures" ]; then
-                cp -a "zh/$rel_dir/figures" "$out_subdir/"
-              fi
-            done < <(find zh -type f -name '*.qmd' -print0)
-          fi
+        run: quarto render zh/ --profile jupyter
 
       - name: Package zh notebooks
         shell: bash
         run: |
           set -euo pipefail
-          if [ -d "dnnl/zh" ] && [ "$(find dnnl/zh -type f | wc -l)" -gt 0 ]; then
-            tar -czf dnnl-zh.tar.gz -C dnnl zh
+          if [ -d "_jupyter/zh" ] && [ "$(find _jupyter/zh -type f | wc -l)" -gt 0 ]; then
+            tar -czf dnnl-zh.tar.gz -C _jupyter zh
           fi
 
       - name: Generate zh package attestation
@@ -72,7 +76,7 @@ jobs:
           subject-path: dnnl-zh.tar.gz
 
       - name: Upload zh artifact
-        if: ${{ hashFiles('dnnl/zh/**/*.ipynb') != '' }}
+        if: ${{ hashFiles('_jupyter/zh/**/*.ipynb') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: dnnl-zh
@@ -89,36 +93,40 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.14
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Mermaid CLI
+        run: |
+          npm init -y
+          npm install @mermaid-js/mermaid-cli
+
+      - name: Set Chrome path for Puppeteer
+        if: runner.os == 'Linux'
+        run: echo "PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable" >> "$GITHUB_ENV"
+
       - name: Convert en qmd to ipynb
         shell: bash
-        run: |
-          set -euo pipefail
-
-          OUT_DIR="dnnl/en"
-          mkdir -p "$OUT_DIR"
-
-          if [ -d "en" ]; then
-            while IFS= read -r -d '' qmd; do
-              rel="${qmd#en/}"
-              rel_dir="$(dirname "$rel")"
-              stem="$(basename "$qmd" .qmd)"
-
-              out_subdir="$OUT_DIR/$rel_dir"
-              mkdir -p "$out_subdir"
-
-              quarto convert "$qmd" --output "$out_subdir/$stem.ipynb"
-              if [ -d "en/$rel_dir/figures" ]; then
-                cp -a "en/$rel_dir/figures" "$out_subdir/"
-              fi
-            done < <(find en -type f -name '*.qmd' -print0)
-          fi
+        run: quarto render en/ --profile jupyter
 
       - name: Package en notebooks
         shell: bash
         run: |
           set -euo pipefail
-          if [ -d "dnnl/en" ] && [ "$(find dnnl/en -type f | wc -l)" -gt 0 ]; then
-            tar -czf dnnl-en.tar.gz -C dnnl en
+          if [ -d "_jupyter/en" ] && [ "$(find _jupyter/en -type f | wc -l)" -gt 0 ]; then
+            tar -czf dnnl-en.tar.gz -C _jupyter en
           fi
 
       - name: Generate en package attestation
@@ -128,7 +136,7 @@ jobs:
           subject-path: dnnl-en.tar.gz
 
       - name: Upload en artifact
-        if: ${{ hashFiles('dnnl/en/**/*.ipynb') != '' }}
+        if: ${{ hashFiles('_jupyter/en/**/*.ipynb') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: dnnl-en
