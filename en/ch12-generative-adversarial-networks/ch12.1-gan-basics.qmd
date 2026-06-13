@@ -17,10 +17,7 @@ We are no longer satisfied with judging whether this is a cat, but hope that the
 
 **GAN (Generative Adversarial Network)** [@goodfellow2014GAN] is one of the most classic methods in this direction. Its idea is very intuitive: instead of training only one generative model, it trains two models that compete with each other at the same time. One model is responsible for generating samples, and the other model is responsible for judging whether the samples are real or fake. The generator tries every way to fool the discriminator, while the discriminator tries every way to identify forged samples. In this continuous adversarial process, the generator gradually learns how to generate more and more realistic data.
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch12.1-gan.svg" style="height: 225px;">
-  <figcaption>Figure 1: GAN network structure [@zhang2023d2l, fig. 20.1.1]</figcaption>
-</figure>
+![Figure 1: GAN network structure [@zhang2023d2l, fig. 20.1.1]](figures/ch12.1-gan.svg){height="225px"}
 
 In this section, we first clarify the four most basic questions about GAN:
 
