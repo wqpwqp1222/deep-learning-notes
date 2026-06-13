@@ -8,7 +8,7 @@ comments: false
 
 listing:
   contents:
-    - index-parts/part*.qmd
+    - "index-parts/part*.qmd"
   sort: title asc
   type: table
   fields: [title, author, date]
