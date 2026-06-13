@@ -94,10 +94,7 @@ So, the core of the Encoder-Decoder Transformer is not simply putting the Encode
 
 The information flow of a complete Encoder-Decoder Transformer can be written as:
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.8-transformer.png" style="height: 600px;">
-  <figcaption>Figure 1: Transformer network architecture diagram [@vaswani2023Attention, fig. 1]</figcaption>
-</figure>
+![Figure 1: Transformer network architecture diagram [@vaswani2023Attention, fig. 1]](figures/ch8.8-transformer.png){height="600px"}
 
 The left half of the figure is the Encoder, and the right half is the Decoder.
 

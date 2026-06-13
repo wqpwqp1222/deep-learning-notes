@@ -271,10 +271,7 @@ $$
 
 Compared with recomputing the full $Q_{\le t}K_{\le t}^{\top}$ at every step without KV cache, this part drops from accumulated $O(T^3d)$ to $O(T^2d)$.
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.9-kv-cache.svg">
-  <figcaption>Figure 1: KV cache diagram</figcaption>
-</figure>
+![Figure 1: KV cache diagram](figures/ch8.9-kv-cache.svg)
 
 Therefore, with KV cache, the model does not stop doing attention. It only computes the attention from the current new token to historical tokens. The keys/values of historical tokens have already been stored in the cache and do not need to be recomputed; the attention rows corresponding to historical tokens themselves also do not need to be recomputed.
 

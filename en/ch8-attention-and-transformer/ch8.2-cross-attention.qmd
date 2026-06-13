@@ -271,10 +271,7 @@ $$
 \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
 $$
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.2-sdpa.png" style="height: 250px;">
-  <figcaption>Figure 1: SDPA computation diagram [@vaswani2023Attention, fig. 2]</figcaption>
-</figure>
+![Figure 1: SDPA computation diagram [@vaswani2023Attention, fig. 2]](figures/ch8.2-sdpa.png){height="250px"}
 
 Its difference from the most original attention is that it divides the scores by $\sqrt{d_k}$.
 

@@ -167,10 +167,7 @@ Self-attention is more like a complete graph. In theory, every position can dire
 
 More importantly, this graph is not fixed. It is dynamically computed according to the current input. The same token may attend to different positions in different sentences. For example, `bank` may pay more attention to `money` and `deposited` in a financial context, and may pay more attention to `river` and `sat` in a natural-environment context. This shows that what self-attention builds is not a static graph, but an **input-dependent dynamic information graph**.
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.3-self-attn-vis.png" style="width: 80%;">
-  <figcaption>Figure 1: Schematic diagram of dynamic information in Self-Attention [@vaswani2023Attention, fig. 5]</figcaption>
-</figure>
+![Figure 1: Schematic diagram of dynamic information in Self-Attention [@vaswani2023Attention, fig. 5]](figures/ch8.3-self-attn-vis.png){width="80%"}
 
 This viewpoint can help us understand why self-attention is flexible: it does not use a fixed structure to process all sequences, but lets the model decide by itself, according to each input sample, which positions should exchange more information.
 

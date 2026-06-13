@@ -254,10 +254,7 @@ $$
 
 Therefore, a decoder block can be written as:
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.7-decoder-block.svg" style="height: 800px;">
-  <figcaption>Figure 1: Transformer Decoder Block structure diagram</figcaption>
-</figure>
+![Figure 1: Transformer Decoder Block structure diagram](figures/ch8.7-decoder-block.svg){height="800px"}
 
 Compared with the encoder block, the decoder block has one more cross-attention module, and its self-attention needs a causal mask.
 

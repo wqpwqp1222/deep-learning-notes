@@ -82,10 +82,7 @@ It does not invent a completely new attention computation method. Instead, it ru
 
 From the overall structure, each head first obtains its own set of $Q$, $K$, and $V$ through its own linear projections, and then independently computes scaled dot-product attention. The outputs of multiple heads are concatenated, and finally passed through a linear layer to be fused into the final multi-head attention output.
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.4-mha.png" style="height: 300px;">
-  <figcaption>Figure 1: MHA computation diagram [@vaswani2023Attention, fig. 2]</figcaption>
-</figure>
+![Figure 1: MHA computation diagram [@vaswani2023Attention, fig. 2]](figures/ch8.4-mha.png){height="300px"}
 
 For the $i$-th head, there is an independent set of linear projection matrices:
 

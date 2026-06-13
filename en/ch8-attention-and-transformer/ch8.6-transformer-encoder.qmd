@@ -93,10 +93,7 @@ Here, $X$ is the input representation of the current layer, $Y$ is the output re
 
 From the data flow, it looks like this:
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch8.6-encoder-block.svg" style="height: 600px;">
-  <figcaption>Figure 1: Transformer Encoder Block structure diagram</figcaption>
-</figure>
+![Figure 1: Transformer Encoder Block structure diagram](figures/ch8.6-encoder-block.svg){height="600px"}
 
 This is the most basic encoder block structure.
 
