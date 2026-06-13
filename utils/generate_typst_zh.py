@@ -93,7 +93,7 @@ def write_config() -> None:
 
 def main() -> None:
     write_config()
-    print(f'Updated {CONFIG.relative_to(ROOT)}')
+    print(f'Updated {CONFIG.relative_to(ROOT)}', flush=True)
 
 
 if __name__ == '__main__':
