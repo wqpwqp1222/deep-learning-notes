@@ -51,7 +51,17 @@ quarto convert path/to/file.qmd
 
 完整依赖见 `requirements.txt`。
 
-在运行相关内容之前，请先进入 `dnnlpy` 文件夹，按照 `dnnlpy/README.md` 的说明安装 `dnnlpy` 库。这个库包含了笔记中使用的一些自定义实现和工具函数，安装完成后才能正常运行相关代码。
+在运行相关内容之前，请先安装 `dnnlpy` 库。这个库包含了笔记中使用的一些自定义实现和工具函数，安装完成后才能正常运行相关代码。
+
+```bash
+pip install dnnlpy
+```
+
+如果你想直接从本仓库安装最新版本，可以使用：
+
+```bash
+uv pip install "git+https://github.com/jshn9515/deep-learning-notes.git#subdirectory=dnnlpy"
+```
 
 > [!NOTE]
 > 本项目使用 **Transformers v5**。如果你参考的其他仓库或教程基于 v4，API 会有较大差异（如分词器、量化配置等），请参考 [官方迁移指南](https://github.com/huggingface/transformers/blob/main/MIGRATION_GUIDE_V5.md) 进行调整。

@@ -51,7 +51,17 @@ All code in this repository has been tested in the following environment:
 
 See `requirements.txt` for the full list of dependencies.
 
-Before running the related content, please first enter the `dnnlpy` directory and install the `dnnlpy` library according to the instructions in `dnnlpy/README.md`. This library contains some custom implementations and utility functions used throughout the notes, and many examples will not run properly without it.
+Before running the related content, please install the `dnnlpy` library. This library contains some custom implementations and utility functions used throughout the notes, and many examples will not run properly without it.
+
+```bash
+pip install dnnlpy
+```
+
+To install the latest version directly from this repository, use:
+
+```bash
+uv pip install "git+https://github.com/jshn9515/deep-learning-notes.git#subdirectory=dnnlpy"
+```
 
 > [!NOTE]
 > This project uses **Transformers v5**. If you are following other repositories or tutorials based on v4, there may be significant API differences (such as tokenizers and quantization configurations). Please refer to the [official migration guide](https://github.com/huggingface/transformers/blob/main/MIGRATION_GUIDE_V5.md) for adjustments.
