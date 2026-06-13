@@ -123,10 +123,7 @@ This form is called a **Pre-Norm Transformer**, meaning layer norm is applied be
 
 In terms of module order, the computation flow of an encoder block is:
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch11.4-vit-encoder.svg" style="height: 750px;">
-  <figcaption>Figure 1: ViT Encoder model structure</figcaption>
-</figure>
+![Figure 1: ViT Encoder model structure](figures/ch11.4-vit-encoder.svg){height="750px"}
 
 This is very close to the Transformer Encoder we discussed earlier. The only difference is that the tokens are no longer words, but image patches.
 

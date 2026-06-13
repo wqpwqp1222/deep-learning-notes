@@ -172,10 +172,7 @@ $$
 \end{aligned}
 $$
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch11.1-vit.png" style="width: 70%;">
-  <figcaption>Figure 1: ViT model architecture [@dosovitskiy2021ViT, fig. 1]</figcaption>
-</figure>
+![Figure 1: ViT model architecture [@dosovitskiy2021ViT, fig. 1]](figures/ch11.1-vit.png){width="70%"}
 
 Given an image, ViT first cuts it into multiple patches; then it flattens each patch and maps it into a fixed-dimensional vector through a linear layer; next it adds positional encoding so that the model knows where each patch comes from; finally, it feeds these patch embeddings into a Transformer Encoder, using self-attention to model the relationships among different patches.
 

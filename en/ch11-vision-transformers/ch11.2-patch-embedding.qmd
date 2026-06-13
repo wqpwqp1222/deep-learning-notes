@@ -219,10 +219,7 @@ $$
 
 In this way, we obtain a patch sequence.
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch11.2-unfold.png">
-  <figcaption>Figure 1: Computation process of Tensor.unfold</figcaption>
-</figure>
+![Figure 1: Computation process of Tensor.unfold](figures/ch11.2-unfold.png)
 
 
 ::: {.callout-tip}
