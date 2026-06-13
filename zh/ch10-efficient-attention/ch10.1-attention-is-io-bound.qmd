@@ -81,10 +81,7 @@ $$
 
 理解 attention 的 IO 问题，还需要知道 GPU 的存储并不是统一的。从速度和容量上看，GPU 的内存是分层的，大致可以粗略理解为：
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch10.1-gpu-memory.png" style="width: 40%;">
-  <figcaption>图 1：GPU 内存分层模型 [@dao2022FlashAttentionv1, fig. 1]</figcaption>
-</figure>
+![图 1：GPU 内存分层模型 [@dao2022FlashAttentionv1, fig. 1]](figures/ch10.1-gpu-memory.png){width="40%"}
 
 - 寄存器（Register）：容量极小，但最快，访问延迟几乎为零
 - SRAM / Shared Memory / L2 Cache：容量小，但速度快，访问延迟低，速度约为 19 TB/s
@@ -129,10 +126,7 @@ $$
 
 我们把标准 attention 的执行过程写得更准确一些：
 
-<figure class="figure" style="text-align: center;">
-  <img src="figures/ch10.1-attn-forward.png" alt="算法 1：标准 Attention 的执行流程" style="width: 100%;">
-  <figcaption>算法 1：标准 attention 的执行流程 [@dao2022FlashAttentionv1, alg. 0]</figcaption>
-</figure>
+![算法 1：标准 attention 的执行流程 [@dao2022FlashAttentionv1, alg. 0]](figures/ch10.1-attn-forward.png){width="100%"}
 
 假设我们使用 `float32`，每个元素占 4 字节。我们做一个很粗略的估算，只抓主导项。
 
