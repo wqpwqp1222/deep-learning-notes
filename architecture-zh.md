@@ -57,7 +57,7 @@ HTML 渲染还会通过 profile 的 post-render hooks 运行 `utils/generate_toc
 
 ## Pull Request 渲染检查
 
-Pull request 使用 `.github/workflows/render-check.yml`。
+Pull request 使用 `.github/workflows/pr-render-check.yml`。
 
 Pull request 遵循相同的缓存优先级规则。已提交的 `_freeze/` 目录始终会被使用。只有在依赖没有变化时，才会恢复 GitHub Actions 缓存；并且 PR 运行使用 `actions/cache/restore`，因此可以读取缓存但不会写回新的缓存。这样可以避免 PR 污染共享的渲染缓存。
 

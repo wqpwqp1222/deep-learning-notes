@@ -57,7 +57,7 @@ The HTML render also runs `utils/generate_toc.py` through the profile post-rende
 
 ## Pull Request Render Checks
 
-Pull requests use `.github/workflows/render-check.yml`.
+Pull requests use `.github/workflows/pr-render-check.yml`.
 
 Pull requests follow the same cache priority rule. The committed `_freeze/` directory is always used. The GitHub Actions cache is restored only when dependencies have not changed, and PR runs use `actions/cache/restore` so they can read the cache without writing a new one back. This keeps PRs from poisoning the shared render cache.
 
