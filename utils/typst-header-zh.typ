@@ -34,6 +34,7 @@
 #set math.equation(numbering: none)
 
 #show heading: set par(first-line-indent: (amount: 0pt, all: false))
+#show outline: set text(font: NotoSerif, fallback: false)
 #show figure: set align(center)
 #show figure: set block(breakable: true)
 #show figure.where(kind: table): set figure.caption(position: top)
