@@ -43,7 +43,7 @@ book:
       chapters:
         - "en/ch3-multi-layer-perceptron/ch3.1-from-linear-model-to-mlp.qmd"
         - "en/ch3-multi-layer-perceptron/ch3.2-activation-functions.qmd"
-        - "en/ch3-multi-layer-perceptron/ch3.3-softmax-crosstropy.qmd"
+        - "en/ch3-multi-layer-perceptron/ch3.3-softmax-cross-entropy.qmd"
         - "en/ch3-multi-layer-perceptron/ch3.4-linear-layer.qmd"
         - "en/ch3-multi-layer-perceptron/ch3.5-mlp-from-scratch.qmd"
         - "en/ch3-multi-layer-perceptron/ch3.6-train-mlp-on-mnist.qmd"
