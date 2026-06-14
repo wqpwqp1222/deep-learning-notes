@@ -14,7 +14,9 @@ ch8-attention-and-transformer/
 ch10-efficient-attention/
 
 # Chapter 11: Vision Transformers
-ch11-vision-transformers/
+ch11-vision-transformers/*
+!ch11-vision-transformers/ch11.5-vit-as-backbone/
+!ch11-vision-transformers/ch11.5-vit-as-backbone/**
 
 # Chapter 13: AutoEncoders and Variational AutoEncoders
 ch13-autoencoders-and-vaes/*
