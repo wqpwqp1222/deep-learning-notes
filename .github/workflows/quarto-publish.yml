@@ -3,20 +3,23 @@ name: Publish Quarto Website
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "assets/**"
-      - "utils/**"
-      - "_freeze/**"
-      - "**/LICENSE.*"
-      - "**/*.md"
-      - "**/ruff.toml"
-      - "**/.git*"
-      - "**/.github/*.json"
-      - "**/.github/workflows/dnnlpy-ci.yml"
-      - "**/.github/workflows/manual-publish.yml"
-      - "**/.github/workflows/package-notebooks.yml"
-      - "**/.github/workflows/render-check.yml"
-      - "**/.github/workflows/release*.yml"
+    paths:
+      - "zh/**"
+      - "en/**"
+      - "dnnlpy/**"
+      - "pyproject.toml"
+      - "_quarto.yml"
+      - "_quarto-html.yml"
+      - "styles.css"
+      - "refs-*.bib"
+      - "utils/download_datasets.py"
+      - "utils/render_mermaid.py"
+      - "utils/clean_checkpoints.py"
+      - "utils/clean_mermaid_svg.py"
+      - "utils/generate_toc.py"
+      - ".github/workflows/quarto-publish.yml"
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
@@ -123,6 +126,7 @@ jobs:
         run: quarto render --profile html
 
       - name: Commit back TOC changes
+        if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -146,7 +150,7 @@ jobs:
           name: quarto-cache
           path: _freeze/
 
-      - name: Setup Pages
+      - name: Setup GitHub Pages
         uses: actions/configure-pages@v6
 
       - name: Upload artifact
