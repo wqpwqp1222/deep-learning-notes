@@ -9,6 +9,8 @@ title: "1.3 前向传播、反向传播与计算图"
 order: 3
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/zh/ch1-introduction/ch1.3-computation-graph.ipynb){fig-align="left"}
+
 **计算图（Computational Graph）**是深度学习中最核心的概念之一。理解了计算图，我们就能理解神经网络是如何计算输出的，以及它是如何根据误差自动调整参数的。
 
 在前面的章节中，我们已经介绍了损失函数。损失函数衡量了模型的误差，而深度学习的目标，就是通过调整参数，使损失函数尽可能小。但要做到这一点，我们必须回答一个关键问题：每个参数是如何影响损失函数的？
@@ -73,7 +75,7 @@ $$ f(x,y) = \sin(x \cdot y) $$
 
 我们可以把这个过程表示成一个计算图：
 
-![图 1：一个简单的计算图](figures/ch1.3-computation-graph.svg){width="60%"}
+![图 1.3.2：一个简单的计算图](figures/ch1.3-computation-graph.svg){width=60%}
 
 在这个计算图中，圆圈表示变量，方框表示操作，箭头表示数据流动的方向。输入 $x$ 和 $y$ 通过乘法操作得到中间变量 $z$，然后 $z$ 通过正弦操作得到输出 $f$。
 
