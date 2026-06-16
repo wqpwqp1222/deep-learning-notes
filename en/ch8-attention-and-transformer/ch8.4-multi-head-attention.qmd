@@ -9,6 +9,8 @@ title: "8.4 Multi-Head Attention: From Single Perspective to Multiple Perspectiv
 order: 4
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.4-multi-head-attention.ipynb){fig-align="left"}
+
 In the previous section, we saw that self-attention allows each position in a sequence to directly build connections with other positions. For a certain token, it no longer has to rely only on the previous hidden state, and it does not need to indirectly see distant information through many convolution layers. Instead, it can aggregate context from the entire sequence at once based on relevance.
 
 If we only look at this point, self-attention is already very powerful. But there is still one problem that has not been solved: the relationship between one token and other tokens is often **not just one kind**.
@@ -82,7 +84,7 @@ It does not invent a completely new attention computation method. Instead, it ru
 
 From the overall structure, each head first obtains its own set of $Q$, $K$, and $V$ through its own linear projections, and then independently computes scaled dot-product attention. The outputs of multiple heads are concatenated, and finally passed through a linear layer to be fused into the final multi-head attention output.
 
-![Figure 1: MHA computation diagram [@vaswani2023Attention, fig. 2]](figures/ch8.4-mha.png){height="300px"}
+![Figure 8.4.2: MHA computation diagram [@vaswani2023Attention, fig. 2]](figures/ch8.4-mha.png){height=300px}
 
 For the $i$-th head, there is an independent set of linear projection matrices:
 

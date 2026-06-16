@@ -9,6 +9,8 @@ title: "8.9 KV Cache: Why We Don't Recompute the Past During Inference"
 order: 9
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.9-kv-cache.ipynb){fig-align="left"}
+
 In the previous sections, we have seen that the Transformer decoder usually performs **autoregressive generation** during inference. In other words, the model does not generate the whole sentence at once. Instead, it generates token by token:
 
 $$
@@ -271,7 +273,7 @@ $$
 
 Compared with recomputing the full $Q_{\le t}K_{\le t}^{\top}$ at every step without KV cache, this part drops from accumulated $O(T^3d)$ to $O(T^2d)$.
 
-![Figure 1: KV cache diagram](figures/ch8.9-kv-cache.svg)
+![Figure 8.9.4: KV cache diagram](figures/ch8.9-kv-cache.svg)
 
 Therefore, with KV cache, the model does not stop doing attention. It only computes the attention from the current new token to historical tokens. The keys/values of historical tokens have already been stored in the cache and do not need to be recomputed; the attention rows corresponding to historical tokens themselves also do not need to be recomputed.
 

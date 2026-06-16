@@ -9,6 +9,8 @@ title: "8.2 Cross-Attention: One Sequence Querying Another Sequence"
 order: 2
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.2-cross-attention.ipynb){fig-align="left"}
+
 In the previous section, starting from Bahdanau attention, we saw one of the earliest important motivations behind the attention mechanism: do not force the whole input sentence into a fixed-length vector. Instead, when generating each target word, dynamically look for the most relevant information in the source sentence. This idea can be summarized in one sentence:
 
 > **Whatever information is needed at the current time step, use the current state to search for that information in the input sequence.**
@@ -271,7 +273,7 @@ $$
 \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
 $$
 
-![Figure 1: SDPA computation diagram [@vaswani2023Attention, fig. 2]](figures/ch8.2-sdpa.png){height="250px"}
+![Figure 8.2.6: SDPA computation diagram [@vaswani2023Attention, fig. 2]](figures/ch8.2-sdpa.png){height=250px}
 
 Its difference from the most original attention is that it divides the scores by $\sqrt{d_k}$.
 

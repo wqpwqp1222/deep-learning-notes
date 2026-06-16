@@ -9,6 +9,8 @@ title: "8.11 Hugging Face Transformers API: From Structure to Calls"
 order: 11
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.11-hugging-face-transformers-api.ipynb){fig-align="left"}
+
 In the previous sections, we have conceptually covered the main structures of Transformer:
 
 - Token embedding and positional encoding;
@@ -62,7 +64,7 @@ There are two core objects here: `tokenizer` and `model`. The `tokenizer` turns 
 
 The overall workflow can be written as:
 
-![Figure 1: Basic Hugging Face Transformers call flow](figures/ch8.11-transformers-pipeline.svg)
+![Figure 8.11.1: Basic Hugging Face Transformers call flow](figures/ch8.11-transformers-pipeline.svg)
 
 That is:
 

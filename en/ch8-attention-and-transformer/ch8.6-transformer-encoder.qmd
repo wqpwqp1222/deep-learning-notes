@@ -9,6 +9,8 @@ title: "8.6 Transformer Encoder: Stacking Self-Attention Layers"
 order: 6
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.6-transformer-encoder.ipynb){fig-align="left"}
+
 In the previous sections, we have already taken apart several of the most central components in Transformer.
 
 Self-attention lets each token in a sequence directly exchange information with other tokens; multi-head attention lets the model observe the sequence in parallel from multiple representation spaces; positional encoding adds the order information that self-attention itself lacks.
@@ -93,7 +95,7 @@ Here, $X$ is the input representation of the current layer, $Y$ is the output re
 
 From the data flow, it looks like this:
 
-![Figure 1: Transformer Encoder Block structure diagram](figures/ch8.6-encoder-block.svg){height="600px"}
+![Figure 8.6.2: Transformer Encoder Block structure diagram](figures/ch8.6-encoder-block.svg){height=600px}
 
 This is the most basic encoder block structure.
 

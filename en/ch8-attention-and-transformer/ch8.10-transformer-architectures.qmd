@@ -9,6 +9,8 @@ title: "8.10 Three Different Transformer Architectures: Understanding, Generatio
 order: 10
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.10-transformer-architectures.ipynb){fig-align="left"}
+
 In the previous sections, we looked separately at the Transformer Encoder and the Transformer Decoder.
 
 - The core of the encoder is **self-attention**, which lets each token in a sequence see both left and right context at the same time, so it is well suited for understanding tasks.

@@ -9,6 +9,8 @@ title: "8.5 Positional Encoding: Adding Positional Information to Attention"
 order: 5
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.5-positional-encoding.ipynb){fig-align="left"}
+
 In the previous section on self-attention, we saw that each token can directly build connections with all tokens in the sequence. Compared with RNNs, which can only pass information step by step, the advantage of self-attention is that it can be computed in parallel and can more easily capture long-range dependencies. But self-attention also has one very important problem: **by itself, it does not know the order of tokens.**
 
 In other words, if we only feed a set of token embeddings into self-attention, what attention sees is just a pile of vectors, not an ordered sentence. It can compute similarities between tokens and decide which token to attend to, but it cannot naturally distinguish whether a token appears in the first position or the fifth position.

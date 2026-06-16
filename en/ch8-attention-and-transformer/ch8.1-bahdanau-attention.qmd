@@ -9,6 +9,8 @@ title: "8.1 Bahdanau Attention: From Information Compression to Dynamic Retrieva
 order: 1
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.1-bahdanau-attention.ipynb){fig-align="left"}
+
 In the previous sequence models, we have already seen a very natural idea: first use an encoder to read the whole input sequence, summarize it into one vector, and then let the decoder generate the output step by step according to this vector. Taking machine translation as an example, the encoder reads the source-language sentence and finally gets a context vector; the decoder then generates the target-language sentence according to this context vector.
 
 This method looks very reasonable. Since the input is a sentence, compressing the whole sentence into one representation and then using this representation to generate another sentence seems to be a standard "encoder-decoder" process.

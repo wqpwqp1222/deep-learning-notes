@@ -9,6 +9,8 @@ title: "8.3 Self-Attention: Internal Information Interaction Within a Sequence"
 order: 3
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.3-self-attention.ipynb){fig-align="left"}
+
 In the previous section, we have already viewed cross-attention as an information retrieval mechanism across sequences: one sequence is responsible for proposing the query, and another sequence is responsible for providing the key and value. In this way, a certain position in the target sequence can retrieve relevant information from the source sequence according to the current need.
 
 In this section, we discuss **self-attention**. It still uses the scaled dot-product attention introduced in the previous section, so we will not fully derive the formula again. What we really need to focus on is: when query, key, and value no longer come from two different sequences, but all come from the same sequence, how does the meaning of attention change?
@@ -167,7 +169,7 @@ Self-attention is more like a complete graph. In theory, every position can dire
 
 More importantly, this graph is not fixed. It is dynamically computed according to the current input. The same token may attend to different positions in different sentences. For example, `bank` may pay more attention to `money` and `deposited` in a financial context, and may pay more attention to `river` and `sat` in a natural-environment context. This shows that what self-attention builds is not a static graph, but an **input-dependent dynamic information graph**.
 
-![Figure 1: Schematic diagram of dynamic information in Self-Attention [@vaswani2023Attention, fig. 5]](figures/ch8.3-self-attn-vis.png){width="80%"}
+![Figure 8.3.4: Schematic diagram of dynamic information in Self-Attention [@vaswani2023Attention, fig. 5]](figures/ch8.3-self-attn-vis.png){width=80%}
 
 This viewpoint can help us understand why self-attention is flexible: it does not use a fixed structure to process all sequences, but lets the model decide by itself, according to each input sample, which positions should exchange more information.
 

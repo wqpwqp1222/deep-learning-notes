@@ -9,6 +9,8 @@ title: "8.7 Transformer Decoder: Masked Self-Attention and Cross-Attention"
 order: 7
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch8-attention-and-transformer/ch8.7-transformer-decoder.ipynb){fig-align="left"}
+
 Earlier, we looked at the Transformer Encoder. The core task of the encoder is to represent each token in the input sequence as a vector with contextual information. After multiple layers of self-attention and feed-forward networks, each position in the input sequence can already fuse information from other positions.
 
 If we are only doing tasks such as text classification, sequence labeling, or image classification, an encoder is often enough. This is because these tasks usually only need to understand the input and then make predictions based on the input representation.
@@ -254,7 +256,7 @@ $$
 
 Therefore, a decoder block can be written as:
 
-![Figure 1: Transformer Decoder Block structure diagram](figures/ch8.7-decoder-block.svg){height="800px"}
+![Figure 8.7.4: Transformer Decoder Block structure diagram](figures/ch8.7-decoder-block.svg){height=800px}
 
 Compared with the encoder block, the decoder block has one more cross-attention module, and its self-attention needs a causal mask.
 
