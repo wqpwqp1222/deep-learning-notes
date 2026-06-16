@@ -9,6 +9,8 @@ title: "3.7 Backward Propagation Check: Using Numerical Gradients to Verify Hand
 order: 7
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch3-multi-layer-perceptron/ch3.7-gradient-checking.ipynb){fig-align="left"}
+
 In the previous sections, we implemented the forward pass, backward pass, and parameter updates of an MLP from scratch with NumPy, and trained it on MNIST. But this naturally raises another question:
 
 > **How do we know that our handwritten backward is actually correct?**

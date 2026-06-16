@@ -9,6 +9,8 @@ title: "3.2 Activation Functions: Adding Nonlinearity to Neural Networks"
 order: 2
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch3-multi-layer-perceptron/ch3.2-activation-functions.ipynb){fig-align="left"}
+
 In the previous section, we saw that if we simply stack multiple linear layers together, the entire model is still equivalent to a single linear layer:
 
 $$

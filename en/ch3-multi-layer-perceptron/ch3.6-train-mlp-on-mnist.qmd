@@ -9,6 +9,8 @@ title: "3.6 Train MLP on MNIST with NumPy"
 order: 6
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch3-multi-layer-perceptron/ch3.6-train-mlp-on-mnist.ipynb){fig-align="left"}
+
 In the previous section, we used NumPy to build a two-layer MLP that can run `forward`, `backward`, and `update`. However, the previous section only used a small randomly generated dataset, which can only check whether the model structure runs correctly. To truly train a neural network, we need to put it on a real dataset and repeatedly perform many parameter updates.
 
 In this section, we train the MLP implemented earlier on the MNIST dataset. To keep the focus on the neural network itself, we still use NumPy to implement the model, loss function, backpropagation, and parameter updates by hand. However, for reading the dataset, we can use the `MNIST` dataset provided by the `torchvision` library.

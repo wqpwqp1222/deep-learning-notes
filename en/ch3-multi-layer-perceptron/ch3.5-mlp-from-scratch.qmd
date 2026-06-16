@@ -9,6 +9,8 @@ title: "3.5 Building a Complete MLP with NumPy"
 order: 5
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch3-multi-layer-perceptron/ch3.5-mlp-from-scratch.ipynb){fig-align="left"}
+
 In the previous sections, we implemented several basic components needed for an MLP:
 
 1. The `Linear` layer performs a learnable linear transformation;

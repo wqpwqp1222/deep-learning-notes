@@ -9,6 +9,8 @@ title: "3.4 Forward and Backward Propagation of Linear Layers"
 order: 4
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch3-multi-layer-perceptron/ch3.4-linear-layer.ipynb){fig-align="left"}
+
 In the previous sections, we discussed several key components in an MLP:
 
 1. Linear transformations map inputs into a new feature space;
@@ -17,7 +19,7 @@ In the previous sections, we discussed several key components in an MLP:
 
 Now we return to the most fundamental and most common module in an MLP: the **linear layer**. Before going into the specific formulas, let us first look at where linear layers appear in the overall structure of an MLP. In practice, we usually add an activation function after each hidden layer, but we will temporarily ignore that here.
 
-![Figure 1: MLP model [@zhang2023d2l, fig. 4.1.1]](figures/ch3.1-mlp.svg)
+![Figure 3.4.0: MLP model [@zhang2023d2l, fig. 4.1.1]](figures/ch3.1-mlp.svg)
 
 As shown in the figure, adjacent layers in an MLP are usually fully connected. Each edge corresponds to a learnable weight, and the overall computation from one layer to the next can be written as a linear transformation.
 
