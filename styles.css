@@ -31,6 +31,9 @@
 /* make images responsive and fit within the container */
 img {
   max-width: 100%;
+}
+
+img:not([height]):not([style*="height"]) {
   height: auto;
 }
 
