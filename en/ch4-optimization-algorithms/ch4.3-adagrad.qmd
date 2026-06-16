@@ -9,6 +9,8 @@ title: "4.3 Adagrad: Starting Point of Adaptive Learning Rates"
 order: 3
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.3-adagrad.ipynb){fig-align="left"}
+
 In the previous two sections, we went from gradient descent to SGD, and then introduced momentum.
 
 The basic update rule of SGD is:

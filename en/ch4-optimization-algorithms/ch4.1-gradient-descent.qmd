@@ -9,6 +9,8 @@ title: "4.1 From Gradient Descent to SGD"
 order: 1
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.1-gradient-descent.ipynb){fig-align="left"}
+
 In the previous chapters, we have seen that a neural network can be viewed as a function with parameters. Given an input $x$, the model produces a prediction through forward propagation, and then a loss function measures the gap between the prediction and the true label. The goal of training is to keep adjusting the model parameters so that the loss becomes smaller and smaller.
 
 If we use $\theta$ to denote all learnable parameters in the model, and $L(\theta)$ to denote the loss under the current parameters, then training a neural network is essentially solving an optimization problem:

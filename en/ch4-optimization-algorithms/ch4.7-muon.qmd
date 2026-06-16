@@ -9,6 +9,8 @@ title: "4.7 Muon: Orthogonalized Updates for Matrix Parameters"
 order: 7
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.7-muon.ipynb){fig-align="left"}
+
 In the previous sections, we saw a fairly classic line of optimizer evolution.
 
 SGD updates parameters directly along the current mini-batch gradient; momentum further remembers past update directions, giving parameter updates inertia; Adagrad, RMSprop, and Adam start to care about the gradient scales of different parameters and adjust the effective learning rate for each parameter; AdamW then decouples weight decay from Adam's adaptive gradient update.

@@ -9,6 +9,8 @@ title: "4.9 Learning Rate Schedulers: Letting the Learning Rate Change During Tr
 order: 9
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.9-learning-rate-schedulers.ipynb){fig-align="left"}
+
 In the previous sections, we have treated the learning rate $\eta$ as a hyperparameter in the optimizer. Whether we use SGD, momentum, Adagrad, RMSprop, Adam, or AdamW, the parameter update always contains some form of “step size”:
 
 $$

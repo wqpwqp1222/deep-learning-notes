@@ -9,6 +9,8 @@ title: "4.5 Adam: Combining Momentum and RMSprop"
 order: 5
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.5-adam.ipynb){fig-align="left"}
+
 In the previous sections, we have seen that basic SGD has two important problems.
 
 The first problem is that mini-batch SGD is noisy. If each step only looks at the gradient of the current batch, the update direction may fluctuate, especially in the early stage of training, when the model has not yet learned many useful features.

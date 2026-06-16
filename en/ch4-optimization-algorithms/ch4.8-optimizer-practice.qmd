@@ -9,6 +9,8 @@ title: "4.8 Optimizer Map: When to Use Which Optimization Algorithm"
 order: 8
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.8-optimizer-practice.ipynb){fig-align="left"}
+
 In the previous sections, we followed a fairly clear thread and introduced SGD, momentum, Adagrad, RMSprop, Adadelta, Adam, AdamW, and Muon in sequence.
 
 If we only look at the formulas, these optimizers can easily blur together: some maintain momentum, some maintain squared gradients, some apply weight decay, and some orthogonalize matrices. But in real training, the question we care about more is:

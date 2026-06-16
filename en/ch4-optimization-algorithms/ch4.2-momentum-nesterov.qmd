@@ -9,6 +9,8 @@ title: "4.2 Momentum and Nesterov Momentum"
 order: 2
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.2-momentum-nesterov.ipynb){fig-align="left"}
+
 In the previous section, we went from gradient descent to mini-batch SGD. The update rule of SGD is very simple:
 
 $$

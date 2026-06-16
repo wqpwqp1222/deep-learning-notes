@@ -9,6 +9,8 @@ title: "4.4 RMSprop and Adadelta: Fixing Learning Rate Decay"
 order: 4
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.4-rmsprop-adadelta.ipynb){fig-align="left"}
+
 In the previous section, we introduced Adagrad. Its core idea is: instead of letting all parameters share the same learning rate, maintain a historical accumulated squared gradient for each parameter:
 
 $$

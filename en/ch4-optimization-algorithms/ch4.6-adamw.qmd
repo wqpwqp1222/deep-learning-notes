@@ -9,6 +9,8 @@ title: "4.6 AdamW: Decoupled Weight Decay"
 order: 6
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch4-optimization-algorithms/ch4.6-adamw.ipynb){fig-align="left"}
+
 In the previous section, we saw that Adam combines the ideas of momentum and RMSprop. On the one hand, it maintains a first-moment estimate of the gradient, $m_t$, to smooth the update direction. On the other hand, it maintains a second-moment estimate of the squared gradient, $v_t$, to adaptively scale the step size for different parameters.
 
 Adam's update steps can be written as:
