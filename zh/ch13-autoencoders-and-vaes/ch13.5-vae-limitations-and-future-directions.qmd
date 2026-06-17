@@ -9,6 +9,8 @@ title: "13.5 VAE 的优点、局限与后续发展"
 order: 5
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/zh/ch13-autoencoders-and-vaes/ch13.5-vae-limitations-and-future-directions.ipynb){fig-align="left"}
+
 前面几节里，我们已经分别讨论了：
 
 - AutoEncoder 如何通过压缩与重建学习 latent representation

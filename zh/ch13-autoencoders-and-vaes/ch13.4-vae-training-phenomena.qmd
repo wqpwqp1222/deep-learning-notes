@@ -9,6 +9,8 @@ title: "13.4 VAE 的训练现象与潜空间直觉"
 order: 4
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/zh/ch13-autoencoders-and-vaes/ch13.4-vae-training-phenomena.ipynb){fig-align="left"}
+
 前面我们已经知道，VAE 的目标函数由两部分组成：
 
 $$

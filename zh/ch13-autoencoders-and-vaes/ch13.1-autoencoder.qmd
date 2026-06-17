@@ -9,6 +9,8 @@ title: "13.1 AutoEncoder：从压缩与重建开始"
 order: 1
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/zh/ch13-autoencoders-and-vaes/ch13.1-autoencoder.ipynb){fig-align="left"}
+
 在正式进入 VAE (Variational Autoencoder) 之前，我们先来看一个更简单也更直观的模型（也是 VAE 的前身）：**AutoEncoder** [@hinton2006AutoEncoder]。
 
 如果用一句话概括，AutoEncoder 做的事情其实很简单：
@@ -78,7 +80,7 @@ $$
 x \rightarrow \text{Encoder} \rightarrow z \rightarrow \text{Decoder} \rightarrow \hat{x}
 $$
 
-![图 1：AutoEncoder 网络结构 [@Mathworks2026AutoEncoder]](figures/ch13.1-autoencoder.svg){height="225px"}
+![图 13.1.1：AutoEncoder 网络结构 [@Mathworks2026AutoEncoder]](figures/ch13.1-autoencoder.svg){height=225px}
 
 到这里你可能会问，既然目标只是让输出尽量接近输入，那模型直接学一个恒等映射不就行了吗？
 

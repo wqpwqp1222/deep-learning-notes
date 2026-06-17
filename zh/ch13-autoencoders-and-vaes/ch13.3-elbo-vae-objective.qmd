@@ -9,6 +9,8 @@ title: "13.3 ELBO：VAE 的目标函数从哪里来"
 order: 3
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/zh/ch13-autoencoders-and-vaes/ch13.3-elbo-vae-objective.ipynb){fig-align="left"}
+
 上一节里，我们已经知道了 VAE 的基本建模思路：
 
 - 先从先验分布 $p(z)$ 中采样 latent variable
