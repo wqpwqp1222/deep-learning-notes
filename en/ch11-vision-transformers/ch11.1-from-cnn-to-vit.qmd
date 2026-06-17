@@ -9,6 +9,8 @@ title: "11.1 From CNN to Vision Transformer: Treating Images as Sequences"
 order: 1
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch11-vision-transformers/ch11.1-from-cnn-to-vit.ipynb){fig-align="left"}
+
 In the previous chapters, we have seen how Transformer processes sequences. Whether it is the Encoder-Decoder Transformer used in machine translation, or models that use only the encoder or only the decoder, their input is essentially a token sequence:
 
 $$
@@ -172,7 +174,7 @@ $$
 \end{aligned}
 $$
 
-![Figure 1: ViT model architecture [@dosovitskiy2021ViT, fig. 1]](figures/ch11.1-vit.png){width="70%"}
+![Figure 11.1.5: ViT model architecture [@dosovitskiy2021ViT, fig. 1]](figures/ch11.1-vit.png){width=70%}
 
 Given an image, ViT first cuts it into multiple patches; then it flattens each patch and maps it into a fixed-dimensional vector through a linear layer; next it adds positional encoding so that the model knows where each patch comes from; finally, it feeds these patch embeddings into a Transformer Encoder, using self-attention to model the relationships among different patches.
 

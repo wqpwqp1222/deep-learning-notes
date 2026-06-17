@@ -9,6 +9,8 @@ title: "11.3 Class Token and Positional Embedding: Letting a Sequence Represent 
 order: 3
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch11-vision-transformers/ch11.3-positional-embedding.ipynb){fig-align="left"}
+
 In the previous section, we converted the image from the original tensor
 
 $$

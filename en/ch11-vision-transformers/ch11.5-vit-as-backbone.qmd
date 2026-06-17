@@ -9,6 +9,8 @@ title: "11.5 ViT Backbone: Pretraining and Fine-Tuning"
 order: 5
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch11-vision-transformers/ch11.5-vit-as-backbone.ipynb){fig-align="left"}
+
 In the previous section, we connected a most basic Vision Transformer end to end:
 
 $$

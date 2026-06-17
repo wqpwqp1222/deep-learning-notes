@@ -9,6 +9,8 @@ title: "11.4 ViT Encoder: Letting Patch Tokens Exchange Information"
 order: 4
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch11-vision-transformers/ch11.4-vit-encoder.ipynb){fig-align="left"}
+
 In the previous section, we completed the input construction of ViT. Given an image, ViT first cuts it into patches, obtains visual tokens through patch embedding, and then adds the class token and positional embedding:
 
 $$
@@ -123,7 +125,7 @@ This form is called a **Pre-Norm Transformer**, meaning layer norm is applied be
 
 In terms of module order, the computation flow of an encoder block is:
 
-![Figure 1: ViT Encoder model structure](figures/ch11.4-vit-encoder.svg){height="750px"}
+![Figure 11.4.3: ViT Encoder model structure](figures/ch11.4-vit-encoder.svg){height=750px}
 
 This is very close to the Transformer Encoder we discussed earlier. The only difference is that the tokens are no longer words, but image patches.
 

@@ -9,6 +9,8 @@ title: "11.2 Patch Embedding: Cutting Images into Tokens"
 order: 2
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch11-vision-transformers/ch11.2-patch-embedding.ipynb){fig-align="left"}
+
 In the previous section, we discussed the basic idea of Vision Transformer: since Transformer is good at processing sequences, can we also turn an image into a sequence and then let Transformer model it?
 
 This idea sounds natural, but it immediately brings up a concrete problem: Transformer does not receive raw images, but a sequence of token embeddings. In natural language processing, the input is usually a sequence of tokens, and each token is mapped to an embedding; an image, however, is originally a two-dimensional grid and does not have ready-made tokens.
@@ -219,8 +221,7 @@ $$
 
 In this way, we obtain a patch sequence.
 
-![Figure 1: Computation process of Tensor.unfold](figures/ch11.2-unfold.png)
-
+![Figure 11.2.3: Computation process of Tensor.unfold](figures/ch11.2-unfold.png)
 
 ::: {.callout-tip}
 `Tensor.unfold(dim, size, step)` takes sliding windows along the `dim` dimension, where `size` is the window length and `step` is the window stride. Every time it obtains a window, it stacks that window, and the extra dimension indicates which window it is.
