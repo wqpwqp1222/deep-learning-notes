@@ -9,6 +9,8 @@ title: "12.1 GAN Basics: Core Ideas and Training Flow of Generative Adversarial 
 order: 1
 ---
 
+[![](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jshn9515/dnnl-notebooks/blob/main/en/ch12-generative-adversarial-networks/ch12.1-gan-basics.ipynb){fig-align="left"}
+
 In the previous chapters, we have encountered many discriminative models. Whether it is a convolutional neural network or a Transformer, most of them are doing the same type of thing: given an input, predict an output. For example, input an image and determine which class it belongs to; input a sentence and predict what the next word is.
 
 But there is another very important type of problem in deep learning: generation.
@@ -17,7 +19,7 @@ We are no longer satisfied with judging whether this is a cat, but hope that the
 
 **GAN (Generative Adversarial Network)** [@goodfellow2014GAN] is one of the most classic methods in this direction. Its idea is very intuitive: instead of training only one generative model, it trains two models that compete with each other at the same time. One model is responsible for generating samples, and the other model is responsible for judging whether the samples are real or fake. The generator tries every way to fool the discriminator, while the discriminator tries every way to identify forged samples. In this continuous adversarial process, the generator gradually learns how to generate more and more realistic data.
 
-![Figure 1: GAN network structure [@zhang2023d2l, fig. 20.1.1]](figures/ch12.1-gan.svg){height="225px"}
+![Figure 12.1.0: GAN network structure [@zhang2023d2l, fig. 20.1.1]](figures/ch12.1-gan.svg){height=225px}
 
 In this section, we first clarify the four most basic questions about GAN:
 
