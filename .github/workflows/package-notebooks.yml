@@ -8,6 +8,7 @@ on:
       - "en/**"
       - "_quarto-jupyter.yml"
       - "utils/clean_attachments.py"
+      - "utils/add_image_attrs.py"
       - ".github/workflows/package-notebooks.yml"
   release:
     types: [published]
