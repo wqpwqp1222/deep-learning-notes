@@ -89,6 +89,10 @@ website:
           contents:
             - section: "Chapter 15: 视觉语言模型：从图文对齐到多模态对话"
               contents: "zh/ch15-vision-language-models/*.qmd"
+        - section: "Part 8: LLM 基础：以 GPT-2 为例"
+          contents:
+            - section: "Chapter 18: 从零实现 GPT-2：语言模型训练的核心结构"
+              contents: "zh/ch18-gpt2-from-scratch/*.qmd"
     - id: en
       style: floating
       contents:
