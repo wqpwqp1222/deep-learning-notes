@@ -19,24 +19,28 @@ class MultiheadAttention(nn.Module):
         kdim: int | None = None,
         vdim: int | None = None,
         dropout: float = 0.0,
+        *,
+        fast: bool = False,
     ):
         """Initialize the attention projections.
 
         Args:
             embed_dim (int): Output embedding dimension.
             num_heads (int): Number of attention heads.
+            bias (bool, default: True): Whether projection layers include bias terms.
             kdim (int | None, default: None): Input dimension for keys.
             vdim (int | None, default: None): Input dimension for values.
             dropout (float, default: 0.0): Dropout probability applied to attention weights.
-            bias (bool, default: True): Whether projection layers include bias terms.
+            fast (bool, default: False): Whether to use PyTorch's built-in attention implementation.
         """
         super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
+        self.bias = bias
         self.kdim = kdim or embed_dim
         self.vdim = vdim or embed_dim
         self.dropout = dropout
-        self.bias = bias
+        self.fast = fast
 
         if embed_dim % num_heads != 0:
             raise AssertionError('`embed_dim` must be divisible by `num_heads`.')
@@ -75,6 +79,11 @@ class MultiheadAttention(nn.Module):
             The attention output, or ``(output, weights)`` when
             ``need_weights=True``.
         """
+        if self.fast and need_weights:
+            raise AssertionError(
+                '`need_weights=True` is not supported when `fast=True`.'
+            )
+
         if key_padding_mask is not None:
             padding_mask = key_padding_mask[:, None, None, :]
             attn_mask = (
@@ -89,11 +98,11 @@ class MultiheadAttention(nn.Module):
             query,
             key,
             value,
-            self.num_heads,
-            self.q_proj.weight.T,
-            self.k_proj.weight.T,
-            self.v_proj.weight.T,
-            self.out_proj.weight.T,
+            num_heads=self.num_heads,
+            q_proj_weight=self.q_proj.weight.T,
+            k_proj_weight=self.k_proj.weight.T,
+            v_proj_weight=self.v_proj.weight.T,
+            out_proj_weight=self.out_proj.weight.T,
             q_proj_bias=self.q_proj.bias,
             k_proj_bias=self.k_proj.bias,
             v_proj_bias=self.v_proj.bias,
@@ -103,6 +112,7 @@ class MultiheadAttention(nn.Module):
             dropout=self.dropout,
             training=self.training,
             need_weights=need_weights,
+            fast=self.fast,
         )
 
         if need_weights:

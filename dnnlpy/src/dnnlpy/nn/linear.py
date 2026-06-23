@@ -2,6 +2,7 @@ import math
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
 from . import functional as dF
@@ -32,6 +33,8 @@ class Linear(nn.Module):
         in_features: int,
         out_features: int,
         bias: bool = True,
+        *,
+        fast: bool = False,
     ):
         """Initialize the weight and optional bias parameters.
 
@@ -43,6 +46,7 @@ class Linear(nn.Module):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
+        self.fast = fast
 
         weight = torch.empty(out_features, in_features)
         self.weight = nn.Parameter(weight)
@@ -63,6 +67,8 @@ class Linear(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         """Apply the linear transformation."""
+        if self.fast:
+            return F.linear(x, self.weight, self.bias)
         return dF.linear(x, self.weight, self.bias)
 
     def extra_repr(self) -> str:
