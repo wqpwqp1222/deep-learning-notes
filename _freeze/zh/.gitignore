@@ -28,3 +28,8 @@ ch14-diffusion-models/
 
 # Chapter 15: Vision Language Models
 ch15-vision-language-models/
+
+# Chapter 18: GPT-2 From Scratch
+ch18-gpt2-from-scratch/*
+!ch18-gpt2-from-scratch/ch18.5-train-minigpt/
+!ch18-gpt2-from-scratch/ch18.5-train-minigpt/**
