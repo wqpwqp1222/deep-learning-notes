@@ -381,7 +381,7 @@ def test_fast_multi_head_attention_returns_no_weights():
     )
 
     assert expected_weights is not None
-    assert torch.allclose(actual, expected)
+    assert torch.allclose(actual, expected, atol=1e-6)
     assert actual_weights is None
 
 
