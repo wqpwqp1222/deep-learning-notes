@@ -3,12 +3,13 @@ from collections.abc import Callable
 import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
-import torch.optim.lr_scheduler as lr_scheduler
+import torch.optim.lr_scheduler as lr
 from torch import Tensor
 
-from .base import Optimizer
+import dnnlpy.optim as dopt
 
 type Loss = Callable[[Tensor], Tensor]
+type Optimizer = optim.Optimizer | dopt.Optimizer
 
 __all__ = [
     'run_optimizer',
@@ -25,7 +26,7 @@ def run_optimizer(
     """Run an optimizer on a cloned parameter tensor and record its trajectory.
 
     Args:
-        optimizer (Optimizer): Optimizer to run. Its ``params`` attribute must
+        optimizer (Optimizer): Optimizer to run. Its first parameter group must
             contain a single tensor to optimize.
         loss_fn (Loss): Function that maps the optimized tensor to a scalar loss.
         steps (int): Number of optimization steps to run.
@@ -34,7 +35,13 @@ def run_optimizer(
         Parameter snapshots before the first step and after each update. The
         returned tensor has shape ``(steps + 1, *param.shape)``.
     """
-    theta = optimizer.params[0]
+    if isinstance(optimizer, optim.Optimizer):
+        theta = optimizer.param_groups[0]['params'][0]
+    elif isinstance(optimizer, dopt.Optimizer):
+        theta = optimizer.params[0]
+    else:
+        raise TypeError(f'Unsupported optimizer type: {type(optimizer)}')
+
     theta_history = [theta.detach().clone()]
 
     for _ in range(steps):
@@ -51,7 +58,7 @@ def run_optimizer(
 
 def collect_lr_schedule(
     optimizer: optim.Optimizer,
-    scheduler: lr_scheduler.LRScheduler,
+    scheduler: lr.LRScheduler,
     num_steps: int = 100,
     metric_values: list[float] | None = None,
 ) -> list[float]:
@@ -73,7 +80,7 @@ def collect_lr_schedule(
     for step in range(num_steps):
         lr_history.append(scheduler.get_last_lr()[0])
 
-        if isinstance(scheduler, lr_scheduler.ReduceLROnPlateau):
+        if isinstance(scheduler, lr.ReduceLROnPlateau):
             if metric_values is None:
                 raise AssertionError(
                     '`metric_values` must be provided for ReduceLROnPlateau scheduler.'
@@ -90,7 +97,7 @@ def collect_lr_schedule(
 
 def plot_lr_schedule(
     optimizer: optim.Optimizer,
-    scheduler: lr_scheduler.LRScheduler,
+    scheduler: lr.LRScheduler,
     num_steps: int = 100,
     metric_values: list[float] | None = None,
     xlabel: str = 'Epoch',
