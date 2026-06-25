@@ -301,12 +301,13 @@ class Muon(dopt.Optimizer):
                 continue
 
             # Decoupled weight decay: directly shrink parameters.
+            grad = p.grad
             if self.weight_decay > 0:
                 p.mul_(1 - self.lr * self.weight_decay)
 
-            buffer.mul_(self.momentum).add_(p.grad)
+            buffer.mul_(self.momentum).add_(grad)
             if self.nesterov:
-                direction = p.grad + self.momentum * buffer
+                direction = grad + self.momentum * buffer
             else:
                 direction = buffer
 
@@ -318,7 +319,6 @@ class Muon(dopt.Optimizer):
             )
 
             p.sub_(update, alpha=self.lr)
-
 ```
 
 The update process of this simplified Muon can be split into three steps:

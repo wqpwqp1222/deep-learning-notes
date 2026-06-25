@@ -383,10 +383,11 @@ class SimpleSGDWithWeightDecay(dopt.Optimizer):
             if p.grad is None:
                 continue
 
+            grad = p.grad
             if self.weight_decay > 0:
-                p.grad.add_(self.weight_decay * p)
+                grad = grad.add(p, alpha=self.weight_decay)
 
-            p.sub_(p.grad, alpha=self.lr)
+            p.sub_(grad, alpha=self.lr)
 ```
 
 Note that `weight_decay` here does not subtract a fixed value directly from the parameters. Instead, it decays the parameters proportionally according to their current magnitude. The larger the parameter is, the larger the decay term; the closer the parameter is to 0, the smaller the decay term.

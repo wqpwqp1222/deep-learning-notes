@@ -326,11 +326,12 @@ class Adam(dopt.Optimizer):
             if p.grad is None:
                 continue
 
+            grad = p.grad
             if self.weight_decay > 0:
-                p.grad.add_(self.weight_decay * p)
+                grad = grad.add(p, alpha=self.weight_decay)
 
-            m.mul_(self.beta1).add_(p.grad, alpha=1 - self.beta1)
-            v.mul_(self.beta2).addcmul_(p.grad, p.grad, value=1 - self.beta2)
+            m.mul_(self.beta1).add_(grad, alpha=1 - self.beta1)
+            v.mul_(self.beta2).addcmul_(grad, grad, value=1 - self.beta2)
 
             bias_correction1 = 1 - pow(self.beta1, self.step_count)
             bias_correction2 = 1 - pow(self.beta2, self.step_count)
@@ -338,11 +339,7 @@ class Adam(dopt.Optimizer):
             m_hat = m / bias_correction1
             v_hat = v / bias_correction2
 
-            p.addcdiv_(
-                m_hat,
-                v_hat.sqrt() + self.eps,
-                value=-self.lr,
-            )
+            p.addcdiv_(m_hat, v_hat.sqrt() + self.eps, value=-self.lr)
 ```
 
 There are several states to pay attention to here.
