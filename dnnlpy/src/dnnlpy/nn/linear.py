@@ -16,9 +16,10 @@ __all__ = [
 class Identity(nn.Module):
     """A module that returns the input as is."""
 
-    def __init__(self):
+    def __init__(self, *, fast: bool = False):
         """Initialize the Identity module."""
         super().__init__()
+        self.fast = fast
 
     def forward(self, x: Tensor) -> Tensor:
         """Return the input as is."""
