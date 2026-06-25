@@ -36,7 +36,7 @@ def test_adagrad_accumulates_squared_gradients_and_updates_parameters():
     optimizer.step()
 
     expected_sum_sq_grads = torch.tensor([0.5, 0.125])
-    
+
     state = optimizer.state[param]
     assert_close(state['sum_of_sq_grads'], expected_sum_sq_grads)
     assert_close(param, torch.tensor([0.8292893, -1.9707106]))
@@ -67,7 +67,7 @@ def test_adagrad_uses_lr_decay_and_initial_accumulator_value():
 
     expected_clr = 0.2 / (1 + 0.5)
     expected_param = torch.tensor([0.8585786]) - expected_clr / (0.75**0.5) * 0.5
-    
+
     state = optimizer.state[param]
     assert state['step'] == 2
     assert_close(state['sum_of_sq_grads'], torch.tensor([0.75]))

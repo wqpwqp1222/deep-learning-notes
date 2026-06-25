@@ -71,7 +71,7 @@ def test_muon_accumulates_momentum_and_updates_parameters():
     expected_buffer = torch.tensor([[1.5, 2.0], [0.0, 5.0]])
     expected_update = expected_buffer / expected_buffer.norm()
     expected_param = torch.tensor([[0.94, -2.08], [0.5, 1.0]]) - 0.1 * expected_update
-    
+
     state = optimizer.state[param]
     assert_close(state['momentum_buffer'], expected_buffer)
     assert_close(param, expected_param)
