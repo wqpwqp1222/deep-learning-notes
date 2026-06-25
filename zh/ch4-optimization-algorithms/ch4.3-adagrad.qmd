@@ -232,11 +232,12 @@ class Adagrad(dopt.Optimizer):
             if p.grad is None:
                 continue
 
+            grad = p.grad
             if self.weight_decay > 0:
-                p.grad.add_(self.weight_decay * p)
+                grad = grad.add(p, alpha=self.weight_decay)
 
-            s.add_(p.grad.square())
-            p.sub_(clr / (s.sqrt() + self.eps) * p.grad)
+            s.add_(grad.square())
+            p.sub_(clr / (s.sqrt() + self.eps) * grad)
 
         self.effective_lrs.append(self.get_effective_lr())
 

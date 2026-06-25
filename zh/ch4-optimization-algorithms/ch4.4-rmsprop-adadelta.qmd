@@ -256,19 +256,17 @@ class RMSprop(dopt.Optimizer):
             if p.grad is None:
                 continue
 
+            grad = p.grad
             if self.weight_decay > 0:
-                p.grad.add_(self.weight_decay * p)
+                grad = grad.add(p, alpha=self.weight_decay)
 
-            v.mul_(self.rho).add_(
-                p.grad.square(),
-                alpha=1 - self.rho,
-            )
+            v.mul_(self.rho).add_(grad.square(), alpha=1 - self.rho)
 
             if self.momentum > 0:
-                buffer.mul_(self.momentum).addcdiv_(p.grad, v.sqrt() + self.eps)
+                buffer.mul_(self.momentum).addcdiv_(grad, v.sqrt() + self.eps)
                 p.sub_(buffer, alpha=self.lr)
             else:
-                p.addcdiv_(p.grad, v.sqrt() + self.eps, value=-self.lr)
+                p.addcdiv_(grad, v.sqrt() + self.eps, value=-self.lr)
 
     @torch.no_grad()
     def get_effective_lr(self) -> list[Tensor]:
@@ -284,10 +282,7 @@ class RMSprop(dopt.Optimizer):
 其中最关键的是这一行：
 
 ```python
-v.mul_(self.rho).add_(
-    p.grad.square(),
-    alpha=1 - self.rho,
-)
+v.mul_(self.rho).add_(grad.square(), alpha=1 - self.rho)
 ```
 
 它对应公式：
@@ -386,19 +381,14 @@ class Adadelta(dopt.Optimizer):
             if p.grad is None:
                 continue
 
+            grad = p.grad
             if self.weight_decay > 0:
-                p.grad.add_(self.weight_decay * p)
+                grad = grad.add(p, alpha=self.weight_decay)
 
-            v.mul_(self.rho).add_(
-                p.grad.square(),
-                alpha=1 - self.rho,
-            )
-            delta_x = (u + self.eps).sqrt() / (v + self.eps).sqrt() * p.grad
+            v.mul_(self.rho).add_(grad.square(), alpha=1 - self.rho)
+            delta_x = (u + self.eps).sqrt() / (v + self.eps).sqrt() * grad
 
-            u.mul_(self.rho).add_(
-                delta_x.square(),
-                alpha=1 - self.rho,
-            )
+            u.mul_(self.rho).add_(delta_x.square(), alpha=1 - self.rho)
             p.sub_(delta_x, alpha=self.lr)
 
     @torch.no_grad()
@@ -419,7 +409,7 @@ class Adadelta(dopt.Optimizer):
 这段代码里最重要的是：
 
 ```python
-delta_x = (u + self.eps).sqrt() / (v + self.eps).sqrt() * p.grad
+delta_x = (u + self.eps).sqrt() / (v + self.eps).sqrt() * grad
 ```
 
 它对应公式：
