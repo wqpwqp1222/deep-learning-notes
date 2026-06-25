@@ -1,15 +1,14 @@
 from collections.abc import Iterable
-from typing import override
+from typing import cast
 
 import torch
+import torch.optim as optim
 from torch import Tensor
-
-from .base import Optimizer
 
 __all__ = ['AdamW']
 
 
-class AdamW(Optimizer):
+class AdamW(optim.Optimizer):
     """AdamW optimizer with decoupled weight decay."""
 
     def __init__(
@@ -33,54 +32,48 @@ class AdamW(Optimizer):
                 coefficient applied directly to parameters before the Adam
                 update.
         """
-        super().__init__(
-            params,
-            lr=lr,
-            betas=betas,
-            eps=eps,
-            weight_decay=weight_decay,
-        )
-        self.lr = lr
-        self.beta1 = betas[0]
-        self.beta2 = betas[1]
-        self.eps = eps
-        self.weight_decay = weight_decay
+        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
+        super().__init__(params, defaults)
 
-        self.step_count = 0
-        self.first_moments = [torch.zeros_like(p) for p in self.params]
-        self.second_moments = [torch.zeros_like(p) for p in self.params]
-
-    @override
     @torch.no_grad()
-    def step(self):
+    def step(self):  # type: ignore[override]
         """Update parameters using Adam moments and decoupled weight decay."""
-        self.step_count += 1
+        for group in self.param_groups:
+            lr: float = group['lr']
+            beta1: float = group['betas'][0]
+            beta2: float = group['betas'][1]
+            eps: float = group['eps']
+            weight_decay: float = group['weight_decay']
 
-        for p, m, v in zip(
-            self.params,
-            self.first_moments,
-            self.second_moments,
-            strict=True,
-        ):
-            if p.grad is None:
-                continue
+            for p in group['params']:
+                p = cast(Tensor, p)
+                if p.grad is None:
+                    continue
 
-            # Decoupled weight decay: directly shrink parameters.
-            if self.weight_decay > 0:
-                p.mul_(1 - self.lr * self.weight_decay)
+                state: dict[str, Tensor] = self.state[p]
+                if len(state) == 0:
+                    state['step'] = torch.tensor(0, dtype=torch.int64)
+                    state['exp_avg'] = torch.zeros_like(p)
+                    state['exp_avg_sq'] = torch.zeros_like(p)
 
-            m.mul_(self.beta1).add_(p.grad, alpha=1 - self.beta1)
-            v.mul_(self.beta2).addcmul_(p.grad, p.grad, value=1 - self.beta2)
+                state['step'] += 1
+                step = state['step']
 
-            bias_correction1 = 1 - pow(self.beta1, self.step_count)
-            bias_correction2 = 1 - pow(self.beta2, self.step_count)
+                grad = p.grad
+                # Decoupled weight decay: directly shrink parameters.
+                if weight_decay > 0:
+                    p.mul_(1 - lr * weight_decay)
 
-            m_hat = m / bias_correction1
-            v_hat = v / bias_correction2
+                m = state['exp_avg']
+                v = state['exp_avg_sq']
+                m.mul_(beta1).add_(grad, alpha=1 - beta1)
+                v.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
 
-            # Adam update: use the original gradient statistics.
-            p.addcdiv_(
-                m_hat,
-                v_hat.sqrt() + self.eps,
-                value=-self.lr,
-            )
+                bias_correction1 = 1 - torch.pow(beta1, step)
+                bias_correction2 = 1 - torch.pow(beta2, step)
+
+                m_hat = m / bias_correction1
+                v_hat = v / bias_correction2
+
+                # Adam update: use the original gradient statistics.
+                p.addcdiv_(m_hat, v_hat.sqrt() + eps, value=-lr)

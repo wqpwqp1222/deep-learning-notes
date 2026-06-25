@@ -1,15 +1,14 @@
 from collections.abc import Iterable
-from typing import override
+from typing import cast
 
 import torch
+import torch.optim as optim
 from torch import Tensor
-
-from .base import Optimizer
 
 __all__ = ['Adadelta']
 
 
-class Adadelta(Optimizer):
+class Adadelta(optim.Optimizer):
     """Adadelta optimizer with running averages of gradients and updates."""
 
     def __init__(
@@ -31,60 +30,42 @@ class Adadelta(Optimizer):
             weight_decay (float, default: 0.0): Coefficient applied to the
                 parameters before adding them to the gradient.
         """
-        super().__init__(
-            params,
-            lr=lr,
-            rho=rho,
-            eps=eps,
-            weight_decay=weight_decay,
-        )
-        self.lr = lr
-        self.rho = rho
-        self.eps = eps
-        self.weight_decay = weight_decay
+        defaults = {
+            'lr': lr,
+            'rho': rho,
+            'eps': eps,
+            'weight_decay': weight_decay,
+        }
+        super().__init__(params, defaults=defaults)
 
-        self.ema_of_sq_grads = [torch.zeros_like(p) for p in self.params]
-        self.ema_of_sq_updates = [torch.zeros_like(p) for p in self.params]
-
-    @override
     @torch.no_grad()
-    def step(self):
+    def step(self):  # type: ignore[override]
         """Update parameters using the current Adadelta state."""
-        for p, v, u in zip(
-            self.params,
-            self.ema_of_sq_grads,
-            self.ema_of_sq_updates,
-            strict=True,
-        ):
-            if p.grad is None:
-                continue
+        for group in self.param_groups:
+            lr: float = group['lr']
+            rho: float = group['rho']
+            eps: float = group['eps']
+            weight_decay: float = group['weight_decay']
 
-            if self.weight_decay > 0:
-                p.grad.add_(self.weight_decay * p)
+            for p in group['params']:
+                p = cast(Tensor, p)
+                if p.grad is None:
+                    continue
 
-            v.mul_(self.rho).add_(
-                p.grad.square(),
-                alpha=1 - self.rho,
-            )
-            delta_x = (u + self.eps).sqrt() / (v + self.eps).sqrt() * p.grad
+                state: dict[str, Tensor] = self.state[p]
+                if len(state) == 0:
+                    state['square_avg'] = torch.zeros_like(p)
+                    state['acc_delta'] = torch.zeros_like(p)
 
-            u.mul_(self.rho).add_(
-                delta_x.square(),
-                alpha=1 - self.rho,
-            )
-            p.sub_(delta_x, alpha=self.lr)
+                grad = p.grad
+                if weight_decay > 0:
+                    grad = grad.add(p, alpha=weight_decay)
 
-    @torch.no_grad()
-    def get_effective_lr(self) -> list[Tensor]:
-        """Return per-parameter effective learning rates."""
-        effective_lr = []
+                v = state['square_avg']
+                u = state['acc_delta']
 
-        for v, u in zip(
-            self.ema_of_sq_grads,
-            self.ema_of_sq_updates,
-            strict=True,
-        ):
-            lr = self.lr * (u + self.eps).sqrt() / (v + self.eps).sqrt()
-            effective_lr.append(lr)
+                v.mul_(rho).add_(grad.square(), alpha=1 - rho)
+                delta_x = (u + eps).sqrt() / (v + eps).sqrt() * grad
 
-        return effective_lr
+                u.mul_(rho).add_(delta_x.square(), alpha=1 - rho)
+                p.sub_(delta_x, alpha=lr)

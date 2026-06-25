@@ -1,10 +1,9 @@
 from collections.abc import Iterable
-from typing import override
+from typing import cast
 
 import torch
+import torch.optim as optim
 from torch import Tensor
-
-from .base import Optimizer
 
 __all__ = ['Muon']
 
@@ -30,7 +29,7 @@ def newton_schulz_5(
         Orthogonalized update matrix with the same shape as ``X``.
     """
     if X.ndim != 2:
-        raise ValueError('Muon only supports 2D parameters.')
+        raise AssertionError('Muon only supports 2D parameters.')
 
     a, b, c = ns_coefficients
     X = X / (X.norm() + eps)
@@ -50,7 +49,7 @@ def newton_schulz_5(
     return X
 
 
-class Muon(Optimizer):
+class Muon(optim.Optimizer):
     """Muon optimizer for two-dimensional parameters."""
 
     def __init__(
@@ -81,49 +80,56 @@ class Muon(Optimizer):
             eps (float, default: 1e-7): Small value used when normalizing the
                 update matrix.
         """
-        super().__init__(
-            params,
-            lr=lr,
-            weight_decay=weight_decay,
-            momentum=momentum,
-            nesterov=nesterov,
-            ns_coefficients=ns_coefficients,
-            ns_steps=ns_steps,
-            eps=eps,
-        )
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.momentum = momentum
-        self.nesterov = nesterov
-        self.ns_coefficients = ns_coefficients
-        self.ns_steps = ns_steps
-        self.eps = eps
+        defaults = {
+            'lr': lr,
+            'weight_decay': weight_decay,
+            'momentum': momentum,
+            'nesterov': nesterov,
+            'ns_coefficients': ns_coefficients,
+            'ns_steps': ns_steps,
+            'eps': eps,
+        }
+        super().__init__(params, defaults)
 
-        self.momentum_buffers = [torch.zeros_like(p) for p in self.params]
-
-    @override
     @torch.no_grad()
-    def step(self):
+    def step(self):  # type: ignore[override]
         """Update parameters using momentum and a Muon orthogonalized step."""
-        for p, buffer in zip(self.params, self.momentum_buffers, strict=True):
-            if p.grad is None:
-                continue
+        for group in self.param_groups:
+            lr: float = group['lr']
+            weight_decay: float = group['weight_decay']
+            momentum: float = group['momentum']
+            nesterov: float = group['nesterov']
+            ns_coefficients: tuple[float, float, float] = group['ns_coefficients']
+            ns_steps: int = group['ns_steps']
+            eps: float = group['eps']
 
-            # Decoupled weight decay: directly shrink parameters.
-            if self.weight_decay > 0:
-                p.mul_(1 - self.lr * self.weight_decay)
+            for p in group['params']:
+                p = cast(Tensor, p)
+                if p.grad is None:
+                    continue
 
-            buffer.mul_(self.momentum).add_(p.grad)
-            if self.nesterov:
-                direction = p.grad + self.momentum * buffer
-            else:
-                direction = buffer
+                state: dict[str, Tensor] = self.state[p]
+                if len(state) == 0:
+                    state['momentum_buffer'] = torch.zeros_like(p)
 
-            update = newton_schulz_5(
-                direction,
-                ns_steps=self.ns_steps,
-                ns_coefficients=self.ns_coefficients,
-                eps=self.eps,
-            )
+                grad = p.grad
+                # Decoupled weight decay: directly shrink parameters.
+                if weight_decay > 0:
+                    p.mul_(1 - lr * weight_decay)
 
-            p.sub_(update, alpha=self.lr)
+                buffer = state['momentum_buffer']
+                buffer.mul_(momentum).add_(grad)
+
+                if nesterov:
+                    direction = grad + momentum * buffer
+                else:
+                    direction = buffer
+
+                update = newton_schulz_5(
+                    direction,
+                    ns_steps=ns_steps,
+                    ns_coefficients=ns_coefficients,
+                    eps=eps,
+                )
+
+                p.sub_(update, alpha=lr)

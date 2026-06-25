@@ -1,15 +1,14 @@
 from collections.abc import Iterable
-from typing import override
+from typing import cast
 
 import torch
+import torch.optim as optim
 from torch import Tensor
-
-from .base import Optimizer
 
 __all__ = ['Adam']
 
 
-class Adam(Optimizer):
+class Adam(optim.Optimizer):
     """Adam optimizer with bias-corrected first and second moments."""
 
     def __init__(
@@ -32,52 +31,51 @@ class Adam(Optimizer):
             weight_decay (float, default: 0.0): Coefficient applied to the
                 parameters before adding them to the gradient.
         """
-        super().__init__(
-            params,
-            lr=lr,
-            betas=betas,
-            eps=eps,
-            weight_decay=weight_decay,
-        )
-        self.lr = lr
-        self.beta1 = betas[0]
-        self.beta2 = betas[1]
-        self.eps = eps
-        self.weight_decay = weight_decay
+        defaults = {
+            'lr': lr,
+            'betas': betas,
+            'eps': eps,
+            'weight_decay': weight_decay,
+        }
+        super().__init__(params, defaults=defaults)
 
-        self.step_count = 0
-        self.exp_avg = [torch.zeros_like(p) for p in self.params]
-        self.exp_avg_sq = [torch.zeros_like(p) for p in self.params]
-
-    @override
     @torch.no_grad()
-    def step(self):
+    def step(self):  # type: ignore[override]
         """Update parameters using the current Adam moment estimates."""
-        self.step_count += 1
+        for group in self.param_groups:
+            lr: float = group['lr']
+            beta1: float = group['betas'][0]
+            beta2: float = group['betas'][1]
+            eps: float = group['eps']
+            weight_decay: float = group['weight_decay']
 
-        for p, m, v in zip(
-            self.params,
-            self.exp_avg,
-            self.exp_avg_sq,
-            strict=True,
-        ):
-            if p.grad is None:
-                continue
+            for p in group['params']:
+                p = cast(Tensor, p)
+                if p.grad is None:
+                    continue
 
-            if self.weight_decay > 0:
-                p.grad.add_(self.weight_decay * p)
+                state: dict[str, Tensor] = self.state[p]
+                if len(state) == 0:
+                    state['step'] = torch.tensor(0, dtype=torch.int64)
+                    state['exp_avg'] = torch.zeros_like(p)
+                    state['exp_avg_sq'] = torch.zeros_like(p)
 
-            m.mul_(self.beta1).add_(p.grad, alpha=1 - self.beta1)
-            v.mul_(self.beta2).addcmul_(p.grad, p.grad, value=1 - self.beta2)
+                state['step'] += 1
+                step = state['step']
 
-            bias_correction1 = 1 - pow(self.beta1, self.step_count)
-            bias_correction2 = 1 - pow(self.beta2, self.step_count)
+                grad = p.grad
+                if weight_decay > 0:
+                    grad = grad.add(p, alpha=weight_decay)
 
-            m_hat = m / bias_correction1
-            v_hat = v / bias_correction2
+                m = state['exp_avg']
+                v = state['exp_avg_sq']
+                m.mul_(beta1).add_(grad, alpha=1 - beta1)
+                v.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
 
-            p.addcdiv_(
-                m_hat,
-                v_hat.sqrt() + self.eps,
-                value=-self.lr,
-            )
+                bias_correction1 = 1 - torch.pow(beta1, step)
+                bias_correction2 = 1 - torch.pow(beta2, step)
+
+                m_hat = m / bias_correction1
+                v_hat = v / bias_correction2
+
+                p.addcdiv_(m_hat, v_hat.sqrt() + eps, value=-lr)
