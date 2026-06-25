@@ -63,7 +63,7 @@ class CharacterTokenizer(Tokenizer):
 
         tokens = []
         for i in ids:
-            token = self.id_to_token[int(i)]
+            token = self.id_to_token[i]
             if token not in special_tokens:
                 tokens.append(token)
 
@@ -125,7 +125,7 @@ class WordTokenizer(Tokenizer):
 
         tokens = []
         for i in ids:
-            token = self.id_to_token[int(i)]
+            token = self.id_to_token[i]
             if token not in special_tokens:
                 tokens.append(token)
 
