@@ -4,9 +4,9 @@ from .activation import ReLU as ReLU
 from .activation import Sigmoid as Sigmoid
 from .activation import Softmax as Softmax
 from .activation import Tanh as Tanh
+from .affine import Identity as Identity
+from .affine import Linear as Linear
 from .attention import MultiheadAttention as MultiheadAttention
-from .linear import Identity as Identity
-from .linear import Linear as Linear
 from .loss import CrossEntropyLoss as CrossEntropyLoss
 from .transformer import LearnablePositionalEmbedding as LearnablePositionalEmbedding
 from .transformer import SinusoidalPositionalEncoding as SinusoidalPositionalEncoding

@@ -4,11 +4,11 @@ from .activation import relu as relu
 from .activation import sigmoid as sigmoid
 from .activation import softmax as softmax
 from .activation import tanh as tanh
+from .affine import linear as linear
 from .attention import generate_causal_mask as generate_causal_mask
 from .attention import multi_head_attention as multi_head_attention
 from .attention import naive_attention as naive_attention
 from .attention import scaled_dot_product_attention as scaled_dot_product_attention
 from .flash_attention import flash_attention_v1_backward as flash_attention_v1_backward
 from .flash_attention import flash_attention_v1_forward as flash_attention_v1_forward
-from .linear import linear as linear
 from .loss import cross_entropy as cross_entropy

@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from . import functional as dF
-from .linear import Linear
+from .affine import Linear
 
 __all__ = ['MultiheadAttention']
 
