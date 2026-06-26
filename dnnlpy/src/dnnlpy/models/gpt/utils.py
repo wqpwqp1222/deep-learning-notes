@@ -82,9 +82,9 @@ def sample_next_token(
 ) -> Tensor:
     """Sample next token ids from logits with temperature, top-k, and top-p."""
     if logits.ndim != 2:
-        raise ValueError('`logits` must have shape (B, V).')
+        raise AssertionError('`logits` must have shape (B, V).')
     if temperature <= 0:
-        raise ValueError('`temperature` must be positive.')
+        raise AssertionError('`temperature` must be positive.')
 
     if greedy:
         next_token = logits.argmax(dim=-1, keepdim=True)
