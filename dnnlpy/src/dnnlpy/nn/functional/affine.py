@@ -1,4 +1,3 @@
-import torch
 from torch import Tensor
 
 __all__ = ['linear']
@@ -13,10 +12,10 @@ def linear(x: Tensor, weight: Tensor, bias: Tensor | None = None) -> Tensor:
         bias (Tensor | None, default: None): Optional bias tensor with shape ``(out_features,)``.
 
     Returns:
-        Transformed tensor with shape ``(*, out_features)``.
+        Tensor: Transformed tensor with shape ``(*, out_features)``.
     """
     if x.ndim == 2 and bias is not None:
-        return torch.addmm(bias, x, weight.T)
+        return bias.addmm(x, weight.T)
     elif bias is not None:
         return x @ weight.T + bias
     else:

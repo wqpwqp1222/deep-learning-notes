@@ -43,15 +43,15 @@ class Linear(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             bias (bool, default: True): Whether to learn an additive bias.
+            fast (bool, default: False): If set to True, will use the fast implementation
+                from torch.nn.functional. Default: False.
         """
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.fast = fast
 
-        weight = torch.empty(out_features, in_features)
-        self.weight = nn.Parameter(weight)
-
+        self.weight = nn.Parameter(torch.empty(out_features, in_features))
         if bias:
             self.bias = nn.Parameter(torch.empty(out_features))
         else:
@@ -62,9 +62,8 @@ class Linear(nn.Module):
     def reset_parameters(self) -> None:
         """Reset parameters using the same default initialization as PyTorch."""
         nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
-        # A simplified version
         if self.bias is not None:
-            nn.init.uniform_(self.bias)
+            nn.init.uniform_(self.bias)  # A simplified version
 
     def forward(self, x: Tensor) -> Tensor:
         """Apply the linear transformation."""
