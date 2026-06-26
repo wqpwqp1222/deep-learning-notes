@@ -1,6 +1,5 @@
 import math
 
-import torch
 from torch import Tensor
 
 __all__ = [
@@ -49,5 +48,5 @@ def softmax(x: Tensor, dim: int) -> Tensor:
 def log_softmax(x: Tensor, dim: int) -> Tensor:
     """Apply the log-softmax function along the specified dimension."""
     max_x = x.max(dim=dim, keepdim=True).values
-    log_sum_exp = torch.logsumexp(x - max_x, dim=dim, keepdim=True)
+    log_sum_exp = (x - max_x).logsumexp(dim=dim, keepdim=True)
     return x - max_x - log_sum_exp
