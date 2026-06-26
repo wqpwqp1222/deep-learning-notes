@@ -32,6 +32,25 @@ def test_elementwise_activation_functions_match_torch(
     assert_close(actual, expected, rtol=1e-5, atol=1e-6)
 
 
+def test_gelu_function_matches_torch_tanh_approximation():
+    x = torch.linspace(-3, 3, steps=13)
+    actual = dF.gelu(x, approximate='tanh')
+    expected = F.gelu(x, approximate='tanh')
+
+    assert_close(actual, expected, rtol=1e-5, atol=1e-6)
+
+
+def test_relu_function_supports_inplace():
+    x = torch.linspace(-3, 3, steps=13)
+    expected = x.clone()
+
+    actual = dF.relu(x, inplace=True)
+    F.relu(expected, inplace=True)
+
+    assert actual is x
+    assert_close(actual, expected)
+
+
 @pytest.mark.parametrize('dim', [0, 1, -1])
 def test_softmax_function_matches_torch(dim: int):
     x = torch.randn(3, 4, 5)
@@ -69,6 +88,20 @@ def test_elementwise_activation_modules_match_torch(
     assert_close(actual, expected, rtol=1e-5, atol=1e-6)
 
 
+def test_relu_module_supports_inplace():
+    x = torch.linspace(-3, 3, steps=13)
+    expected = x.clone()
+    actual_module = dnn.ReLU(inplace=True)
+    expected_module = nn.ReLU(inplace=True)
+
+    actual = actual_module(x)
+    expected = expected_module(expected)
+
+    assert actual is x
+    assert actual_module.inplace is True
+    assert_close(actual, expected)
+
+
 @pytest.mark.parametrize(
     ('actual_module', 'expected_fn'),
     [
@@ -86,6 +119,28 @@ def test_fast_elementwise_activation_modules_match_torch(
     expected = expected_fn(x)
 
     assert_close(actual, expected, rtol=1e-5, atol=1e-6)
+
+
+def test_fast_gelu_module_matches_torch_tanh_approximation():
+    x = torch.linspace(-3, 3, steps=13)
+    actual = dnn.GELU(approximate='tanh', fast=True)(x)
+    expected = F.gelu(x, approximate='tanh')
+
+    assert_close(actual, expected, rtol=1e-5, atol=1e-6)
+
+
+def test_fast_relu_module_supports_inplace():
+    x = torch.linspace(-3, 3, steps=13)
+    expected = x.clone()
+    actual_module = dnn.ReLU(inplace=True, fast=True)
+
+    actual = actual_module(x)
+    F.relu(expected, inplace=True)
+
+    assert actual is x
+    assert actual_module.inplace is True
+    assert actual_module.fast is True
+    assert_close(actual, expected)
 
 
 @pytest.mark.parametrize('dim', [0, 1, -1])
