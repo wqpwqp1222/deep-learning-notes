@@ -20,27 +20,25 @@ class ViTMLP(nn.Module):
 
     def __init__(
         self,
-        embed_dim: int,
-        hidden_dim: int | None = None,
+        embed_dim: int = 768,
+        hidden_dim: int = 3072,
         dropout: float = 0.0,
     ):
         """Initialize the two-layer MLP block.
 
         Args:
             embed_dim (int): Input and output token embedding dimension.
-            hidden_dim (int | None, default: None): Hidden dimension of the
-                feed-forward layer. Defaults to ``4 * embed_dim``.
-            dropout (float, default: 0.0): Dropout probability after each
-                linear projection.
+            hidden_dim (int, default: 3072): Hidden dimension of the feed-forward layer.
+                Defaults to ``4 * embed_dim``.
+            dropout (float, default: 0.0): Dropout probability after each linear projection.
         """
         super().__init__()
-        hidden_dim = hidden_dim or embed_dim * 4
         self.net = nn.Sequential(
             dnn.Linear(embed_dim, hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout),
+            dnn.GELU(),
+            dnn.Dropout(dropout),
             dnn.Linear(hidden_dim, embed_dim),
-            nn.Dropout(dropout),
+            dnn.Dropout(dropout),
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -53,9 +51,9 @@ class ViTEncoderLayer(nn.Module):
 
     def __init__(
         self,
-        embed_dim: int,
+        embed_dim: int = 768,
         num_heads: int = 12,
-        hidden_dim: int | None = None,
+        hidden_dim: int = 3072,
         dropout: float = 0.0,
         attn_dropout: float = 0.0,
     ):
@@ -64,24 +62,21 @@ class ViTEncoderLayer(nn.Module):
         Args:
             embed_dim (int): Token embedding dimension.
             num_heads (int, default: 12): Number of attention heads.
-            hidden_dim (int | None, default: None): Hidden dimension of the
-                feed-forward layer. Defaults to ``4 * embed_dim``.
-            dropout (float, default: 0.0): Dropout probability for residual paths
-                and the feed-forward block.
-            attn_dropout (float, default: 0.0): Dropout probability inside
-                multi-head self-attention.
+            hidden_dim (int, default: 3072): Hidden dimension of the feed-forward layer.
+                Defaults to ``4 * embed_dim``.
+            dropout (float, default: 0.0): Dropout probability for residual paths and
+                the feed-forward block.
+            attn_dropout (float, default: 0.0): Dropout probability inside multi-head
+                self-attention.
         """
         super().__init__()
-        hidden_dim = hidden_dim or embed_dim * 4
-
         self.norm1 = nn.LayerNorm(embed_dim)
         self.attn = dnn.MultiheadAttention(
             embed_dim=embed_dim,
             num_heads=num_heads,
             dropout=attn_dropout,
         )
-        self.dropout1 = nn.Dropout(dropout)
-
+        self.dropout1 = dnn.Dropout(dropout)
         self.norm2 = nn.LayerNorm(embed_dim)
         self.mlp = ViTMLP(
             embed_dim=embed_dim,
@@ -108,10 +103,10 @@ class ViTEncoder(nn.Module):
 
     def __init__(
         self,
-        embed_dim: int,
+        embed_dim: int = 768,
         num_heads: int = 12,
         num_layers: int = 12,
-        hidden_dim: int | None = None,
+        hidden_dim: int = 3072,
         dropout: float = 0.0,
         attn_dropout: float = 0.0,
     ):
@@ -121,12 +116,12 @@ class ViTEncoder(nn.Module):
             embed_dim (int): Token embedding dimension.
             num_heads (int, default: 12): Number of attention heads per layer.
             num_layers (int, default: 12): Number of encoder layers.
-            hidden_dim (int | None, default: None): Hidden dimension of each
-                feed-forward layer. Defaults to ``4 * embed_dim``.
-            dropout (float, default: 0.0): Dropout probability for residual paths
-                and feed-forward blocks.
-            attn_dropout (float, default: 0.0): Dropout probability inside
-                multi-head self-attention.
+            hidden_dim (int, default: 3072): Hidden dimension of each feed-forward layer.
+                Defaults to ``4 * embed_dim``.
+            dropout (float, default: 0.0): Dropout probability for residual paths and
+                feed-forward blocks.
+            attn_dropout (float, default: 0.0): Dropout probability inside multi-head
+                self-attention.
         """
         super().__init__()
         self.layers = nn.ModuleList(
@@ -162,7 +157,7 @@ class ViTModel(nn.Module):
         embed_dim: int = 768,
         num_heads: int = 12,
         num_layers: int = 12,
-        hidden_dim: int | None = None,
+        hidden_dim: int = 3072,
         dropout: float = 0.0,
         attn_dropout: float = 0.0,
     ):
@@ -175,12 +170,12 @@ class ViTModel(nn.Module):
             embed_dim (int, default: 768): Token embedding dimension.
             num_heads (int, default: 12): Number of attention heads per layer.
             num_layers (int, default: 12): Number of encoder layers.
-            hidden_dim (int | None, default: None): Hidden dimension of each
-                feed-forward layer. Defaults to ``4 * embed_dim``.
-            dropout (float, default: 0.0): Dropout probability for residual paths
-                and feed-forward blocks.
-            attn_dropout (float, default: 0.0): Dropout probability inside
-                multi-head self-attention.
+            hidden_dim (int, default: 3072): Hidden dimension of each feed-forward layer.
+                Defaults to ``4 * embed_dim``.
+            dropout (float, default: 0.0): Dropout probability for residual paths and
+                feed-forward blocks.
+            attn_dropout (float, default: 0.0): Dropout probability inside multi-head
+                self-attention.
         """
         super().__init__()
         self.embedding = ViTEmbedding(
@@ -238,7 +233,7 @@ class ViTForImageClassification(nn.Module):
         embed_dim: int = 768,
         num_heads: int = 12,
         num_layers: int = 12,
-        hidden_dim: int | None = None,
+        hidden_dim: int = 3072,
         dropout: float = 0.0,
         attn_dropout: float = 0.0,
     ):
@@ -252,12 +247,12 @@ class ViTForImageClassification(nn.Module):
             embed_dim (int, default: 768): Token embedding dimension.
             num_heads (int, default: 12): Number of attention heads per layer.
             num_layers (int, default: 12): Number of encoder layers.
-            hidden_dim (int | None, default: None): Hidden dimension of each
-                feed-forward layer. Defaults to ``4 * embed_dim``.
-            dropout (float, default: 0.0): Dropout probability in embeddings,
-                residual paths, and feed-forward blocks.
-            attn_dropout (float, default: 0.0): Dropout probability inside
-                multi-head self-attention.
+            hidden_dim (int, default: 3072): Hidden dimension of each feed-forward layer.
+                Defaults to ``4 * embed_dim``.
+            dropout (float, default: 0.0): Dropout probability in embeddings, residual paths,
+                and feed-forward blocks.
+            attn_dropout (float, default: 0.0): Dropout probability inside multi-head
+                self-attention.
         """
         super().__init__()
         self.backbone = ViTModel(
@@ -272,8 +267,7 @@ class ViTForImageClassification(nn.Module):
             attn_dropout=attn_dropout,
         )
         self.head = ViTClassificationHead(
-            embed_dim=embed_dim,
-            num_classes=num_classes,
+            embed_dim=embed_dim, num_classes=num_classes
         )
 
     def forward(self, x: Tensor) -> Tensor:
