@@ -14,13 +14,13 @@ from .regularization import Dropout
 type Activation = Callable[[Tensor], Tensor]
 
 __all__ = [
-    'SinusoidalPositionalEncoding',
     'LearnablePositionalEmbedding',
+    'SinusoidalPositionalEncoding',
     'Transformer',
-    'TransformerEncoder',
-    'TransformerEncoderLayer',
     'TransformerDecoder',
     'TransformerDecoderLayer',
+    'TransformerEncoder',
+    'TransformerEncoderLayer',
 ]
 
 
@@ -38,6 +38,33 @@ def _get_activation_fn(act_fn: str | Activation, *, fast: bool = False) -> Activ
 def _clone_module(module: nn.Module, num_layers: int) -> nn.ModuleList:
     """Deep-copy a module into a ``ModuleList``."""
     return nn.ModuleList(deepcopy(module) for _ in range(num_layers))
+
+
+class LearnablePositionalEmbedding(nn.Module):
+    """Add learnable position embeddings to batch-first sequences."""
+
+    def __init__(self, embed_dim: int, max_len: int = 5000):
+        """Precompute learnable position embeddings.
+
+        Args:
+            embed_dim (int): Embedding dimension of each token.
+            max_len (int, default: 5000): Maximum supported sequence length.
+        """
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.max_len = max_len
+        self.pe = nn.Embedding(max_len, embed_dim)
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Add positional encodings to ``x``."""
+        if x.size(1) > self.max_len:
+            raise AssertionError(f'Sequence length {x.size(1)} exceeds {self.max_len}.')
+
+        seq_len = x.size(1)
+        positions = torch.arange(seq_len, device=x.device)
+        pos_emb = self.pe(positions)
+        x = x + pos_emb.unsqueeze(0)
+        return x
 
 
 class SinusoidalPositionalEncoding(nn.Module):
@@ -72,33 +99,6 @@ class SinusoidalPositionalEncoding(nn.Module):
 
         seq_len = x.size(1)
         x = x + self.pe[:, :seq_len]  # type: ignore
-        return x
-
-
-class LearnablePositionalEmbedding(nn.Module):
-    """Add learnable position embeddings to batch-first sequences."""
-
-    def __init__(self, embed_dim: int, max_len: int = 5000):
-        """Precompute learnable position embeddings.
-
-        Args:
-            embed_dim (int): Embedding dimension of each token.
-            max_len (int, default: 5000): Maximum supported sequence length.
-        """
-        super().__init__()
-        self.embed_dim = embed_dim
-        self.max_len = max_len
-        self.pe = nn.Embedding(max_len, embed_dim)
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Add positional encodings to ``x``."""
-        if x.size(1) > self.max_len:
-            raise AssertionError(f'Sequence length {x.size(1)} exceeds {self.max_len}.')
-
-        seq_len = x.size(1)
-        positions = torch.arange(seq_len, device=x.device)
-        pos_emb = self.pe(positions)
-        x = x + pos_emb.unsqueeze(0)
         return x
 
 
