@@ -27,12 +27,12 @@ __all__ = [
 def _get_activation_fn(act_fn: str | Activation, *, fast: bool = False) -> Activation:
     """Resolve a transformer activation name or callable."""
     if act_fn == 'relu':
-        return F.relu if fast else dF.relu
+        return F.relu if fast else dF.relu  # type: ignore
     if act_fn == 'gelu':
         return F.gelu if fast else dF.gelu
     if callable(act_fn):
         return act_fn
-    raise ValueError('The activation function must be `relu`, `gelu`, or a callable.')
+    raise TypeError('The activation function must be `relu`, `gelu`, or a callable.')
 
 
 def _clone_module(module: nn.Module, num_layers: int) -> nn.ModuleList:
