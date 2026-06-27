@@ -63,13 +63,11 @@ class Linear(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self) -> None:
-        """Reset parameters using the same default initialization as PyTorch."""
         nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
         if self.bias is not None:
             nn.init.uniform_(self.bias)  # A simplified version
 
     def forward(self, x: Tensor) -> Tensor:
-        """Apply the linear transformation."""
         if self.fast:
             return F.linear(x, self.weight, self.bias)
         return dF.linear(x, self.weight, self.bias)
