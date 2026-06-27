@@ -228,7 +228,7 @@ class ViTEmbedding(nn.Module):
             embed_dim=embed_dim,
             use_cls_token=True,
         )
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = dnn.Dropout(dropout)
 
     def forward(self, x: Tensor) -> Tensor:
         """Convert images into class-token-prefixed ViT embeddings."""

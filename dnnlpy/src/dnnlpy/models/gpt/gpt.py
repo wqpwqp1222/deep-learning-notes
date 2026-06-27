@@ -47,7 +47,7 @@ class MiniGPTMLP(nn.Module):
             dnn.Linear(embed_dim, hidden_dim, bias=bias),
             dnn.GELU(),
             dnn.Linear(hidden_dim, embed_dim, bias=bias),
-            nn.Dropout(dropout),
+            dnn.Dropout(dropout),
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -116,7 +116,7 @@ class MiniGPT(nn.Module):
 
         self.token_embed = nn.Embedding(vocab_size, embed_dim)
         self.pos_embed = nn.Embedding(block_size, embed_dim)
-        self.embed_dropout = nn.Dropout(dropout)
+        self.embed_dropout = dnn.Dropout(dropout)
 
         self.blocks = nn.Sequential(
             *[
