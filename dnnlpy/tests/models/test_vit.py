@@ -127,13 +127,13 @@ def test_vit_embedding_returns_patch_and_class_tokens():
     assert resized_pos_embed.shape == (1, 10, 6)
 
 
-def test_vit_mlp_uses_default_hidden_dimension():
+def test_vit_mlp_uses_declared_default_hidden_dimension():
     module = ViTMLP(embed_dim=6, dropout=0.0)
     x = torch.randn(2, 5, 6)
 
     output = module(x)
 
-    assert module.net[0].out_features == 24
+    assert module.net[0].out_features == 3072
     assert output.shape == x.shape
 
 
