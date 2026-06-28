@@ -2,8 +2,8 @@ from .activation import (
     celu as celu,
     elu as elu,
     gelu as gelu,
-    hardsigmoid as hardsigmoid,
     hardshrink as hardshrink,
+    hardsigmoid as hardsigmoid,
     hardswish as hardswish,
     hardtanh as hardtanh,
     leaky_relu as leaky_relu,
@@ -17,8 +17,8 @@ from .activation import (
     selu as selu,
     sigmoid as sigmoid,
     silu as silu,
-    softmin as softmin,
     softmax as softmax,
+    softmin as softmin,
     softplus as softplus,
     softshrink as softshrink,
     softsign as softsign,
@@ -26,7 +26,7 @@ from .activation import (
     tanhshrink as tanhshrink,
     threshold as threshold,
 )
-from .affine import linear as linear
+from .affine import bilinear as bilinear, linear as linear
 from .attention import (
     generate_causal_mask as generate_causal_mask,
     multi_head_attention as multi_head_attention,
