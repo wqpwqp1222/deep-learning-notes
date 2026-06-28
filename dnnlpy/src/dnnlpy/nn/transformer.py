@@ -9,6 +9,7 @@ from torch import Tensor
 from . import functional as dF
 from .affine import Linear
 from .attention import MultiheadAttention
+from .normalization import LayerNorm
 from .regularization import Dropout
 
 type Activation = Callable[[Tensor], Tensor]
@@ -144,8 +145,8 @@ class TransformerEncoderLayer(nn.Module):
         self.dropout = Dropout(dropout, fast=fast)
         self.linear2 = Linear(dim_feedforward, d_model, bias=bias, fast=fast)
 
-        self.norm1 = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
-        self.norm2 = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
+        self.norm1 = LayerNorm(d_model, eps=layer_norm_eps, bias=bias, fast=fast)
+        self.norm2 = LayerNorm(d_model, eps=layer_norm_eps, bias=bias, fast=fast)
         self.dropout1 = Dropout(dropout, fast=fast)
         self.dropout2 = Dropout(dropout, fast=fast)
 
@@ -297,9 +298,9 @@ class TransformerDecoderLayer(nn.Module):
         self.dropout = Dropout(dropout, fast=fast)
         self.linear2 = Linear(dim_feedforward, d_model, bias=bias, fast=fast)
 
-        self.norm1 = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
-        self.norm2 = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
-        self.norm3 = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
+        self.norm1 = LayerNorm(d_model, eps=layer_norm_eps, bias=bias, fast=fast)
+        self.norm2 = LayerNorm(d_model, eps=layer_norm_eps, bias=bias, fast=fast)
+        self.norm3 = LayerNorm(d_model, eps=layer_norm_eps, bias=bias, fast=fast)
         self.dropout1 = Dropout(dropout, fast=fast)
         self.dropout2 = Dropout(dropout, fast=fast)
         self.dropout3 = Dropout(dropout, fast=fast)
@@ -501,7 +502,7 @@ class Transformer(nn.Module):
             norm_first=norm_first,
             fast=fast,
         )
-        encoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
+        encoder_norm = LayerNorm(d_model, eps=layer_norm_eps, bias=bias, fast=fast)
         self.encoder = TransformerEncoder(
             encoder_layer,
             num_encoder_layers,
@@ -519,7 +520,7 @@ class Transformer(nn.Module):
             norm_first=norm_first,
             fast=fast,
         )
-        decoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps, bias=bias)
+        decoder_norm = LayerNorm(d_model, eps=layer_norm_eps, bias=bias, fast=fast)
         self.decoder = TransformerDecoder(
             decoder_layer,
             num_decoder_layers,
