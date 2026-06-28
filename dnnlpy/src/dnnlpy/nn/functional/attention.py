@@ -3,6 +3,7 @@ import math
 import torch
 import torch.nn.functional as F
 from torch import Tensor
+from torch.types import Device
 
 from .. import functional as dF
 
@@ -232,13 +233,13 @@ def multi_head_attention(
 
 def generate_causal_mask(
     sz: int,
-    device: torch.device | None = None,
+    device: Device = None,
 ) -> Tensor:
     """Generate an upper-triangular causal attention mask.
 
     Args:
         sz (int): Height and width of the square mask.
-        device (torch.device | None, default: None): Optional output device.
+        device (Device, default: None): Optional output device.
 
     Returns:
         Tensor: A square mask where positions above the diagonal are masked.
