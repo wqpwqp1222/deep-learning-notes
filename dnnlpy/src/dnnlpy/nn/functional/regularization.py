@@ -16,7 +16,19 @@ def _dropout_with_mask_shape(
     inplace: bool,
     mask_shape: tuple[int, ...],
 ) -> Tensor:
-    """Randomly zero elements of the input tensor with a given mask shape."""
+    """Randomly zero elements of the input tensor with a given mask shape.
+
+    Args:
+        x (Tensor): Input tensor with arbitrary shape.
+        p (float, default: 0.5): Probability of an element to be zeroed. Default: 0.5.
+        training (bool, default: True): Apply dropout if True. Default: True.
+        inplace (bool, default: False): If set to True, will do this operation in-place.
+            Default: False.
+        mask_shape (tuple[int, ...]): Shape of the dropout mask.
+
+    Returns:
+        Tensor: Output tensor with the same shape as input.
+    """
     if not 0.0 <= p <= 1.0:
         raise AssertionError(f'`p` must be between 0 and 1, but got {p}.')
 
