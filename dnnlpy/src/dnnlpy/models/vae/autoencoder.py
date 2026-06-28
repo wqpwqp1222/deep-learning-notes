@@ -27,7 +27,7 @@ class AutoEncoder(nn.Module):
         super().__init__()
         input_dim = math.prod(input_shape)
         self.encoder = nn.Sequential(
-            nn.Flatten(),  # 28x28 -> 784
+            dnn.Flatten(),  # 28x28 -> 784
             dnn.Linear(input_dim, hidden_dim),
             dnn.ReLU(),
             dnn.Linear(hidden_dim, latent_dim),
@@ -37,7 +37,7 @@ class AutoEncoder(nn.Module):
             dnn.ReLU(),
             dnn.Linear(hidden_dim, input_dim),
             dnn.Sigmoid(),
-            nn.Unflatten(1, input_shape),  # 784 -> 28x28
+            dnn.Unflatten(1, input_shape),  # 784 -> 28x28
         )
 
     def encode(self, x: Tensor) -> Tensor:

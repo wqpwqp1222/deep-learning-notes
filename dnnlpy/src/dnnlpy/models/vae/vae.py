@@ -30,7 +30,7 @@ class VAE(nn.Module):
         super().__init__()
         input_dim = math.prod(input_shape)
         self.encoder = nn.Sequential(
-            nn.Flatten(),
+            dnn.Flatten(),
             dnn.Linear(input_dim, hidden_dim),
             dnn.ReLU(),
         )
@@ -41,7 +41,7 @@ class VAE(nn.Module):
             dnn.ReLU(),
             dnn.Linear(hidden_dim, input_dim),
             dnn.Sigmoid(),
-            nn.Unflatten(1, input_shape),
+            dnn.Unflatten(1, input_shape),
         )
 
     def encode(self, x: Tensor) -> tuple[Tensor, Tensor]:
