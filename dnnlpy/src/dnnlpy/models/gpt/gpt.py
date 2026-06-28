@@ -9,7 +9,12 @@ import dnnlpy.nn.functional as dF
 
 from .utils import sample_next_token
 
-__all__ = ['MiniGPT']
+__all__ = [
+    'MiniGPTCausalSelfAttention',
+    'MiniGPTMLP',
+    'MiniGPTBlock',
+    'MiniGPT',
+]
 
 
 class MiniGPTCausalSelfAttention(nn.Module):
