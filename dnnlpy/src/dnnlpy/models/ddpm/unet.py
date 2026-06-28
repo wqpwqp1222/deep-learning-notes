@@ -21,14 +21,14 @@ class ConvBlock(nn.Module):
             groups (int, default: 8): Number of groups for group normalization.
         """
         super().__init__()
-        self.proj = nn.Conv2d(
+        self.proj = dnn.Conv2d(
             in_channels,
             out_channels,
             kernel_size=3,
             padding='same',
         )
-        self.norm = nn.GroupNorm(groups, out_channels)
-        self.act = nn.SiLU()
+        self.norm = dnn.GroupNorm(groups, out_channels)
+        self.act = dnn.SiLU()
 
     def forward(self, x: Tensor) -> Tensor:
         """Apply convolution, normalization, and activation."""
@@ -60,12 +60,12 @@ class ResBlock(nn.Module):
         self.block1 = ConvBlock(in_channels, out_channels, groups=groups)
         self.block2 = ConvBlock(out_channels, out_channels, groups=groups)
         self.time_mlp = nn.Sequential(
-            nn.SiLU(),
+            dnn.SiLU(),
             dnn.Linear(time_emb_dim, out_channels),
         )
 
         if in_channels != out_channels:
-            self.res_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+            self.res_conv = dnn.Conv2d(in_channels, out_channels, kernel_size=1)
         else:
             self.res_conv = dnn.Identity()
 
@@ -90,7 +90,7 @@ class AttentionBlock(nn.Module):
             num_heads (int, default: 4): Number of attention heads.
         """
         super().__init__()
-        self.norm = nn.GroupNorm(8, num_channels)
+        self.norm = dnn.GroupNorm(8, num_channels)
         self.attn = dnn.MultiheadAttention(num_channels, num_heads)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -109,7 +109,7 @@ class Downsample(nn.Module):
     def __init__(self, num_channels: int):
         """Initialize the downsampling convolution."""
         super().__init__()
-        self.conv = nn.Conv2d(
+        self.conv = dnn.Conv2d(
             num_channels,
             num_channels,
             kernel_size=4,
@@ -164,12 +164,12 @@ class UNet2DModel(nn.Module):
         self.time_embedding = nn.Sequential(
             SinusoidalTimestepEmbedding(time_emb_dim),
             dnn.Linear(time_emb_dim, time_emb_dim),
-            nn.SiLU(),
+            dnn.SiLU(),
             dnn.Linear(time_emb_dim, time_emb_dim),
         )
 
         first_ch = block_out_channels[0]
-        self.init_conv = nn.Conv2d(
+        self.init_conv = dnn.Conv2d(
             in_channels,
             first_ch,
             kernel_size=3,
@@ -221,7 +221,7 @@ class UNet2DModel(nn.Module):
             in_ch = out_ch
 
         self.final_block = ConvBlock(in_ch, in_ch)
-        self.final_conv = nn.Conv2d(in_ch, out_channels, kernel_size=1)
+        self.final_conv = dnn.Conv2d(in_ch, out_channels, kernel_size=1)
 
     def forward(self, x: Tensor, timesteps: Tensor) -> Tensor:
         """Run the U-Net on a batch of images and timesteps."""
