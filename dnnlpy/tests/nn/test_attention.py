@@ -419,6 +419,11 @@ def test_multihead_attention_module_matches_torch_module():
                 dim=0,
             )
         )
+
+        assert actual.q_proj.bias is not None
+        assert actual.k_proj.bias is not None
+        assert actual.v_proj.bias is not None
+
         expected.in_proj_bias.copy_(
             torch.concat(
                 [
@@ -429,6 +434,8 @@ def test_multihead_attention_module_matches_torch_module():
                 dim=0,
             )
         )
+
+        assert actual.out_proj.bias is not None
         expected.out_proj.weight.copy_(actual.out_proj.weight)
         expected.out_proj.bias.copy_(actual.out_proj.bias)
 
