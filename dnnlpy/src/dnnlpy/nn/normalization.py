@@ -192,7 +192,7 @@ class BatchNorm3d(_BatchNorm):
 
 class GroupNorm(nn.Module):
     """Apply group normalization over channel groups."""
-    
+
     weight: Tensor | None
     bias: Tensor | None
 
