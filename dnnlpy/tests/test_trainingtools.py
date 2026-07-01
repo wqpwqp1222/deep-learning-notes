@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 import torch
 import torch.nn as nn
@@ -157,7 +159,7 @@ def test_trainer_repr_shows_configuration():
     assert 'gradient_clip_val=0.5' in text
     assert "gradient_clip_algorithm='value'" in text
     assert 'max_epochs=3' in text
-    assert "checkpoint_path=WindowsPath('checkpoints')" in text
+    assert f'checkpoint_path={Path("checkpoints")!r}' in text
     assert 'checkpoint_every_n_epochs=2' in text
     assert 'verbose=False' in text
     assert 'history' not in text
