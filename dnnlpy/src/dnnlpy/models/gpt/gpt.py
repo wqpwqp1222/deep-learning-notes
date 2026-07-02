@@ -27,6 +27,17 @@ class MiniGPTCausalSelfAttention(nn.Module):
         bias: bool = True,
         dropout: float = 0.0,
     ):
+        """Create a causal self-attention block.
+
+        A causal self-attention block computes attention scores for each token in the input
+        sequence, allowing each token to attend only to previous tokens (including itself).
+
+        Args:
+            embed_dim (int, default: 128): Dimension of the input token embeddings.
+            num_heads (int, default: 4): Number of attention heads.
+            bias (bool, default: True): Whether to use bias terms in the attention layers.
+            dropout (float, default: 0.0): Dropout probability for attention weights.
+        """
         super().__init__()
         self.attn = dnn.MultiheadAttention(
             embed_dim, num_heads, bias=bias, dropout=dropout
@@ -47,6 +58,14 @@ class MiniGPTMLP(nn.Module):
         bias: bool = True,
         dropout: float = 0.0,
     ):
+        """Create a feed-forward MLP block.
+
+        Args:
+            embed_dim (int, default: 128): Dimension of the input token embeddings.
+            hidden_dim (int, default: 512): Dimension of the hidden layer in the MLP.
+            bias (bool, default: True): Whether to use bias terms in the linear layers.
+            dropout (float, default: 0.0): Dropout probability for the output of the MLP.
+        """
         super().__init__()
         self.net = nn.Sequential(
             dnn.Linear(embed_dim, hidden_dim, bias=bias),
@@ -70,6 +89,14 @@ class MiniGPTBlock(nn.Module):
         bias: bool = True,
         dropout: float = 0.0,
     ):
+        """Create a Transformer decoder block with pre-layer normalization.
+
+        Args:
+            embed_dim (int, default: 128): Dimension of the input token embeddings.
+            num_heads (int, default: 4): Number of attention heads in self-attention layer.
+            hidden_dim (int, default: 512): Dimension of the hidden layer in feed-forward MLP.
+            bias (bool, default: True): Whether to use bias terms in the linear layers.
+        """
         super().__init__()
         self.norm1 = dnn.LayerNorm(embed_dim, bias=bias)
         self.attn = MiniGPTCausalSelfAttention(
@@ -156,11 +183,6 @@ class MiniGPT(nn.Module):
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
 
-            elif isinstance(module, dnn.LayerNorm):
-                nn.init.ones_(module.weight)
-                if module.bias is not None:
-                    nn.init.zeros_(module.bias)
-
     def forward(self, input_ids: Tensor) -> Tensor:
         """Compute the logits for a batch of input sequences."""
         if input_ids.ndim != 2:
@@ -183,7 +205,19 @@ class MiniGPT(nn.Module):
         return logits
 
     def loss(self, input_ids: Tensor, targets: Tensor | None = None) -> Tensor:
-        """Compute the cross-entropy loss for a batch of input sequences."""
+        """Compute the cross-entropy loss for a batch of input sequences.
+
+        As a language model, the loss is computed by predicting the next token in the
+        sequence. If `targets` is not provided, it is assumed that the targets are the
+        input sequence shifted by one position.
+
+        Args:
+            input_ids (Tensor): Input token ids of shape (B, T).
+            targets (Tensor | None, default: None): Target token ids of shape (B, T).
+
+        Returns:
+            Tensor: The computed cross-entropy loss.
+        """
         if targets is not None and targets.ndim != 2:
             raise AssertionError('`targets` must have shape (B, T).')
 
@@ -193,7 +227,7 @@ class MiniGPT(nn.Module):
             logits = logits[:, :-1, :]
             targets = input_ids[:, 1:]
 
-        return dF.cross_entropy(
+        return dF.cross_entropy_loss(
             logits.reshape(-1, self.vocab_size),
             targets.reshape(-1),
         )
@@ -214,6 +248,9 @@ class MiniGPT(nn.Module):
             top_k (int | None, default: None): If specified, use top-k sampling.
             top_p (float | None, default: None): If specified, use top-p sampling.
             greedy (bool, default: False): If True, use greedy decoding.
+
+        Returns:
+            Tensor: The next token ids sampled from the logits, shape (B,).
         """
         next_token = sample_next_token(
             logits[:, -1],

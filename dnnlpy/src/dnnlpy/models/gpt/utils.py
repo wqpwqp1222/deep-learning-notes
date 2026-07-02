@@ -20,7 +20,17 @@ def get_batch(
     batch_size: int,
     device: Device = 'cpu',
 ) -> tuple[Tensor, Tensor]:
-    """Cut out a batch of inputs and targets from the token stream."""
+    """Cut out a batch of inputs and targets from the token stream.
+
+    Args:
+        token_ids (Tensor): The token ids of the text data.
+        block_size (int): The length of each input sequence.
+        batch_size (int): The number of sequences in the batch.
+        device (Device, default: 'cpu'): The device to place the tensors on.
+
+    Returns:
+        tuple[Tensor, Tensor]: A tuple containing the input tensor `x` and the target tensor `y`.
+    """
     max_start = len(token_ids) - block_size - 1
     starts = torch.randint(max_start + 1, (batch_size,))
 
@@ -30,14 +40,30 @@ def get_batch(
 
 
 def greedy_sampling(logits: Tensor, temperature: float) -> Tensor:
-    """Sample the next token greedily from the logits."""
+    """Sample the next token greedily from the logits.
+
+    Args:
+        logits (Tensor): The logits from the model of shape (B, V).
+        temperature (float): The temperature for sampling. Must be positive.
+
+    Returns:
+        Tensor: The sampled token ids of shape (B, 1).
+    """
     if temperature <= 0:
         raise AssertionError('`temperature` must be positive.')
     return dF.softmax(logits / temperature, dim=-1)
 
 
 def top_k_sampling(logits: Tensor, top_k: int) -> Tensor:
-    """Sample the next token from the logits using top-k sampling."""
+    """Sample the next token from the logits using top-k sampling.
+
+    Args:
+        logits (Tensor): The logits from the model of shape (B, V).
+        top_k (int): The number of top tokens to consider for sampling. Must be positive.
+
+    Returns:
+        Tensor: The logits with tokens outside the top-k set to -inf, of shape (B, V).
+    """
     if top_k <= 0:
         return logits
 
@@ -50,7 +76,15 @@ def top_k_sampling(logits: Tensor, top_k: int) -> Tensor:
 
 
 def top_p_sampling(logits: Tensor, top_p: float) -> Tensor:
-    """Sample the next token from the logits using top-p sampling."""
+    """Sample the next token from the logits using top-p sampling.
+
+    Args:
+        logits (Tensor): The logits from the model of shape (B, V).
+        top_p (float): The cumulative probability threshold for sampling. Must be in (0, 1].
+
+    Returns:
+        Tensor: The logits with tokens outside the top-p set to -inf, of shape (B, V).
+    """
     if not 0 < top_p <= 1:
         raise AssertionError('`top_p` must be in (0, 1].')
 
@@ -80,7 +114,21 @@ def sample_next_token(
     top_p: float | None = None,
     greedy: bool = False,
 ) -> Tensor:
-    """Sample next token ids from logits with temperature, top-k, and top-p."""
+    """Sample next token ids from logits with temperature, top-k, and top-p.
+
+    Args:
+        logits (Tensor): The logits from the model of shape (B, V).
+        temperature (float, default: 1.0): The temperature for sampling. Must be positive.
+        top_k (int | None, default: None): The number of top tokens to consider for sampling.
+            If None, no top-k filtering is applied.
+        top_p (float | None, default: None): The cumulative probability threshold for sampling.
+            If None, no top-p filtering is applied.
+        greedy (bool, default: False): If True, use greedy sampling instead of probabilistic
+            sampling.
+
+    Returns:
+        Tensor: The sampled token ids of shape (B, 1).
+    """
     if logits.ndim != 2:
         raise AssertionError('`logits` must have shape (B, V).')
     if temperature <= 0:
