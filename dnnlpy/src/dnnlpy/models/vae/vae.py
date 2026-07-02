@@ -3,10 +3,12 @@ from typing import Literal
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch import Tensor
 
 import dnnlpy.nn as dnn
+import dnnlpy.nn.functional as dF
+
+type LossFn = Literal['mse', 'bce']
 
 __all__ = ['VAE']
 
@@ -76,7 +78,7 @@ class VAE(nn.Module):
         x: Tensor,
         mu: Tensor,
         logvar: Tensor,
-        loss_fn: Literal['mse', 'bce'] = 'bce',
+        loss_fn: LossFn = 'bce',
         beta: float = 1.0,
         normalize: bool = True,
     ) -> tuple[Tensor, Tensor, Tensor]:
@@ -89,14 +91,16 @@ class VAE(nn.Module):
             logvar (Tensor): Latent Gaussian log-variances.
             loss_fn (Literal['mse', 'bce'], default: 'bce'): Reconstruction loss type.
             beta (float, default: 1.0): Weight applied to the KL divergence term.
+            normalize (bool, default: True): Whether to normalize losses by batch size.
 
         Returns:
-            Tuple of ``(loss, recon_loss, kl_loss)`` normalized by batch size.
+            Tuple[Tensor, Tensor, Tensor]: Tuple of `(loss, recon_loss, kl_loss)`
+            normalized by batch size.
         """
         if loss_fn == 'mse':
-            recon_loss = F.mse_loss(x_hat, x, reduction='sum')
+            recon_loss = dF.mse_loss(x_hat, x, reduction='sum')
         elif loss_fn == 'bce':
-            recon_loss = F.binary_cross_entropy(x_hat, x, reduction='sum')
+            recon_loss = dF.bce_loss(x_hat, x, reduction='sum')
         else:
             raise NotImplementedError(f'Unsupported loss function: {loss_fn}.')
 
