@@ -29,7 +29,7 @@ class ViTMLP(nn.Module):
         Args:
             embed_dim (int): Input and output token embedding dimension.
             hidden_dim (int, default: 3072): Hidden dimension of the feed-forward layer.
-                Defaults to ``4 * embed_dim``.
+                Defaults to `4 * embed_dim`.
             dropout (float, default: 0.0): Dropout probability after each linear projection.
         """
         super().__init__()
@@ -63,7 +63,7 @@ class ViTEncoderLayer(nn.Module):
             embed_dim (int): Token embedding dimension.
             num_heads (int, default: 12): Number of attention heads.
             hidden_dim (int, default: 3072): Hidden dimension of the feed-forward layer.
-                Defaults to ``4 * embed_dim``.
+                Defaults to `4 * embed_dim`.
             dropout (float, default: 0.0): Dropout probability for residual paths and
                 the feed-forward block.
             attn_dropout (float, default: 0.0): Dropout probability inside multi-head
@@ -117,7 +117,7 @@ class ViTEncoder(nn.Module):
             num_heads (int, default: 12): Number of attention heads per layer.
             num_layers (int, default: 12): Number of encoder layers.
             hidden_dim (int, default: 3072): Hidden dimension of each feed-forward layer.
-                Defaults to ``4 * embed_dim``.
+                Defaults to `4 * embed_dim`.
             dropout (float, default: 0.0): Dropout probability for residual paths and
                 feed-forward blocks.
             attn_dropout (float, default: 0.0): Dropout probability inside multi-head
@@ -171,7 +171,7 @@ class ViTModel(nn.Module):
             num_heads (int, default: 12): Number of attention heads per layer.
             num_layers (int, default: 12): Number of encoder layers.
             hidden_dim (int, default: 3072): Hidden dimension of each feed-forward layer.
-                Defaults to ``4 * embed_dim``.
+                Defaults to `4 * embed_dim`.
             dropout (float, default: 0.0): Dropout probability for residual paths and
                 feed-forward blocks.
             attn_dropout (float, default: 0.0): Dropout probability inside multi-head
@@ -248,7 +248,7 @@ class ViTForImageClassification(nn.Module):
             num_heads (int, default: 12): Number of attention heads per layer.
             num_layers (int, default: 12): Number of encoder layers.
             hidden_dim (int, default: 3072): Hidden dimension of each feed-forward layer.
-                Defaults to ``4 * embed_dim``.
+                Defaults to `4 * embed_dim`.
             dropout (float, default: 0.0): Dropout probability in embeddings, residual paths,
                 and feed-forward blocks.
             attn_dropout (float, default: 0.0): Dropout probability inside multi-head

@@ -43,7 +43,7 @@ class ViTLinearPatchEmbedding(nn.Module):
         self.proj = dnn.Linear(in_channels * patch_size * patch_size, embed_dim)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Convert images of shape ``(batch, channels, height, width)`` to patch tokens."""
+        """Convert images of shape `(batch, channels, height, width)` to patch tokens."""
         x = self.unfold(x)  # (B, C*P*P, N)
         x = x.transpose(1, 2)  # (B, N, C*P*P)
         x = self.proj(x)
@@ -84,7 +84,7 @@ class ViTConvPatchEmbedding(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Convert images of shape ``(batch, channels, height, width)`` to patch tokens."""
+        """Convert images of shape `(batch, channels, height, width)` to patch tokens."""
         x = self.proj(x)
         x = x.flatten(2)
         x = x.transpose(1, 2)
@@ -126,8 +126,8 @@ class ViTPositionalEmbedding(nn.Module):
         Args:
             embed_dim (int): Embedding dimension of each token.
             num_patches (int): Number of image patch tokens.
-            use_cls_token (bool, default: True): Whether the sequence includes a
-                leading class token.
+            use_cls_token (bool, default: True): Whether the sequence includes a leading
+                class token.
         """
         super().__init__()
         self.use_cls_token = use_cls_token
@@ -141,8 +141,7 @@ class ViTPositionalEmbedding(nn.Module):
         """Add positional embeddings to an input token sequence."""
         if x.size(1) != self.pos_embed.size(1):
             raise AssertionError(
-                f'Expected sequence length {self.pos_embed.size(1)}, '
-                f'but got {x.size(1)}.'
+                f'Expected sequence length {self.pos_embed.size(1)}, but got {x.size(1)}.'
             )
         return x + self.pos_embed
 
@@ -154,12 +153,12 @@ class ViTPositionalEmbedding(nn.Module):
         """Resize patch positional embeddings to a new image grid.
 
         Args:
-            old_grid_size (tuple[int, int]): Original patch grid as ``(height, width)``.
-            new_grid_size (tuple[int, int]): Target patch grid as ``(height, width)``.
+            old_grid_size (tuple[int, int]): Original patch grid as `(height, width)`.
+            new_grid_size (tuple[int, int]): Target patch grid as `(height, width)`.
 
         Returns:
-            Positional embeddings resized to the target grid. The class token
-            embedding is preserved when ``use_cls_token`` is ``True``.
+            Tensor: Positional embeddings resized to the target grid. The class token
+            embedding is preserved when `use_cls_token` is `True`.
         """
         if self.use_cls_token:
             cls_pos_embed = self.pos_embed[:, :1]
@@ -243,5 +242,14 @@ class ViTEmbedding(nn.Module):
         old_grid_size: tuple[int, int],
         new_grid_size: tuple[int, int],
     ) -> Tensor:
-        """Resize the learned positional embeddings for a new patch grid."""
+        """Resize patch positional embeddings to a new image grid.
+
+        Args:
+            old_grid_size (tuple[int, int]): Original patch grid as `(height, width)`.
+            new_grid_size (tuple[int, int]): Target patch grid as `(height, width)`.
+
+        Returns:
+            Tensor: Positional embeddings resized to the target grid. The class token
+            embedding is preserved when `use_cls_token` is `True`.
+        """
         return self.pos_embed.interpolate(old_grid_size, new_grid_size)

@@ -7,12 +7,12 @@ def patchify(x: Tensor, patch_size: int) -> Tensor:
     """Split images into flattened patches.
 
     Args:
-        x: Input images of shape ``(batch_size, channels, height, width)``.
+        x: Input images of shape `(batch_size, channels, height, width)`.
         patch_size: Height and width of each square patch.
 
     Returns:
-        Flattened patches of shape
-        ``(batch_size, num_patches, channels * patch_size * patch_size)``.
+        Tensor: Flattened patches of shape `(batch_size, num_patches, channels *
+        patch_size * patch_size)`.
     """
     batch_size, _, height, width = x.size()
     if height % patch_size != 0 or width % patch_size != 0:
