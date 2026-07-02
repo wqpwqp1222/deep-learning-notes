@@ -1,11 +1,23 @@
 import torch
 from torch import Tensor
 
-__all__ = ['add_noise', 'denoise']
+__all__ = [
+    'add_noise',
+    'denoise',
+]
 
 
 def add_noise(x0: Tensor, betas: Tensor, timestep: int) -> Tensor:
-    """Sample ``x_t`` directly from ``x_0`` at a given diffusion timestep."""
+    """Sample `x_t` directly from `x_0` at a given diffusion timestep.
+
+    Args:
+        x0 (Tensor): The original data tensor.
+        betas (Tensor): The beta schedule tensor.
+        timestep (int): The diffusion timestep.
+
+    Returns:
+        Tensor: The noisy data tensor at the given timestep.
+    """
     t = timestep
     noise = torch.randn_like(x0)
     alphas = 1.0 - betas
@@ -15,7 +27,17 @@ def add_noise(x0: Tensor, betas: Tensor, timestep: int) -> Tensor:
 
 
 def denoise(x0: Tensor, xt: Tensor, timestep: int, betas: Tensor) -> Tensor:
-    """Compute one DDPM reverse step and sample noise when ``timestep > 0``."""
+    """Compute one DDPM reverse step and sample noise when `timestep > 0`.
+
+    Args:
+        x0 (Tensor): The original data tensor.
+        xt (Tensor): The noisy data tensor at the given timestep.
+        timestep (int): The diffusion timestep.
+        betas (Tensor): The beta schedule tensor.
+
+    Returns:
+        Tensor: The denoised data tensor at the previous timestep.
+    """
     alphas = 1.0 - betas
     alpha_t = alphas[timestep]
     alpha_bars = alphas.cumprod(dim=0)

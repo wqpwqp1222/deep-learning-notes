@@ -31,7 +31,6 @@ class ConvBlock(nn.Module):
         self.act = dnn.SiLU()
 
     def forward(self, x: Tensor) -> Tensor:
-        """Apply convolution, normalization, and activation."""
         x = self.proj(x)
         x = self.norm(x)
         x = self.act(x)
@@ -70,7 +69,6 @@ class ResBlock(nn.Module):
             self.res_conv = dnn.Identity()
 
     def forward(self, x: Tensor, t_emb: Tensor) -> Tensor:
-        """Apply the residual block to features and timestep embeddings."""
         h = self.block1(x)
         time_emb = self.time_mlp(t_emb)  # (B, out_ch)
         h = h + time_emb[:, :, None, None]
@@ -94,7 +92,6 @@ class AttentionBlock(nn.Module):
         self.attn = dnn.MultiheadAttention(num_channels, num_heads)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Apply attention across flattened spatial positions."""
         B, C, H, W = x.size()
         h = self.norm(x)
         h = h.view(B, C, H * W).transpose(1, 2)  # (B, HW, C)
@@ -107,7 +104,11 @@ class Downsample(nn.Module):
     """Downsample a feature map by a factor of two with a strided convolution."""
 
     def __init__(self, num_channels: int):
-        """Initialize the downsampling convolution."""
+        """Initialize a strided convolution for downsampling.
+
+        Args:
+            num_channels (int): Number of feature-map channels.
+        """
         super().__init__()
         self.conv = dnn.Conv2d(
             num_channels,
@@ -118,7 +119,6 @@ class Downsample(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Return the downsampled feature map."""
         return self.conv(x)
 
 
@@ -126,7 +126,11 @@ class Upsample(nn.Module):
     """Upsample a feature map by a factor of two with a transposed convolution."""
 
     def __init__(self, num_channels: int):
-        """Initialize the upsampling convolution."""
+        """Initialize a transposed convolution for upsampling.
+
+        Args:
+            num_channels (int): Number of feature-map channels.
+        """
         super().__init__()
         self.conv = nn.ConvTranspose2d(
             num_channels,
@@ -137,7 +141,6 @@ class Upsample(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Return the upsampled feature map."""
         return self.conv(x)
 
 

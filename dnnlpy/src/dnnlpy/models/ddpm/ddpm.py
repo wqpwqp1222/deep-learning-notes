@@ -44,12 +44,12 @@ class DDPMScheduler:
         """Add noise to clean samples at the requested timesteps.
 
         Args:
-            original_samples (Tensor): Clean samples ``x_0``.
-            noise (Tensor): Gaussian noise with the same shape as ``original_samples``.
+            original_samples (Tensor): Clean samples `x_0`.
+            noise (Tensor): Gaussian noise with the same shape as `original_samples`.
             timesteps (Tensor): 1D tensor of timestep indices, one per batch item.
 
         Returns:
-            Noisy samples ``x_t``.
+            Tensor: Noisy samples `x_t`.
         """
         if original_samples.shape != noise.shape:
             raise AssertionError(
@@ -77,7 +77,7 @@ class DDPMScheduler:
         self,
         num_inference_steps: int,
         device: Device = 'cpu',
-    ):
+    ) -> None:
         """Set the inference timestep schedule.
 
         Args:
@@ -119,6 +119,10 @@ class DDPMScheduler:
                 the predicted noise component at the current time step.
             timestep (int): The current time step in the reverse diffusion process.
             sample (Tensor): The current noisy sample at the given time step.
+
+        Returns:
+            Tensor: The previous sample in the reverse diffusion process, computed based on
+            the model's output and the noise schedule.
         """
         t = timestep
         prev_t = self.previous_timestep(t)

@@ -23,7 +23,6 @@ class SinusoidalTimestepEmbedding(nn.Module):
         self.max_period = max_period
 
     def forward(self, timesteps: Tensor) -> Tensor:
-        """Embed a 1D tensor of timesteps."""
         half_dim = self.embedding_dim // 2
         if half_dim == 0:
             return torch.zeros(
