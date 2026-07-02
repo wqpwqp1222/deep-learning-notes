@@ -39,7 +39,17 @@ from .convolution import (
     Conv2d as Conv2d,
     Conv3d as Conv3d,
 )
-from .loss import CrossEntropyLoss as CrossEntropyLoss
+from .loss import (
+    BCELoss as BCELoss,
+    BCEWithLogitsLoss as BCEWithLogitsLoss,
+    CrossEntropyLoss as CrossEntropyLoss,
+    HuberLoss as HuberLoss,
+    KLDivLoss as KLDivLoss,
+    L1Loss as L1Loss,
+    MSELoss as MSELoss,
+    NLLLoss as NLLLoss,
+    SmoothL1Loss as SmoothL1Loss,
+)
 from .normalization import (
     BatchNorm1d as BatchNorm1d,
     BatchNorm2d as BatchNorm2d,

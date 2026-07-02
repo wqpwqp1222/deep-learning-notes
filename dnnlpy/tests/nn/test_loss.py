@@ -2,46 +2,692 @@ import pytest
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 from torch.testing import assert_close
 
 import dnnlpy.nn as dnn
 import dnnlpy.nn.functional as dF
+import dnnlpy.nn.functional.loss as loss_functional
 
 
 @pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
-def test_cross_entropy_function_matches_torch(reduction: str):
+def test_bce_loss_function_matches_torch(reduction: str):
+    x = torch.rand(2, 3)
+    target = torch.rand(2, 3)
+
+    actual = dF.bce_loss(x, target, reduction=reduction)
+    expected = F.binary_cross_entropy(x, target, reduction=reduction)
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_bce_loss_function_matches_torch_with_weight(reduction: str):
+    x = torch.rand(2, 3)
+    target = torch.rand(2, 3)
+    weight = torch.rand(2, 3)
+
+    actual = dF.bce_loss(x, target, weight=weight, reduction=reduction)
+    expected = F.binary_cross_entropy(
+        x,
+        target,
+        weight=weight,
+        reduction=reduction,
+    )
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_bce_with_logits_loss_function_matches_torch(reduction: str):
+    x = torch.randn(2, 3)
+    target = torch.rand(2, 3)
+
+    actual = dF.bce_with_logits_loss(x, target, reduction=reduction)
+    expected = F.binary_cross_entropy_with_logits(
+        x,
+        target,
+        reduction=reduction,
+    )
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_bce_with_logits_loss_function_matches_torch_with_weights(
+    reduction: str,
+):
+    x = torch.randn(2, 3)
+    target = torch.rand(2, 3)
+    weight = torch.rand(2, 3)
+    pos_weight = torch.rand(3) + 0.5
+
+    actual = dF.bce_with_logits_loss(
+        x,
+        target,
+        weight=weight,
+        reduction=reduction,
+        pos_weight=pos_weight,
+    )
+    expected = F.binary_cross_entropy_with_logits(
+        x,
+        target,
+        weight=weight,
+        reduction=reduction,
+        pos_weight=pos_weight,
+    )
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_bce_with_logits_loss_function_is_stable_for_extreme_logits(
+    reduction: str,
+):
+    x = Tensor([[-1000.0, -100.0, 0.0, 100.0, 1000.0]])
+    target = Tensor([[0.0, 1.0, 0.25, 0.75, 1.0]])
+    pos_weight = Tensor([0.5, 1.0, 1.5, 2.0, 2.5])
+
+    actual = dF.bce_with_logits_loss(
+        x,
+        target,
+        reduction=reduction,
+        pos_weight=pos_weight,
+    )
+    expected = F.binary_cross_entropy_with_logits(
+        x,
+        target,
+        reduction=reduction,
+        pos_weight=pos_weight,
+    )
+
+    assert torch.isfinite(actual).all()
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['batchmean', 'mean', 'sum', 'none'])
+def test_kl_div_loss_function_matches_torch(reduction: str):
+    x = torch.randn(2, 3).log_softmax(dim=1)
+    target = torch.rand(2, 3).softmax(dim=1)
+
+    actual = dF.kl_div_loss(x, target, reduction=reduction)
+    if reduction == 'mean':
+        with pytest.warns(UserWarning, match='batchmean'):
+            expected = F.kl_div(x, target, reduction=reduction)
+    else:
+        expected = F.kl_div(x, target, reduction=reduction)
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['batchmean', 'mean', 'sum', 'none'])
+def test_kl_div_loss_function_matches_torch_with_log_target(reduction: str):
+    x = torch.randn(2, 3).log_softmax(dim=1)
+    target = torch.randn(2, 3).log_softmax(dim=1)
+
+    actual = dF.kl_div_loss(x, target, reduction=reduction, log_target=True)
+    if reduction == 'mean':
+        with pytest.warns(UserWarning, match='batchmean'):
+            expected = F.kl_div(x, target, reduction=reduction, log_target=True)
+    else:
+        expected = F.kl_div(x, target, reduction=reduction, log_target=True)
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_mse_loss_function_matches_torch(reduction: str):
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+
+    actual = dF.mse_loss(x, target, reduction=reduction)
+    expected = F.mse_loss(x, target, reduction=reduction)
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_mse_loss_function_matches_torch_with_weight(reduction: str):
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+    weight = torch.rand(2, 3)
+
+    actual = dF.mse_loss(x, target, reduction=reduction, weight=weight)
+    expected = F.mse_loss(x, target, reduction=reduction, weight=weight)  # type: ignore[call-arg]
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_l1_loss_function_matches_torch(reduction: str):
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+
+    actual = dF.l1_loss(x, target, reduction=reduction)
+    expected = F.l1_loss(x, target, reduction=reduction)
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_l1_loss_function_matches_torch_with_weight(reduction: str):
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+    weight = torch.rand(2, 3)
+
+    actual = dF.l1_loss(x, target, reduction=reduction, weight=weight)
+    expected = F.l1_loss(x, target, reduction=reduction, weight=weight)  # type: ignore[call-arg]
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_smooth_l1_loss_function_matches_torch(reduction: str):
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+
+    actual = dF.smooth_l1_loss(x, target, reduction=reduction, beta=0.5)
+    expected = F.smooth_l1_loss(x, target, reduction=reduction, beta=0.5)
+
+    assert_close(actual, expected)
+
+
+def test_smooth_l1_loss_function_matches_torch_with_zero_beta():
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+
+    actual = dF.smooth_l1_loss(x, target, beta=0.0)
+    expected = F.smooth_l1_loss(x, target, beta=0.0)
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_huber_loss_function_matches_torch(reduction: str):
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+
+    actual = dF.huber_loss(x, target, reduction=reduction, delta=0.5)
+    expected = F.huber_loss(x, target, reduction=reduction, delta=0.5)
+
+    assert_close(actual, expected)
+
+
+def test_huber_loss_function_backward_matches_torch():
+    x = torch.randn(2, 3, requires_grad=True)
+    target = torch.randn(2, 3)
+    expected_x = x.detach().clone().requires_grad_()
+
+    actual = dF.huber_loss(x, target, delta=0.5)
+    expected = F.huber_loss(expected_x, target, delta=0.5)
+    actual.backward()
+    expected.backward()
+
+    assert_close(actual, expected)
+    assert_close(x.grad, expected_x.grad)
+
+
+@pytest.mark.parametrize(
+    'loss_fn,args',
+    [
+        (dF.mse_loss, (torch.randn(2, 3), torch.randn(2, 3))),
+        (dF.l1_loss, (torch.randn(2, 3), torch.randn(2, 3))),
+        (dF.smooth_l1_loss, (torch.randn(2, 3), torch.randn(2, 3))),
+        (dF.huber_loss, (torch.randn(2, 3), torch.randn(2, 3))),
+        (dF.bce_loss, (torch.rand(2, 3), torch.rand(2, 3))),
+        (dF.bce_with_logits_loss, (torch.randn(2, 3), torch.rand(2, 3))),
+    ],
+)
+def test_pointwise_loss_functions_reject_invalid_reduction(loss_fn, args):
+    with pytest.raises(AssertionError, match='reduction'):
+        loss_fn(*args, reduction='batchmean')
+
+
+def test_kl_div_loss_rejects_invalid_reduction():
+    x = torch.randn(2, 3)
+    target = torch.rand(2, 3)
+
+    with pytest.raises(AssertionError, match='reduction'):
+        dF.kl_div_loss(x, target, reduction='invalid')
+
+
+def test_smooth_l1_loss_rejects_negative_beta():
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+
+    with pytest.raises(AssertionError, match='beta'):
+        dF.smooth_l1_loss(x, target, beta=-0.5)
+
+
+def test_huber_loss_rejects_non_positive_delta():
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+
+    with pytest.raises(RuntimeError, match='delta'):
+        dF.huber_loss(x, target, delta=0.0)
+
+
+@pytest.mark.parametrize(
+    ('actual_module', 'expected_module', 'x', 'target'),
+    [
+        (
+            dnn.MSELoss(reduction='sum'),
+            nn.MSELoss(reduction='sum'),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.L1Loss(reduction='sum'),
+            nn.L1Loss(reduction='sum'),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.SmoothL1Loss(reduction='sum', beta=0.5),
+            nn.SmoothL1Loss(reduction='sum', beta=0.5),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.HuberLoss(reduction='sum', delta=0.5),
+            nn.HuberLoss(reduction='sum', delta=0.5),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.BCELoss(weight=torch.rand(2, 3), reduction='sum'),
+            nn.BCELoss(weight=torch.rand(2, 3), reduction='sum'),
+            torch.rand(2, 3),
+            torch.rand(2, 3),
+        ),
+        (
+            dnn.BCEWithLogitsLoss(
+                weight=torch.rand(2, 3),
+                pos_weight=torch.rand(3) + 0.5,
+                reduction='sum',
+            ),
+            nn.BCEWithLogitsLoss(
+                weight=torch.rand(2, 3),
+                pos_weight=torch.rand(3) + 0.5,
+                reduction='sum',
+            ),
+            torch.randn(2, 3),
+            torch.rand(2, 3),
+        ),
+        (
+            dnn.KLDivLoss(reduction='batchmean', log_target=True),
+            nn.KLDivLoss(reduction='batchmean', log_target=True),
+            torch.randn(2, 3).log_softmax(dim=1),
+            torch.randn(2, 3).log_softmax(dim=1),
+        ),
+    ],
+)
+def test_loss_modules_match_torch_modules(
+    actual_module: nn.Module,
+    expected_module: nn.Module,
+    x: Tensor,
+    target: Tensor,
+):
+    if isinstance(actual_module, (dnn.BCELoss, dnn.BCEWithLogitsLoss)):
+        assert actual_module.weight is not None
+        expected_module.weight = actual_module.weight
+    if isinstance(actual_module, dnn.BCEWithLogitsLoss):
+        assert actual_module.pos_weight is not None
+        expected_module.pos_weight = actual_module.pos_weight
+
+    assert_close(actual_module(x, target), expected_module(x, target))
+
+
+@pytest.mark.parametrize(
+    ('actual_module', 'expected_module', 'x', 'target'),
+    [
+        (
+            dnn.MSELoss(reduction='sum', fast=True),
+            nn.MSELoss(reduction='sum'),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.L1Loss(reduction='sum', fast=True),
+            nn.L1Loss(reduction='sum'),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.SmoothL1Loss(reduction='sum', beta=0.5, fast=True),
+            nn.SmoothL1Loss(reduction='sum', beta=0.5),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.HuberLoss(reduction='sum', delta=0.5, fast=True),
+            nn.HuberLoss(reduction='sum', delta=0.5),
+            torch.randn(2, 3),
+            torch.randn(2, 3),
+        ),
+        (
+            dnn.BCELoss(weight=torch.rand(2, 3), reduction='sum', fast=True),
+            nn.BCELoss(weight=torch.rand(2, 3), reduction='sum'),
+            torch.rand(2, 3),
+            torch.rand(2, 3),
+        ),
+        (
+            dnn.BCEWithLogitsLoss(
+                weight=torch.rand(2, 3),
+                pos_weight=torch.rand(3) + 0.5,
+                reduction='sum',
+                fast=True,
+            ),
+            nn.BCEWithLogitsLoss(
+                weight=torch.rand(2, 3),
+                pos_weight=torch.rand(3) + 0.5,
+                reduction='sum',
+            ),
+            torch.randn(2, 3),
+            torch.rand(2, 3),
+        ),
+        (
+            dnn.KLDivLoss(reduction='batchmean', log_target=True, fast=True),
+            nn.KLDivLoss(reduction='batchmean', log_target=True),
+            torch.randn(2, 3).log_softmax(dim=1),
+            torch.randn(2, 3).log_softmax(dim=1),
+        ),
+    ],
+)
+def test_fast_loss_modules_match_torch_modules(
+    actual_module: nn.Module,
+    expected_module: nn.Module,
+    x: Tensor,
+    target: Tensor,
+):
+    if isinstance(actual_module, (dnn.BCELoss, dnn.BCEWithLogitsLoss)):
+        assert actual_module.weight is not None
+        expected_module.weight = actual_module.weight
+    if isinstance(actual_module, dnn.BCEWithLogitsLoss):
+        assert actual_module.pos_weight is not None
+        expected_module.pos_weight = actual_module.pos_weight
+
+    assert actual_module.fast is True
+    assert_close(actual_module(x, target), expected_module(x, target))
+
+
+def test_weighted_mse_loss_module_matches_functional():
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+    weight = torch.rand(2, 3)
+
+    actual = dnn.MSELoss(weight=weight, reduction='sum')
+    expected = dF.mse_loss(x, target, weight=weight, reduction='sum')
+
+    assert_close(actual(x, target), expected)
+
+
+def test_weighted_l1_loss_module_matches_functional():
+    x = torch.randn(2, 3)
+    target = torch.randn(2, 3)
+    weight = torch.rand(2, 3)
+
+    actual = dnn.L1Loss(weight=weight, reduction='sum')
+    expected = dF.l1_loss(x, target, weight=weight, reduction='sum')
+
+    assert_close(actual(x, target), expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_nll_loss_function_matches_torch(reduction: str):
+    x = torch.randn(5, 4).log_softmax(dim=1)
+    target = torch.tensor([0, -1, 1, 2, -1])
+    weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
+
+    actual = dF.nll_loss(
+        x,
+        target,
+        weight=weight,
+        ignore_index=-1,
+        reduction=reduction,
+    )
+    expected = F.nll_loss(
+        x,
+        target,
+        weight=weight,
+        ignore_index=-1,
+        reduction=reduction,
+    )
+
+    assert_close(actual, expected)
+
+
+def test_nll_loss_function_matches_torch_for_spatial_targets():
+    x = torch.randn(2, 4, 3, 2).log_softmax(dim=1)
+    target = torch.tensor([[[0, 1], [2, -1], [3, 0]], [[1, 2], [-1, 3], [0, 1]]])
+    weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
+
+    actual = dF.nll_loss(
+        x,
+        target,
+        weight=weight,
+        ignore_index=-1,
+        reduction='mean',
+    )
+    expected = F.nll_loss(
+        x,
+        target,
+        weight=weight,
+        ignore_index=-1,
+        reduction='mean',
+    )
+
+    assert_close(actual, expected)
+
+
+def test_nll_loss_module_matches_torch_module():
+    x = torch.randn(5, 4).log_softmax(dim=1)
+    target = torch.tensor([0, -1, 1, 2, -1])
+    weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
+
+    actual = dnn.NLLLoss(weight=weight, ignore_index=-1, reduction='sum')
+    expected = nn.NLLLoss(weight=weight, ignore_index=-1, reduction='sum')
+
+    assert_close(actual(x, target), expected(x, target))
+
+
+def test_fast_nll_loss_module_matches_torch_module():
+    x = torch.randn(5, 4).log_softmax(dim=1)
+    target = torch.tensor([0, 3, 1, 2, 1])
+    weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
+
+    actual = dnn.NLLLoss(weight=weight, reduction='sum', fast=True)
+    expected = nn.NLLLoss(weight=weight, reduction='sum')
+
+    assert actual.fast is True
+    assert_close(actual(x, target), expected(x, target))
+
+
+def test_nll_loss_rejects_invalid_reduction():
+    x = torch.randn(5, 4).log_softmax(dim=1)
+    target = torch.tensor([0, 3, 1, 2, 1])
+
+    with pytest.raises(AssertionError, match='reduction'):
+        dF.nll_loss(x, target, reduction='batchmean')
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_cross_entropy_loss_function_matches_torch(reduction: str):
     x = torch.randn(5, 4)
     target = torch.tensor([0, 3, 1, 2, 1])
     weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
 
-    actual = dF.cross_entropy(x, target, weight=weight, reduction=reduction)
+    actual = dF.cross_entropy_loss(x, target, weight=weight, reduction=reduction)
     expected = F.cross_entropy(x, target, weight=weight, reduction=reduction)
 
     assert_close(actual, expected)
 
 
-def test_cross_entropy_function_matches_torch_without_weight():
+def test_cross_entropy_loss_function_matches_torch_without_weight():
     x = torch.randn(5, 4)
     target = torch.tensor([0, 3, 1, 2, 1])
 
-    actual = dF.cross_entropy(x, target)
+    actual = dF.cross_entropy_loss(x, target)
     expected = F.cross_entropy(x, target)
 
     assert_close(actual, expected)
 
 
-def test_cross_entropy_module_matches_torch_module():
+def test_cross_entropy_loss_uses_nll_loss_for_index_targets(monkeypatch):
+    called = False
+
+    def fake_nll_loss(input, target, weight=None, ignore_index=-100, reduction='mean'):
+        nonlocal called
+        called = True
+        return torch.tensor(3.0)
+
+    monkeypatch.setattr(loss_functional, 'nll_loss', fake_nll_loss)
+
+    actual = loss_functional.cross_entropy_loss(
+        torch.randn(5, 4),
+        torch.tensor([0, 3, 1, 2, 1]),
+    )
+
+    assert called is True
+    assert_close(actual, torch.tensor(3.0))
+
+
+def test_cross_entropy_loss_does_not_use_nll_loss_for_probability_targets(monkeypatch):
+    def fail_nll_loss(*args, **kwargs):
+        raise AssertionError('nll_loss should not be used for probability targets')
+
+    monkeypatch.setattr(loss_functional, 'nll_loss', fail_nll_loss)
+
+    x = torch.randn(3, 4)
+    target = torch.rand(3, 4)
+    target = target / target.sum(dim=1, keepdim=True)
+
+    actual = loss_functional.cross_entropy_loss(x, target)
+    expected = F.cross_entropy(x, target)
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_cross_entropy_loss_function_matches_torch_with_ignore_index(reduction: str):
+    x = torch.randn(5, 4)
+    target = torch.tensor([0, -1, 1, 2, -1])
+    weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
+
+    actual = dF.cross_entropy_loss(
+        x,
+        target,
+        weight=weight,
+        ignore_index=-1,
+        reduction=reduction,
+        label_smoothing=0.2,
+    )
+    expected = F.cross_entropy(
+        x,
+        target,
+        weight=weight,
+        ignore_index=-1,
+        reduction=reduction,
+        label_smoothing=0.2,
+    )
+
+    assert_close(actual, expected)
+
+
+@pytest.mark.parametrize('reduction', ['mean', 'sum', 'none'])
+def test_cross_entropy_loss_function_matches_torch_with_label_smoothing(
+    reduction: str,
+):
     x = torch.randn(5, 4)
     target = torch.tensor([0, 3, 1, 2, 1])
     weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
 
-    actual = dnn.CrossEntropyLoss(weight=weight, reduction='sum')
-    expected = nn.CrossEntropyLoss(weight=weight, reduction='sum')
+    actual = dF.cross_entropy_loss(
+        x,
+        target,
+        weight=weight,
+        reduction=reduction,
+        label_smoothing=0.2,
+    )
+    expected = F.cross_entropy(
+        x,
+        target,
+        weight=weight,
+        reduction=reduction,
+        label_smoothing=0.2,
+    )
+
+    assert_close(actual, expected)
+
+
+def test_cross_entropy_loss_function_matches_torch_for_spatial_targets():
+    x = torch.randn(2, 4, 3, 2)
+    target = torch.tensor([[[0, 1], [2, -1], [3, 0]], [[1, 2], [-1, 3], [0, 1]]])
+
+    actual = dF.cross_entropy_loss(
+        x,
+        target,
+        ignore_index=-1,
+        reduction='none',
+        label_smoothing=0.1,
+    )
+    expected = F.cross_entropy(
+        x,
+        target,
+        ignore_index=-1,
+        reduction='none',
+        label_smoothing=0.1,
+    )
+
+    assert_close(actual, expected)
+
+
+def test_cross_entropy_loss_function_matches_torch_for_probability_targets():
+    x = torch.randn(3, 4)
+    target = torch.rand(3, 4)
+    target = target / target.sum(dim=1, keepdim=True)
+    weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
+
+    actual = dF.cross_entropy_loss(
+        x,
+        target,
+        weight=weight,
+        reduction='mean',
+        label_smoothing=0.1,
+    )
+    expected = F.cross_entropy(
+        x,
+        target,
+        weight=weight,
+        reduction='mean',
+        label_smoothing=0.1,
+    )
+
+    assert_close(actual, expected)
+
+
+def test_cross_entropy_loss_module_matches_torch_module():
+    x = torch.randn(5, 4)
+    target = torch.tensor([0, 3, 1, 2, 1])
+    weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
+
+    actual = dnn.CrossEntropyLoss(
+        weight=weight,
+        ignore_index=-1,
+        reduction='sum',
+        label_smoothing=0.2,
+    )
+    expected = nn.CrossEntropyLoss(
+        weight=weight,
+        ignore_index=-1,
+        reduction='sum',
+        label_smoothing=0.2,
+    )
 
     assert_close(actual(x, target), expected(x, target))
 
 
-def test_fast_cross_entropy_module_matches_torch_module():
+def test_fast_cross_entropy_loss_module_matches_torch_module():
     x = torch.randn(5, 4)
     target = torch.tensor([0, 3, 1, 2, 1])
     weight = torch.tensor([1.0, 0.5, 2.0, 1.5])
@@ -53,9 +699,9 @@ def test_fast_cross_entropy_module_matches_torch_module():
     assert_close(actual(x, target), expected(x, target))
 
 
-def test_cross_entropy_rejects_invalid_reduction():
+def test_cross_entropy_loss_rejects_invalid_reduction():
     x = torch.randn(5, 4)
     target = torch.tensor([0, 3, 1, 2, 1])
 
-    with pytest.raises(NotImplementedError, match='reduction'):
-        dF.cross_entropy(x, target, reduction='batchmean')
+    with pytest.raises(AssertionError, match='reduction'):
+        dF.cross_entropy_loss(x, target, reduction='batchmean')

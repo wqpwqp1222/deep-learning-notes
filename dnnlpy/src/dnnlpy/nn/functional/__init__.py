@@ -42,7 +42,17 @@ from .flash_attention import (
     flash_attention_v1_backward as flash_attention_v1_backward,
     flash_attention_v1_forward as flash_attention_v1_forward,
 )
-from .loss import cross_entropy as cross_entropy
+from .loss import (
+    bce_loss as bce_loss,
+    bce_with_logits_loss as bce_with_logits_loss,
+    cross_entropy_loss as cross_entropy_loss,
+    huber_loss as huber_loss,
+    kl_div_loss as kl_div_loss,
+    l1_loss as l1_loss,
+    mse_loss as mse_loss,
+    nll_loss as nll_loss,
+    smooth_l1_loss as smooth_l1_loss,
+)
 from .normalization import (
     batch_norm as batch_norm,
     group_norm as group_norm,
