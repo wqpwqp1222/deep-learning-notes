@@ -1,13 +1,11 @@
-from .activation import ReLU as ReLU
-from .activation import Sigmoid as Sigmoid
-from .activation import Softmax as Softmax
-from .activation import Tanh as Tanh
-from .base import Module as Module
-from .base import Optimizer as Optimizer
-from .base import Parameter as Parameter
-from .layer import Flatten as Flatten
-from .layer import Identity as Identity
-from .layer import Linear as Linear
+from .activation import (
+    ReLU as ReLU,
+    Sigmoid as Sigmoid,
+    Softmax as Softmax,
+    Tanh as Tanh,
+)
+from .base import Module as Module, Optimizer as Optimizer, Parameter as Parameter
+from .layer import Flatten as Flatten, Identity as Identity, Linear as Linear
 from .loss import CrossEntropyLoss as CrossEntropyLoss
 from .mlp import MLP as MLP
 from .optimizer import SGD as SGD
