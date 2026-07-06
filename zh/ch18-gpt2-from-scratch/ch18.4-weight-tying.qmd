@@ -285,7 +285,7 @@ lm_head = dnn.Linear(D, V, bias=False)
 logits = lm_head(h)
 
 labels = torch.randint(0, V, (B, T))
-loss = dF.cross_entropy(
+loss = dF.cross_entropy_loss(
     logits.reshape(B * T, V),
     labels.reshape(B * T),
 )
@@ -425,7 +425,7 @@ input_ids = torch.tensor([[1, 2, 3]])
 labels = torch.tensor([[2, 3, 4]])
 
 logits = model(input_ids)
-loss = dF.cross_entropy(
+loss = dF.cross_entropy_loss(
     logits.reshape(-1, vocab_size),
     labels.reshape(-1),
 )

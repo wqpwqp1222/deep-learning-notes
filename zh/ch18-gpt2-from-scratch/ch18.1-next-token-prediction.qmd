@@ -259,7 +259,7 @@ B, T, V = 2, 4, 10
 logits = torch.randn(B, T, V)
 labels = torch.randint(V, (B, T))
 
-loss = dF.cross_entropy(
+loss = dF.cross_entropy_loss(
     logits.reshape(B * T, V),
     labels.reshape(B * T),
 )
